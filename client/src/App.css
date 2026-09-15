@@ -1,0 +1,18 @@
+/* src/App.css */
+/* Plain CSS, no framework — a simple readable starting point. */
+
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px;
+  font-family: system-ui, sans-serif;
+}
+
+.page h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.page p {
+  color: #444;
+}
