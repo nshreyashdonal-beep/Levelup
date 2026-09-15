@@ -37,3 +37,18 @@ CREATE TABLE courses (
 
 -- Speeds up "show all courses by this instructor" queries
 CREATE INDEX idx_courses_instructor ON courses(instructor_id);
+
+-- ============================================================
+-- enrollments table
+-- Links a student to a course they've signed up for.
+-- ============================================================
+CREATE TABLE enrollments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES users(id),
+  course_id UUID NOT NULL REFERENCES courses(id),
+  enrolled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, course_id)
+);
+
+-- Speeds up "who is enrolled in this course" queries
+CREATE INDEX idx_enrollments_course ON enrollments(course_id);
