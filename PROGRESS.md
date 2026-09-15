@@ -60,7 +60,7 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 - [x] Add PostgreSQL connection (`config/db.js`, `.env.example`, `.env`, `dotenv`, `pg`, `cors`)
 - [x] `levelup` database created in pgAdmin, `pgcrypto` extension enabled
 - [x] `users` table (created via pgAdmin Query Tool)
-- [ ] `courses` table
+- [x] `courses` table
 - [ ] `enrollments` table
 - [ ] `reviews` table
 - [ ] `sessions` table (doubt sessions / offline meets / mock tests)
@@ -102,6 +102,7 @@ server/config/db.js    (shared Postgres connection pool)
 server/db/schema.sql   (pgcrypto + users table)
 server/routes/auth.js  (register + login, verified working via Hoppscotch)
 server/middleware/auth.js (requireAuth + requireRole; tested via temporary /api/me route)
+server/db/schema.sql   (now also includes courses table)
 ```
 
 ---
@@ -123,15 +124,19 @@ server/middleware/auth.js (requireAuth + requireRole; tested via temporary /api/
   no separate controller/service layers, kept as simple as possible.
 - Testing endpoints with **Hoppscotch** (browser-based, free) instead of Postman.
 - Project is now version-controlled on GitHub: github.com/nshreyashdonal-beep/Levelup.
+- `courses` table: `price` uses `NUMERIC(10,2)` (never floating-point, to avoid rounding
+  errors with money). `instructor_id` is a foreign key to `users(id)` — Postgres enforces
+  it must be a real user, but doesn't enforce that user is actually an instructor (that's
+  checked in application code via `requireRole('instructor')`).
 
 ---
 
 ## 4. Known Issues / TODO Carried Between Sessions
 
 ```
-- Auth middleware added (requireAuth, requireRole) — verify via the temporary
-  GET /api/me route (send your login token as "Authorization: Bearer <token>").
-- Next piece: courses table.
+- courses table created and verified in pgAdmin (needed a sidebar refresh to appear).
+- Next piece: course routes (create/update/publish, browse/search) — will need
+  requireAuth + requireRole('instructor') on the create route.
 - When pushing to GitHub, double check server/.env.example keeps its leading dot and
   that no stray duplicate copy gets committed (this happened once already).
 - Watch out for accidentally nested folders (e.g. server/server) if re-extracting zip files —

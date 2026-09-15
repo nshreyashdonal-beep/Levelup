@@ -21,3 +21,19 @@ CREATE TABLE users (
 
 -- Speeds up login lookups (WHERE email = ...)
 CREATE INDEX idx_users_email ON users(email);
+
+-- ============================================================
+-- courses table
+-- Each course belongs to one instructor (a user with role = 'instructor').
+-- ============================================================
+CREATE TABLE courses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(150) NOT NULL,
+  description TEXT,
+  price NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  instructor_id UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Speeds up "show all courses by this instructor" queries
+CREATE INDEX idx_courses_instructor ON courses(instructor_id);
