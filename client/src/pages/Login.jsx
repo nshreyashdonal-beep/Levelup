@@ -1,34 +1,48 @@
 // src/pages/Login.jsx
-// A simple login form. On success, saves the token to localStorage and
-// sends the user to the homepage.
+// Converted from the src.rar mockup: two-column card (form + info panel).
+// Styling lives in Login.css (colocated), same pattern as Home/Navbar/Footer.
+//
+// Note: the mockup had a student/instructor toggle that picked a different
+// login endpoint (/api/students/login vs /api/instructors/login). Our real
+// backend only has ONE login endpoint (/api/auth/login) that already
+// figures out the role from the users table and sends it back — so a
+// toggle here wouldn't change the request at all. Left it out rather than
+// keep a control that does nothing.
 
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { API_BASE } from '../api.js';
-import '../styles/forms.css';
+import './Login.css';
 
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function Login() {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  function handleChange(e) {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
 
   async function handleSubmit(e) {
-    e.preventDefault(); // stops the browser from doing a full page reload on submit
+    e.preventDefault();
+    setLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        // The server sent back an error message (e.g. "Invalid email or password")
-        setError(data.error);
+      if (!res.ok) {
+        setError(data.error || 'Invalid email or password');
         return;
       }
 
@@ -36,47 +50,86 @@ function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/'); // send them to the homepage now that they're logged in
+      // No student/instructor dashboards exist yet, so everyone just
+      // goes home for now. This is a known TODO (see PROGRESS.md).
+      navigate('/');
     } catch (err) {
       setError('Could not reach the server. Is it running?');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="page">
-      <h1>Log In</h1>
+    <div className="login-page-wrap">
+      <Navbar />
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+      <main className="login-main">
+        <div className="login-card">
+          {/* Left — Form */}
+          <div className="login-form-side">
+            <h2 className="login-title">Welcome Back</h2>
+            <p className="login-subtitle">
+              Login to continue learning with nearby instructors.
+            </p>
+
+            {error && <div className="login-error">{error}</div>}
+
+            <form onSubmit={handleSubmit} className="login-form">
+              <label className="login-label">Email</label>
+              <input
+                name="email"
+                type="email"
+                placeholder="Enter email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="login-input"
+              />
+
+              <label className="login-label">Password</label>
+              <div className="login-password-row">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="login-input login-password-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="login-show-btn"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              <button type="submit" disabled={loading} className="login-submit-btn">
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+
+              <p className="login-footer-text">
+                New here? <Link to="/signup" className="login-link">Create account</Link>
+              </p>
+            </form>
+          </div>
+
+          {/* Right — Info panel */}
+          <div className="login-info-side">
+            <h3 className="login-info-title">Learn Hybrid. Learn Local.</h3>
+            {['Find instructors near you', 'Join online + offline learning', 'Track your progress'].map((item) => (
+              <div key={item} className="login-info-item">
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
+      </main>
 
-        <div className="form-row">
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        {error && <p className="error">{error}</p>}
-
-        <button type="submit">Log In</button>
-      </form>
-
-      <p>
-        Don't have an account? <Link to="/signup">Sign up</Link>
-      </p>
+      <Footer />
     </div>
   );
 }
-
-export default Login;
