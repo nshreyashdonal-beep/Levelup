@@ -1,16 +1,19 @@
 // src/App.jsx
 // Defines which "page" component shows for which URL path.
-// Only one route exists so far — more get added as we build each page
-// (auth pages, course browse, dashboards, etc.) as separate pieces.
+// No CSS import here — App itself renders no markup of its own, just
+// routes to whichever page component matches the current URL.
 
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
-import './App.css'
+import Login from './pages/Login.jsx'
+import Signup from './pages/Signup.jsx'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
     </Routes>
   )
 }

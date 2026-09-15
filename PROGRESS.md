@@ -54,16 +54,20 @@ LevelUp/
     └── src/
         ├── main.jsx
         ├── App.jsx
-        ├── App.css
         ├── index.css
+        ├── api.js
+        ├── styles/
+        │   └── forms.css
         └── pages/
-            └── Home.jsx
+            ├── Home.jsx
+            ├── Login.jsx
+            └── Signup.jsx
 ```
 
 **Notes chapter tracking:** two separate numbering tracks — backend and frontend each
 increment independently, based on which one a session actually works on.
 - Backend notes: `LevelUp-chapterN-notes.md` — currently at **Chapter 8**
-- Frontend notes: `LevelUp-ChapterN-Frontend.md` — currently at **Chapter 1**
+- Frontend notes: `LevelUp-ChapterN-Frontend.md` — currently at **Chapter 2**
 
 ---
 
@@ -91,7 +95,7 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 
 ### Frontend (later)
 - [x] Frontend skeleton (Vite + Tailwind + Router)
-- [ ] Auth pages (Login/Signup)
+- [x] Auth pages (Login/Signup)
 - [ ] Navbar + Home page
 - [ ] Course browse + detail pages
 - [ ] Create/manage course page (instructor)
@@ -126,9 +130,13 @@ server/routes/enrollments.js (POST enroll [student-only, blocks duplicates], GET
 server/routes/reviews.js (POST review [student-only, blocks duplicates, enforces 1-5 rating], GET ?course_id=<id> [public, joined with student name]; verified via Hoppscotch)
 client/  (Vite + React + react-router-dom, scaffolded via `npm create vite@latest client -- --template react`)
 client/src/main.jsx  (wraps App in BrowserRouter)
-client/src/App.jsx   (Routes/Route setup, currently one route: "/")
+client/src/App.jsx   (Routes/Route setup: "/", "/login", "/signup")
+client/src/index.css (global reset + shared .page layout class)
+client/src/api.js    (shared API_BASE constant)
+client/src/styles/forms.css (shared styling for Login/Signup forms)
 client/src/pages/Home.jsx  (placeholder homepage, proves routing works)
-client/src/App.css, client/src/index.css  (plain CSS, no framework)
+client/src/pages/Login.jsx  (calls POST /api/auth/login, saves token+user to localStorage)
+client/src/pages/Signup.jsx (calls POST /api/auth/register, redirects to /login on success)
 ```
 
 ---
@@ -186,6 +194,13 @@ client/src/App.css, client/src/index.css  (plain CSS, no framework)
   route (`/` → `Home`), more get added as each page becomes its own checklist piece.
 - Removed Vite's default boilerplate (spinning logo, counter button) in favor of a minimal
   placeholder `Home` page, matching the project's "simplest possible, grow as you go" rule.
+- CSS organized per standard React convention: colocated with components rather than one
+  big shared file. `.page` (used by every page) lives in the global `index.css`; form
+  styling shared by `Login`/`Signup` lives in `styles/forms.css`; `App.css` was removed
+  since `App.jsx` itself renders no markup, only routes.
+- Auth pages save the JWT to `localStorage` on login (`token` and `user` keys) so the
+  browser remembers the session across refreshes. `/register` doesn't return a token, so
+  Signup redirects to `/login` afterward rather than logging in automatically.
 
 ---
 
@@ -204,7 +219,11 @@ client/src/App.css, client/src/index.css  (plain CSS, no framework)
 - Backend is now feature-complete for the checklist's "Backend logic" section.
 - Frontend skeleton confirmed working: npm run dev in client/ shows a plain "LevelUp" page
   at http://localhost:5173, replacing the default Vite starter content.
-- Next piece: Auth pages (Login/Signup).
+- Auth pages verified end-to-end: signup creates an account and redirects to /login; login
+  saves token+user to localStorage and redirects to /. Confirmed via browser dev tools.
+- Reminder: both npm run dev processes (server/ on :3000 and client/ on :5173) must be
+  running simultaneously in separate terminals for the frontend to reach the backend.
+- Next piece: Navbar + Home page.
 - When pushing to GitHub, double check server/.env.example keeps its leading dot and
   that no stray duplicate copy gets committed (this happened once already).
 - Watch out for accidentally nested folders (e.g. server/server) if re-extracting zip files —
