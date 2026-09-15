@@ -52,3 +52,20 @@ CREATE TABLE enrollments (
 
 -- Speeds up "who is enrolled in this course" queries
 CREATE INDEX idx_enrollments_course ON enrollments(course_id);
+
+-- ============================================================
+-- reviews table
+-- A student leaves at most one review per course (rating 1-5, optional comment).
+-- ============================================================
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES users(id),
+  course_id UUID NOT NULL REFERENCES courses(id),
+  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, course_id)
+);
+
+-- Speeds up "show all reviews for this course" queries
+CREATE INDEX idx_reviews_course ON reviews(course_id);
