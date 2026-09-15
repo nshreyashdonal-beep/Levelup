@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
+const courseRoutes = require('./routes/courses');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -19,6 +20,9 @@ app.use(express.json());
 
 // All auth routes live under /api/auth (e.g. /api/auth/register, /api/auth/login)
 app.use('/api/auth', authRoutes);
+
+// All course routes live under /api/courses (e.g. POST /api/courses, GET /api/courses)
+app.use('/api/courses', courseRoutes);
 
 // Temporary test route to prove the middleware works — remove once real
 // protected routes (courses, etc.) exist to test against instead.
