@@ -12,8 +12,10 @@ const router = express.Router();
 
 // POST /api/auth/register
 // Body: { name, email, password, role }  (role is optional, defaults to 'student')
+// If role is 'instructor', also accepts { bio, phone, location } and
+// saves them into instructor_profiles — students never send/see these.
 router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, bio, phone, location } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'name, email and password are required' });
@@ -31,7 +33,19 @@ router.post('/register', async (req, res) => {
       [name, email, passwordHash, role]
     );
 
-    res.status(201).json(result.rows[0]);
+    const newUser = result.rows[0];
+
+    // Only instructors get a profile row, and only if they actually
+    // sent profile fields (BecomeInstructor.jsx always does).
+    if (newUser.role === 'instructor') {
+      await db.query(
+        `INSERT INTO instructor_profiles (user_id, bio, phone, location)
+         VALUES ($1, $2, $3, $4)`,
+        [newUser.id, bio || null, phone || null, location || null]
+      );
+    }
+
+    res.status(201).json(newUser);
   } catch (err) {
     // Postgres error code 23505 = unique constraint violation (duplicate email).
     if (err.code === '23505') {

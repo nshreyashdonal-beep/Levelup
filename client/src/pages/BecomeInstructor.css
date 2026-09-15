@@ -1,0 +1,35 @@
+/* src/pages/BecomeInstructor.css */
+/* Same layout/classes as Signup.css (imported alongside this file) —
+   this file only overrides the accent color from indigo to emerald,
+   so it visually matches the "teacher" variant already used on
+   Home.css (journey-track--teacher, how-card-btn--teacher: #10b981). */
+
+.instructor-theme .signup-input:focus {
+  border-color: #6ee7b7;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.instructor-theme .signup-show-btn {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.instructor-theme .signup-show-btn:hover {
+  background: #d1fae5;
+}
+
+.instructor-theme .signup-submit-btn {
+  background: #10b981;
+}
+
+.instructor-theme .signup-submit-btn:hover {
+  background: #059669;
+}
+
+.instructor-theme .signup-link {
+  color: #10b981;
+}
+
+.instructor-theme .signup-info-side {
+  background: #ecfdf5;
+}

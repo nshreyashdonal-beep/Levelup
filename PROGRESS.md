@@ -30,6 +30,18 @@ for simplicity).
   being built right now get created. The repo layout below only ever shows what actually
   exists today.
 
+**Reference mockups (not part of the live app — design/structure reference only, same
+role Becomeinstructor.jsx played before it got wired up and moved into `client/src/pages/`):**
+```
+src.rar (uploaded, extracted to inspect)
+├── components/Navbar.jsx, Footer.jsx        (already implemented for real, ignore now)
+├── pages/Becomeinstructor.jsx, Home.jsx,     (already implemented for real, ignore now)
+│         Login.jsx, Signup.jsx
+└── pages/Instructordashboard.jsx,           ← next 3 pieces to build, see checklist
+          Mycourses.jsx,
+          Studentdashboard.jsx
+```
+
 **Repo layout (current — grows one piece at a time, never scaffolded ahead):**
 ```
 LevelUp/
@@ -58,10 +70,14 @@ LevelUp/
         ├── api.js
         ├── styles/
         │   └── forms.css
+        ├── components/
+        │   ├── Navbar.jsx / Navbar.css
+        │   └── Footer.jsx / Footer.css
         └── pages/
-            ├── Home.jsx
+            ├── Home.jsx / Home.css
             ├── Login.jsx
-            └── Signup.jsx
+            ├── Signup.jsx / Signup.css
+            └── BecomeInstructor.jsx / BecomeInstructor.css
 ```
 
 **Notes chapter tracking:** two separate numbering tracks — backend and frontend each
@@ -84,6 +100,7 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 - [x] `courses` table
 - [x] `enrollments` table
 - [x] `reviews` table
+- [x] `instructor_profiles` table (created + verified in pgAdmin)
 - [ ] `sessions` table (doubt sessions / offline meets / mock tests)
 
 ### Backend logic
@@ -92,16 +109,62 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 - [x] Course routes (create/update/publish, browse/search)
 - [x] Enrollment routes
 - [x] Review routes
+- [x] `POST /api/auth/register` writes `bio`/`phone`/`location` into `instructor_profiles`
+      when `role === 'instructor'` — confirmed working via the live Become Instructor form.
 
-### Frontend (later)
+### Frontend — Auth & entry pages (done)
 - [x] Frontend skeleton (Vite + Tailwind + Router)
-- [x] Auth pages (Login/Signup)
-- [ ] Navbar + Home page
-- [ ] Course browse + detail pages
-- [ ] Create/manage course page (instructor)
-- [ ] Student dashboard
-- [ ] Instructor dashboard
-- [ ] Reviews UI
+- [x] Login page
+- [x] Signup page (student-only, no role toggle)
+- [x] Become Instructor page (instructor-only, own emerald theme, bio/phone/location,
+      writes to `instructor_profiles`)
+- [x] Navbar component
+- [x] Footer component
+- [x] Home page (hero, student/teacher journey tabs, how-it-works, reviews)
+
+### Frontend — Branch: Dashboards & course pages (next up)
+Mockups for all three arrived this session in `src.rar` (`pages/Studentdashboard.jsx`,
+`pages/Instructordashboard.jsx`, `pages/Mycourses.jsx`) — these are the **visual/structure
+reference only**, same as Becomeinstructor.jsx was. Each still needs the same treatment
+that page got: swap any fields/endpoints the mockup imagines for what the real backend
+actually has, before wiring it up. Build **one at a time, in this order**, ticking each
+box only once it's wired to real data (not just static/placeholder content) and manually
+verified in the browser:
+
+- [ ] **Student Dashboard** (`/dashboard` or similar — mockup: `Studentdashboard.jsx`)
+      - Reuses the student/teacher "journey" section styling from Home.
+      - Reads `user` from `localStorage` (same pattern as Login/Signup already use) and
+        redirects to `/login` if missing or `role !== 'student'`.
+      - Needs real data wired in: enrolled courses + progress should come from
+        `GET /api/enrollments/me` (already built and verified) instead of any placeholder
+        array — there is currently no `progress` column anywhere, so decide then whether
+        to add one or drop that part of the mockup for now.
+- [ ] **Instructor Dashboard** (`/instructor-dashboard` or similar — mockup:
+      `Instructordashboard.jsx`)
+      - Same localStorage guard pattern, but `role !== 'instructor'`.
+      - Stat cards (Total Students / Active Courses / Total Earnings / Avg. Rating) are
+        static "0"/"—" placeholders in the mockup. Active Courses can be wired for real
+        immediately via `GET /api/courses` filtered to this instructor. The other three
+        need backend work that doesn't exist yet (earnings, ratings aggregation, student
+        counts) — flag those as follow-up pieces rather than faking numbers.
+      - "Quick Actions" (Create Course / Go Live / Schedule Offline) are just cards in the
+        mockup with no click behavior — Create Course can eventually link to the
+        create/manage course page below; the other two depend on features not built yet.
+- [ ] **My Courses** (`/mycourse` — mockup: `Mycourses.jsx`, path already referenced by
+      Navbar links in other mockups)
+      - Same localStorage guard pattern, `role !== 'student'`.
+      - Mockup uses a hardcoded `courses` array — replace with `GET /api/enrollments/me`.
+      - Progress bars again depend on a `progress` concept that doesn't exist in the
+        schema yet — same open question as Student Dashboard above.
+- [ ] Course browse + detail pages (no mockup yet — uses existing public
+      `GET /api/courses`)
+- [ ] Create/manage course page (instructor) — no mockup yet — uses existing
+      `POST /api/courses` (instructor-only, already built)
+- [ ] Reviews UI — no mockup yet — uses existing review routes
+
+**Note for whichever page gets built next:** decide up front whether `progress` (course
+completion %) is worth a real schema piece now or a placeholder to skip — it shows up in
+both Student Dashboard and My Courses mockups but nothing in the current schema tracks it.
 
 ### Late-stage differentiator
 - [ ] Geolocation / "nearby instructors" — backend query + frontend UI
@@ -130,13 +193,21 @@ server/routes/enrollments.js (POST enroll [student-only, blocks duplicates], GET
 server/routes/reviews.js (POST review [student-only, blocks duplicates, enforces 1-5 rating], GET ?course_id=<id> [public, joined with student name]; verified via Hoppscotch)
 client/  (Vite + React + react-router-dom, scaffolded via `npm create vite@latest client -- --template react`)
 client/src/main.jsx  (wraps App in BrowserRouter)
-client/src/App.jsx   (Routes/Route setup: "/", "/login", "/signup")
+client/src/App.jsx   (Routes/Route setup: "/", "/login", "/signup", "/become-instructor")
 client/src/index.css (global reset + shared .page layout class)
 client/src/api.js    (shared API_BASE constant)
 client/src/styles/forms.css (shared styling for Login/Signup forms)
 client/src/pages/Home.jsx  (placeholder homepage, proves routing works)
 client/src/pages/Login.jsx  (calls POST /api/auth/login, saves token+user to localStorage)
 client/src/pages/Signup.jsx (calls POST /api/auth/register, redirects to /login on success)
+
+--- This session ---
+server/db/schema.sql   (now also includes instructor_profiles table — NOT YET RUN in pgAdmin, see checklist)
+server/routes/auth.js  (register route now also inserts into instructor_profiles when role is 'instructor')
+client/src/pages/Signup.jsx        (removed Student/Instructor role toggle — this page is student-only now, always sends role: "student"; added a link to /become-instructor for anyone who lands here by mistake)
+client/src/pages/BecomeInstructor.jsx (NEW — instructor-only signup page. No role toggle, always sends role: "instructor". Fields: name, email, password, bio, phone, location. Posts to the real /api/auth/register, not the old imagined /api/instructors/signup.)
+client/src/pages/BecomeInstructor.css (NEW — reuses Signup.css's layout/classes, overrides the indigo accent to the emerald "#10b981" already used for the teacher variant in Home.css, via a `.instructor-theme` wrapper class)
+client/src/App.jsx     (added the /become-instructor route, which previously had a dead link pointing to it from Navbar/Home)
 ```
 
 ---
@@ -201,6 +272,29 @@ client/src/pages/Signup.jsx (calls POST /api/auth/register, redirects to /login 
 - Auth pages save the JWT to `localStorage` on login (`token` and `user` keys) so the
   browser remembers the session across refreshes. `/register` doesn't return a token, so
   Signup redirects to `/login` afterward rather than logging in automatically.
+- **Split student vs instructor signup into two separate pages instead of one form with a
+  role toggle.** `Signup.jsx` = students only (linked from Navbar "Signup" and Home's
+  "Start Learning"). `BecomeInstructor.jsx` = instructors only (linked from Navbar "Become
+  Instructor" and Home's "For Teachers" card). Reasoning: a single form with a toggle made
+  it too easy to end up on the wrong role by accident; two dedicated pages is clearer UX,
+  and each page cross-links to the other for anyone who lands on the wrong one.
+- Because instructors need extra fields (bio, phone, location) that students don't, and the
+  `users` table intentionally doesn't carry those columns for every row, added a separate
+  **`instructor_profiles`** table (`user_id` primary key + foreign key to `users`, one row
+  per instructor) instead of adding nullable columns to `users`. `POST /api/auth/register`
+  now inserts into it when `role === 'instructor'`.
+- `BecomeInstructor.jsx` gets its own `BecomeInstructor.css` rather than reusing Signup.css
+  as-is — it imports Signup.css for the shared layout/classes, then overrides just the
+  accent color to emerald (`#10b981`) via a `.instructor-theme` wrapper class, matching the
+  teacher color already established in `Home.css` (`journey-track--teacher`,
+  `how-card-btn--teacher`) instead of inventing a new color.
+- Confirmed Become Instructor works end-to-end (form → register → instructor_profiles row
+  → redirect to login) — closes out that piece of the frontend checklist.
+- Frontend checklist restructured into a **named branch** ("Dashboards & course pages")
+  once 3 more mockup pages arrived (`Studentdashboard.jsx`, `Instructordashboard.jsx`,
+  `Mycourses.jsx`), each with a sub-checklist of what needs to change from mockup-imagined
+  data to real backend calls — same pattern already proven with Become Instructor, so
+  future sessions don't re-litigate "should this hit the real API" per page.
 
 ---
 
@@ -223,11 +317,26 @@ client/src/pages/Signup.jsx (calls POST /api/auth/register, redirects to /login 
   saves token+user to localStorage and redirects to /. Confirmed via browser dev tools.
 - Reminder: both npm run dev processes (server/ on :3000 and client/ on :5173) must be
   running simultaneously in separate terminals for the frontend to reach the backend.
-- Next piece: Navbar + Home page.
 - When pushing to GitHub, double check server/.env.example keeps its leading dot and
   that no stray duplicate copy gets committed (this happened once already).
 - Watch out for accidentally nested folders (e.g. server/server) if re-extracting zip files —
   always confirm with "dir" that package.json is in your current folder before running npm commands.
+
+--- Carried from this session ---
+- Become Instructor is now fully confirmed working end-to-end: instructor_profiles table
+  created in pgAdmin, register route tested with role: "instructor" + bio/phone/location,
+  /become-instructor route in the browser confirmed (form submit → redirect to /login).
+- Fixed along the way: App.jsx locally was missing the BecomeInstructor import/route
+  (blank white page on /become-instructor) — make sure you're editing the same App.jsx
+  Claude gives you each session, not an older saved copy.
+- src.rar (uploaded this session) contains 3 more mockup pages not yet built:
+  Studentdashboard.jsx, Instructordashboard.jsx, Mycourses.jsx — see the new
+  "Branch: Dashboards & course pages" section in the checklist above for build order and
+  what each one needs translated from mockup to real backend calls.
+- Open question to settle before/during Student Dashboard or My Courses: is course
+  "progress" (% complete) worth a real schema addition now, or a placeholder to skip for
+  later? Both those mockups show a progress bar with no backing data yet.
+- Next piece: Student Dashboard (first item in the new dashboards branch).
 ```
 
 ---

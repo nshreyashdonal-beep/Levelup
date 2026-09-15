@@ -69,3 +69,18 @@ CREATE TABLE reviews (
 
 -- Speeds up "show all reviews for this course" queries
 CREATE INDEX idx_reviews_course ON reviews(course_id);
+
+-- ============================================================
+-- instructor_profiles table
+-- Extra fields only instructors fill in (bio, phone, location).
+-- Kept OUT of the users table because students don't need these
+-- columns at all — a separate 1-to-1 table means we're not adding
+-- nullable junk to every student row.
+-- One row per instructor, created right after they register.
+-- ============================================================
+CREATE TABLE instructor_profiles (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  bio TEXT,
+  phone VARCHAR(20),
+  location VARCHAR(150)
+);
