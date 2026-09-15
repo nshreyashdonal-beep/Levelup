@@ -42,7 +42,9 @@ LevelUp/
     │   └── db.js
     ├── db/
     │   └── schema.sql
-    └── routes/
+    ├── routes/
+    │   └── auth.js
+    └── middleware/
         └── auth.js
 ```
 
@@ -65,7 +67,7 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 
 ### Backend logic
 - [x] Auth: register/login routes (bcrypt password hashing, JWT)
-- [ ] Auth middleware (protect routes, role-based access)
+- [x] Auth middleware (protect routes, role-based access)
 - [ ] Course routes (create/update/publish, browse/search)
 - [ ] Enrollment routes
 - [ ] Review routes
@@ -99,6 +101,7 @@ server/server.js       (Express app, /api/health, JSON body parsing, mounts /api
 server/config/db.js    (shared Postgres connection pool)
 server/db/schema.sql   (pgcrypto + users table)
 server/routes/auth.js  (register + login, verified working via Hoppscotch)
+server/middleware/auth.js (requireAuth + requireRole; tested via temporary /api/me route)
 ```
 
 ---
@@ -119,16 +122,18 @@ server/routes/auth.js  (register + login, verified working via Hoppscotch)
 - Auth routes (register/login) done as two plain functions in one `routes/auth.js` file —
   no separate controller/service layers, kept as simple as possible.
 - Testing endpoints with **Hoppscotch** (browser-based, free) instead of Postman.
+- Project is now version-controlled on GitHub: github.com/nshreyashdonal-beep/Levelup.
 
 ---
 
 ## 4. Known Issues / TODO Carried Between Sessions
 
 ```
-- Register and login both verified working via Hoppscotch (201 on register, 200 + token
-  on login).
-- Next piece: auth middleware to protect routes and check role (e.g. only instructors can
-  create courses).
+- Auth middleware added (requireAuth, requireRole) — verify via the temporary
+  GET /api/me route (send your login token as "Authorization: Bearer <token>").
+- Next piece: courses table.
+- When pushing to GitHub, double check server/.env.example keeps its leading dot and
+  that no stray duplicate copy gets committed (this happened once already).
 - Watch out for accidentally nested folders (e.g. server/server) if re-extracting zip files —
   always confirm with "dir" that package.json is in your current folder before running npm commands.
 ```

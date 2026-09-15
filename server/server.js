@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
+const { requireAuth } = require('./middleware/auth');
 
 const app = express();
 const PORT = 3000;
@@ -18,6 +19,12 @@ app.use(express.json());
 
 // All auth routes live under /api/auth (e.g. /api/auth/register, /api/auth/login)
 app.use('/api/auth', authRoutes);
+
+// Temporary test route to prove the middleware works — remove once real
+// protected routes (courses, etc.) exist to test against instead.
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ loggedInAs: req.user });
+});
 
 // A "health check" route — visiting this tells you the server is alive
 // AND whether it can currently reach Postgres.
