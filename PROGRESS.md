@@ -15,7 +15,8 @@
 now being rebuilt solo, one small piece at a time.
 
 **Stack:** Node.js + Express · **PostgreSQL** (raw SQL via the `pg` library — no ORM) ·
-JWT + bcrypt auth · React (Vite) + Tailwind, later.
+JWT + bcrypt auth · React (Vite) + React Router + plain CSS (no Tailwind — chose plain CSS
+for simplicity).
 
 **Working style:**
 - Solo build, beginner-level, going **one table / one file / one feature at a time**.
@@ -45,10 +46,24 @@ LevelUp/
     ├── routes/
     │   ├── auth.js
     │   ├── courses.js
-    │   └── enrollments.js
+    │   ├── enrollments.js
+    │   └── reviews.js
     └── middleware/
         └── auth.js
+└── client/
+    └── src/
+        ├── main.jsx
+        ├── App.jsx
+        ├── App.css
+        ├── index.css
+        └── pages/
+            └── Home.jsx
 ```
+
+**Notes chapter tracking:** two separate numbering tracks — backend and frontend each
+increment independently, based on which one a session actually works on.
+- Backend notes: `LevelUp-chapterN-notes.md` — currently at **Chapter 8**
+- Frontend notes: `LevelUp-ChapterN-Frontend.md` — currently at **Chapter 1**
 
 ---
 
@@ -72,10 +87,10 @@ Mark `[x]` when a piece is done **and** verified (server runs, or table shows up
 - [x] Auth middleware (protect routes, role-based access)
 - [x] Course routes (create/update/publish, browse/search)
 - [x] Enrollment routes
-- [ ] Review routes
+- [x] Review routes
 
 ### Frontend (later)
-- [ ] Frontend skeleton (Vite + Tailwind + Router)
+- [x] Frontend skeleton (Vite + Tailwind + Router)
 - [ ] Auth pages (Login/Signup)
 - [ ] Navbar + Home page
 - [ ] Course browse + detail pages
@@ -108,6 +123,12 @@ server/db/schema.sql   (now also includes courses table)
 server/routes/courses.js (POST create course [instructor-only], GET browse all courses; verified via Hoppscotch)
 server/db/schema.sql   (now also includes reviews table)
 server/routes/enrollments.js (POST enroll [student-only, blocks duplicates], GET /me [own enrollments joined with course]; verified via Hoppscotch)
+server/routes/reviews.js (POST review [student-only, blocks duplicates, enforces 1-5 rating], GET ?course_id=<id> [public, joined with student name]; verified via Hoppscotch)
+client/  (Vite + React + react-router-dom, scaffolded via `npm create vite@latest client -- --template react`)
+client/src/main.jsx  (wraps App in BrowserRouter)
+client/src/App.jsx   (Routes/Route setup, currently one route: "/")
+client/src/pages/Home.jsx  (placeholder homepage, proves routing works)
+client/src/App.css, client/src/index.css  (plain CSS, no framework)
 ```
 
 ---
@@ -150,6 +171,21 @@ server/routes/enrollments.js (POST enroll [student-only, blocks duplicates], GET
   at the database level. `UNIQUE (student_id, course_id)` limits each student to one review
   per course (same pattern as enrollments). No foreign key to `enrollments` — a student
   isn't required to be enrolled to leave a review, kept simple for now.
+- `POST /api/reviews` catches `23505` (duplicate review) → 409, `23503` (fake course_id) →
+  400, and `23514` (CHECK constraint violated, bad rating) → 400.
+- `GET /api/reviews` uses a query parameter (`?course_id=...`) instead of a body — standard
+  practice for GET requests, which conventionally don't carry a request body.
+- **Backend logic section of the checklist is now fully complete** — all core routes
+  (auth, courses, enrollments, reviews) built and verified via Hoppscotch.
+- Frontend: chose **plain CSS instead of Tailwind** for simplicity — no utility-class syntax
+  to learn, just regular CSS files with normal class names.
+- Frontend scaffolded with Vite's own official tool (`npm create vite@latest`) rather than
+  hand-writing boilerplate — this is the standard, correct way to start a Vite project.
+- React Router set up via `BrowserRouter` (in `main.jsx`, wraps the whole app) and
+  `Routes`/`Route` (in `App.jsx`, maps URL paths to page components) — currently just one
+  route (`/` → `Home`), more get added as each page becomes its own checklist piece.
+- Removed Vite's default boilerplate (spinning logo, counter button) in favor of a minimal
+  placeholder `Home` page, matching the project's "simplest possible, grow as you go" rule.
 
 ---
 
@@ -162,7 +198,13 @@ server/routes/enrollments.js (POST enroll [student-only, blocks duplicates], GET
 - Reminder for future Hoppscotch testing: Headers (including Authorization) are per-tab,
   not shared across tabs — a fresh GET/POST tab needs its own Authorization header set.
 - reviews table created and verified in pgAdmin.
-- Next piece: Review routes (student leaves a review, browse reviews for a course).
+- Review routes verified: POST /api/reviews (student-only, 201, blocks duplicates with 409,
+  enforces 1-5 rating with 400), GET /api/reviews?course_id=<id> (public, joined with
+  student name) both tested via Hoppscotch.
+- Backend is now feature-complete for the checklist's "Backend logic" section.
+- Frontend skeleton confirmed working: npm run dev in client/ shows a plain "LevelUp" page
+  at http://localhost:5173, replacing the default Vite starter content.
+- Next piece: Auth pages (Login/Signup).
 - When pushing to GitHub, double check server/.env.example keeps its leading dot and
   that no stray duplicate copy gets committed (this happened once already).
 - Watch out for accidentally nested folders (e.g. server/server) if re-extracting zip files —
@@ -192,4 +234,6 @@ Rules for this session:
    - the new/changed files (as a diff or full files, whichever is clearer for a beginner to apply)
    - the exact text to paste into PROGRESS.md's "Files Created So Far", "Decisions Log",
      "Repo layout", and checklist (with the box ticked) before my next session.
+   - if notes were generated this session, update the "Notes chapter tracking" line for
+     whichever track (backend/frontend) was used.
 ```
