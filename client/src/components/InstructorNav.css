@@ -82,25 +82,8 @@
   color: #4f46e5;
 }
 
-.instructor-nav-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 2px solid #6366f1;
-  color: #6366f1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.instructor-nav-avatar:hover {
-  background: #6366f1;
-  color: #fff;
-}
+/* Avatar + dropdown is now ProfileMenu.jsx/.css, shared with StudentNav,
+   instead of a plain non-clickable div styled here. */
 
 /* Note: .instructor-nav is already `position: sticky` above, which is
    enough to make it the positioning context for the absolutely-centered

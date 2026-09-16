@@ -14,6 +14,7 @@
 // in indigo while Studentdashboard.jsx didn't highlight anything).
 
 import { Link } from 'react-router-dom';
+import ProfileMenu from './ProfileMenu.jsx';
 import './StudentNav.css';
 
 export default function StudentNav({ user, activeLink }) {
@@ -45,9 +46,7 @@ export default function StudentNav({ user, activeLink }) {
         >
           My Courses
         </Link>
-        <div className="student-nav-avatar">
-          {user?.name?.charAt(0).toUpperCase() || 'S'}
-        </div>
+        <ProfileMenu user={user} />
       </nav>
     </header>
   );

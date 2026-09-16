@@ -13,6 +13,7 @@
 // Course) can reuse it instead of copy-pasting the same JSX again.
 
 import { Link } from 'react-router-dom';
+import ProfileMenu from './ProfileMenu.jsx';
 import './InstructorNav.css';
 
 export default function InstructorNav({ user }) {
@@ -39,9 +40,7 @@ export default function InstructorNav({ user }) {
         <a href="#" className="instructor-nav-link">Subscribe</a>
         <a href="#" className="instructor-nav-link">Create Course</a>
         <Link to="/instructor-dashboard" className="instructor-nav-link">Dashboard</Link>
-        <div className="instructor-nav-avatar">
-          {user?.name?.charAt(0).toUpperCase() || 'I'}
-        </div>
+        <ProfileMenu user={user} />
       </nav>
     </header>
   );

@@ -97,6 +97,15 @@ increment independently, based on which one a session actually works on.
 
 Mark `[x]` when a piece is done **and** verified (server runs, or table shows up in pgAdmin).
 
+Two branches from here:
+- **Branch 0** — the main line below (everything already in this checklist: remaining
+  backend tables, course browse/create/review UI, geolocation, testing).
+- **Branch 1** — a side quest that jumped the queue (see its own section after Branch 0
+  below). Once Branch 1 is finished, come back here and resume Branch 0 at the next
+  unchecked item.
+
+### Branch 0 — Main line
+
 ### Backend foundation
 - [x] Minimal project skeleton: `package.json`, `.gitignore`, `server.js` with a basic
       `/api/health` route (no database yet)
@@ -192,6 +201,24 @@ both Student Dashboard and My Courses mockups but nothing in the current schema 
 - [ ] Basic backend tests
 - [ ] Manual QA pass, loading/error states
 
+### Branch 1 — Profile menu dropdown
+
+Side quest, not part of the Branch 0 order above: the avatar circle in StudentNav/
+InstructorNav did nothing on click. Reference: a screenshot of Udemy's own profile
+dropdown (avatar + name/email header, then grouped links, then Log out).
+
+- [x] **ProfileMenu component** (`client/src/components/ProfileMenu.jsx`) — shared
+      dropdown used by both StudentNav and InstructorNav
+      - Opens/closes on avatar click, closes on outside click
+      - Header: avatar initial + real `name`/`email` from the `user` object
+      - One real nav link: My Courses (student) or Instructor Dashboard (instructor)
+      - Real Log out: clears `token`/`user` from localStorage, navigates to `/`
+      - Everything else from the Udemy screenshot (cart, wishlist, notifications,
+        messages, account settings, payment methods, subscriptions, Udemy credits,
+        purchase history, language, help & support) was left out entirely rather than
+        shown as dead links — none of it exists anywhere in this project's schema or
+        plans, same reasoning as Instructor Dashboard's honest placeholder stats.
+
 ---
 
 ## 2. Files Created So Far
@@ -274,6 +301,20 @@ client/src/pages/MyCourses.jsx (NEW — converted from the uploaded Mycourses.js
   of redefining it inline.)
 client/src/pages/MyCourses.css
 client/src/App.jsx (added the /mycourse route)
+
+--- Branch 1: Profile menu dropdown ---
+client/src/components/ProfileMenu.jsx (NEW — dropdown for the avatar in StudentNav/
+  InstructorNav. Header with name/email, one real nav link by role, real Log out.
+  Everything else from the Udemy reference screenshot left out — no backend/plan for it.)
+client/src/components/ProfileMenu.css (NEW — matches the existing indigo avatar styling
+  that used to live in StudentNav.css/InstructorNav.css directly)
+client/src/components/StudentNav.jsx (swapped the plain non-clickable avatar div for
+  <ProfileMenu user={user} />)
+client/src/components/InstructorNav.jsx (same swap as StudentNav)
+client/src/components/StudentNav.css (removed the now-unused .student-nav-avatar rules,
+  moved into ProfileMenu.css)
+client/src/components/InstructorNav.css (removed the now-unused .instructor-nav-avatar
+  rules, same move)
 ```
 
 ---
@@ -426,6 +467,23 @@ client/src/App.jsx (added the /mycourse route)
 - My Courses reuses the existing `StudentNav` component instead of redefining the same
   header inline again like the mockup did — same reasoning as Student Dashboard extracting
   it in the first place.
+- Checklist split into **Branch 0** (the existing main-line order) and **Branch 1** (a
+  named side quest that jumps the queue) instead of just inserting the new work wherever —
+  keeps the original order intact to resume once the side quest is done, same spirit as
+  the earlier "Branch: Dashboards & course pages" naming.
+- **ProfileMenu is one shared component**, not two separate dropdowns for student/
+  instructor — StudentNav and InstructorNav already use the exact same indigo avatar
+  styling (`#6366f1`), so a `user.role` check inside one component picks the one different
+  link (My Courses vs Instructor Dashboard) instead of duplicating the whole dropdown.
+- Profile menu only wires items that go somewhere real: the role-based nav link and Log
+  out. Everything else in the Udemy reference screenshot (cart, wishlist, notifications,
+  messages, settings, payment methods, subscriptions, credits, purchase history, language,
+  help) was dropped rather than shown as non-clickable placeholders, because — unlike the
+  Instructor Dashboard stat cards, which are on the actual roadmap — none of these have any
+  planned backend or schema support at all.
+- Log out is the first place `localStorage`'s `token`/`user` keys get cleared — previous
+  sessions only ever wrote them (Login) or read them (dashboard guards), never removed
+  them.
 
 ---
 
