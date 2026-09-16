@@ -50,9 +50,10 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // No student/instructor dashboards exist yet, so everyone just
-      // goes home for now. This is a known TODO (see PROGRESS.md).
-      navigate('/');
+      // Send students to their dashboard now that it exists. Instructors
+      // still go home for now — no instructor dashboard yet (next piece
+      // in PROGRESS.md's dashboards branch).
+      navigate(data.user.role === 'student' ? '/student-dashboard' : '/');
     } catch (err) {
       setError('Could not reach the server. Is it running?');
     } finally {

@@ -1,0 +1,110 @@
+/* src/components/StudentNav.css */
+/* Same visual system as Navbar.css (indigo accent, Outfit logo font),
+   but for logged-in student pages: centered search bar, an active-link
+   state for "My Courses", and an avatar circle instead of auth buttons. */
+
+.student-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.student-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.student-nav-logo-badge {
+  width: 36px;
+  height: 36px;
+  background: #6366f1;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.student-nav-logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.student-nav-search-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 288px;
+}
+
+.student-nav-search {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.student-nav-search:focus {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.student-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.student-nav-link {
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.student-nav-link:hover {
+  color: #4f46e5;
+}
+
+.student-nav-link--active {
+  color: #4f46e5;
+}
+
+.student-nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid #6366f1;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.student-nav-avatar:hover {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Note: .student-nav is already `position: sticky` above, which is enough
+   to make it the positioning context for the absolutely-centered search
+   bar (any non-static position value establishes that). */

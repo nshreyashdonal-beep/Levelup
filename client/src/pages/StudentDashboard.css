@@ -1,0 +1,207 @@
+/* src/pages/StudentDashboard.css */
+/* Plain-CSS conversion of the mockup's Tailwind classes, same visual
+   system (indigo accent, Montserrat/Source Sans) as the rest of the site. */
+
+.student-dash-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.student-dash-main {
+  flex: 1;
+  padding: 0 5% 96px;
+}
+
+.student-dash-welcome {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.student-dash-welcome-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.875rem;
+  color: #111827;
+  margin: 0;
+}
+
+.student-dash-info-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.student-dash-section-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: #111827;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+/* Journey */
+
+.student-dash-journey {
+  margin-top: 48px;
+  text-align: center;
+}
+
+.student-dash-journey h2 {
+  margin-bottom: 48px;
+}
+
+.student-dash-journey-track {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.student-dash-journey-line {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  right: 32px;
+  border-top: 2px dashed #c7d2fe;
+}
+
+.student-dash-journey-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 130px;
+  position: relative;
+  z-index: 1;
+}
+
+.student-dash-journey-node {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #6366f1;
+  background: #eef2ff;
+  font-size: 1.25rem;
+  position: relative;
+}
+
+.student-dash-journey-node--final {
+  background: #6366f1;
+  color: #fff;
+  border-color: transparent;
+}
+
+.student-dash-journey-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-dash-journey-label {
+  margin-top: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.student-dash-journey-sub {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  margin: 2px 0 0;
+}
+
+/* Action cards */
+
+.student-dash-actions {
+  margin-top: 80px;
+  text-align: center;
+}
+
+.student-dash-actions-subtitle {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0 0 32px;
+}
+
+.student-dash-action-cards {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.student-dash-action-card {
+  width: 256px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.student-dash-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.student-dash-action-icon {
+  font-size: 2.25rem;
+  margin-bottom: 12px;
+}
+
+.student-dash-action-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.student-dash-action-desc {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0 0 12px;
+}
+
+.student-dash-action-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+/* Stack journey steps on small screens */
+@media (max-width: 640px) {
+  .student-dash-journey-track {
+    flex-wrap: wrap;
+    row-gap: 24px;
+  }
+  .student-dash-journey-line {
+    display: none;
+  }
+}
