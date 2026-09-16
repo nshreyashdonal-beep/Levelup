@@ -4,11 +4,12 @@
 // nothing on click.
 //
 // Only shows items that actually go somewhere in this app right now:
-// a link to My Courses (student) or the Instructor Dashboard (instructor),
-// and a real Log out. The Udemy screenshot this was designed from also has
-// cart/wishlist/payment methods/subscriptions/credits/purchase history —
-// none of that exists anywhere in this project's schema or plans, so it's
-// left out entirely instead of being shown as dead links.
+// a link to Student Dashboard + My Courses (student), or the Instructor
+// Dashboard (instructor), and a real Log out. The Udemy screenshot this
+// was designed from also has cart/wishlist/payment methods/subscriptions/
+// credits/purchase history — none of that exists anywhere in this
+// project's schema or plans, so it's left out entirely instead of being
+// shown as dead links.
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -70,13 +71,22 @@ export default function ProfileMenu({ user }) {
                 Instructor Dashboard
               </Link>
             ) : (
-              <Link
-                to="/mycourse"
-                className="profile-menu-link"
-                onClick={() => setOpen(false)}
-              >
-                My Courses
-              </Link>
+              <>
+                <Link
+                  to="/student-dashboard"
+                  className="profile-menu-link"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/mycourse"
+                  className="profile-menu-link"
+                  onClick={() => setOpen(false)}
+                >
+                  My Courses
+                </Link>
+              </>
             )}
           </div>
 

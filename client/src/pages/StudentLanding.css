@@ -1,0 +1,186 @@
+/* src/pages/StudentLanding.css */
+/* Styling for student landing page — hero section + course browse grid */
+
+.student-landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-landing-main {
+  flex: 1;
+}
+
+/* Hero image section */
+.student-landing-hero-image {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background-color: #e5e7eb;
+}
+
+.student-landing-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Hero text section */
+.student-landing-hero-text {
+  text-align: center;
+  padding: 40px 16px 0;
+  background: white;
+}
+
+.student-landing-hero-text h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.875rem;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.student-landing-hero-text p {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 300;
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin: 8px 0 0;
+}
+
+/* Courses section */
+.student-landing-courses {
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.student-landing-courses h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.875rem;
+  color: #111827;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.student-landing-courses-subtitle {
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 32px;
+}
+
+.student-landing-loading,
+.student-landing-empty {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 1.1rem;
+  padding: 40px 20px;
+}
+
+/* Courses grid */
+.student-landing-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Course card */
+.student-landing-course-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.student-landing-course-card:hover {
+  border-color: #6366f1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+/* Course avatar (first letter circle) */
+.course-card-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Course content */
+.course-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.course-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.course-card-instructor {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Course meta (price + rating) */
+.course-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.course-card-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.course-card-rating {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .student-landing-hero-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .student-landing-hero-text p {
+    font-size: 1rem;
+  }
+
+  .student-landing-courses {
+    padding: 40px 15px;
+  }
+
+  .student-landing-courses h2 {
+    font-size: 1.5rem;
+  }
+
+  .student-landing-courses-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

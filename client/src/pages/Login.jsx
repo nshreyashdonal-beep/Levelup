@@ -50,10 +50,11 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Send each role to its own landing spot. Instructors land on a
-      // welcome page (journey recap) first, same idea as Student
-      // Dashboard's welcome+journey screen, with a link through to the
-      // real stats dashboard rather than dropping straight into it.
+      // Send each role to its own landing spot. Students land on the
+      // Student Dashboard first (with StudentNav), which has an
+      // "Explore Courses" action card linking through to the course
+      // browse page. Instructors land on a welcome page (journey recap)
+      // with a link through to the real stats dashboard.
       if (data.user.role === 'student') {
         navigate('/student-dashboard');
       } else if (data.user.role === 'instructor') {

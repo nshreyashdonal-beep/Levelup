@@ -108,7 +108,7 @@ export default function StudentDashboard() {
               <span className="student-dash-action-link">Go to My Courses →</span>
             </Link>
 
-            <Link to="/" className="student-dash-action-card">
+            <Link to="/student-landing" className="student-dash-action-card">
               <div className="student-dash-action-icon">🔍</div>
               <h3 className="student-dash-action-title">Explore Courses</h3>
               <p className="student-dash-action-desc">Discover new courses and instructors near you</p>

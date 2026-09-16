@@ -184,8 +184,24 @@ verified in the browser:
         Card image band replaced with a plain colored circle showing the title's first
         letter instead. Flagged as follow-up, not built now (see "Late-stage" / open
         questions below for progress %).
-- [ ] Course browse + detail pages (no mockup yet — uses existing public
-      `GET /api/courses`)
+- [x] **Student Landing Page** (`/student-landing` — new page, no mockup; this is the
+      **Explore Courses** page students reach via a button, not the post-login landing)
+      - StudentNav + hero (image + text only — journey tabs, how-it-works, and reviews
+        sections from Home.jsx dropped) + a course grid below the hero showing all
+        available courses.
+      - Course grid data comes from the existing public `GET /api/courses` (no new
+        backend work) — each card shows title, instructor name, price, and rating (⭐).
+        Cards are clickable but don't navigate yet (course detail page doesn't exist).
+      - `StudentNav.jsx`: "Explore" link changed from a dead `<a href="#">` to a real
+        `Link` to `/student-landing`, with the same active-state highlighting pattern
+        already used for "My Courses" on `/mycourse`.
+      - Reached two ways: StudentNav's "Explore" link (present on every student page,
+        including the Dashboard), and the "Explore Courses" action card on Student
+        Dashboard (fixed to point here instead of its old broken link to `/`).
+- [ ] Course browse + detail pages (basic course grid now lives on Student Landing via
+      `GET /api/courses`; still need: individual course detail view with full
+      description, sessions, reviews, enroll button, and making the grid cards
+      actually navigate there)
 - [ ] Create/manage course page (instructor) — no mockup yet — uses existing
       `POST /api/courses` (instructor-only, already built)
 - [ ] Reviews UI — no mockup yet — uses existing review routes
@@ -325,6 +341,30 @@ server/routes/sessions.js (NEW — POST /api/sessions [instructor-only, must own
   201 on success, 403 when posting to another instructor's course, 400 on invalid
   session_type, 200 with the session listed on GET)
 server/server.js (mounted the new session routes under /api/sessions)
+
+--- This session ---
+client/src/pages/StudentLanding.jsx (NEW — post-login landing page for students. Hero
+  image + text only, no journey tabs/how-it-works/reviews. Course grid below the hero
+  using the existing public GET /api/courses; each card shows title, instructor name,
+  price, rating. Not yet clickable through to a real detail page.)
+client/src/pages/StudentLanding.css (NEW)
+client/src/App.jsx (added the /student-landing route)
+client/src/pages/Login.jsx (student redirect changed from /student-dashboard to
+  /student-landing)
+client/src/components/StudentNav.jsx ("Explore" link changed from a dead <a href="#">
+  to a real Link to /student-landing, with active-state highlighting)
+
+--- This session ---
+client/src/components/ProfileMenu.jsx (added a "Dashboard" link to the student section,
+  pointing at /student-dashboard — that page became unreachable through normal navigation
+  once Login.jsx started sending students to /student-landing instead)
+
+--- This session ---
+client/src/pages/Login.jsx (student redirect changed back from /student-landing to
+  /student-dashboard — Dashboard is the post-login landing again, Student Landing is now
+  the Explore Courses page instead)
+client/src/pages/StudentDashboard.jsx (fixed the "Explore Courses" action card, which
+  was linking to "/" — now links to /student-landing)
 ```
 
 ---
@@ -568,6 +608,43 @@ server/server.js (mounted the new session routes under /api/sessions)
   course_id). Backend foundation checklist section is now fully checked off.
 - Next piece: "Course browse + detail pages" (frontend, no mockup yet, uses the existing
   public GET /api/courses).
+
+--- Carried from this session ---
+- Created StudentLanding.jsx as the new post-login landing page for students. Instead of
+  going straight to Student Dashboard (stats), students now see StudentNav + hero + a grid
+  of all available courses they can explore. This replaces the previous flow where
+  login → /student-dashboard; Student Dashboard itself wasn't deleted, it's just no longer
+  the default destination.
+- StudentNav's "Explore" link is now a real Link to /student-landing (previously just
+  <a href="#">).
+- "Explore" link highlights with active state when the user is on student-landing, same
+  pattern as "My Courses" highlighting on /mycourse.
+- Course grid uses GET /api/courses (already exists) — each card shows title, instructor
+  name, price, and rating. Cards are clickable but don't navigate yet (course detail page
+  is next).
+- Next piece: "Course Browse + Detail Pages" — individual course view with full
+  description, sessions, reviews, and enrollment button.
+- Student Dashboard became unreachable through normal navigation once Login.jsx started
+  sending students to /student-landing instead — StudentNav's Explore/My Courses links
+  never pointed to it either. Fixed by adding a "Dashboard" link to ProfileMenu.jsx's
+  student section (next to "My Courses"), so the page stays reachable via the avatar
+  dropdown instead of only by typing the URL directly.
+
+--- Carried from this session ---
+- Reconsidered which page should be the post-login landing spot for students. Student
+  Dashboard (welcome + journey recap + two action cards) makes a better first landing
+  than jumping straight into a course grid — so Login.jsx's student redirect was changed
+  back from /student-landing to /student-dashboard.
+- Student Landing is now purpose-built as the "Explore Courses" page instead of the
+  landing page — same file/route (/student-landing), just a different role in the flow.
+  Reached via StudentNav's "Explore" link (visible on every student page including the
+  Dashboard) or via the Dashboard's own "Explore Courses" action card.
+- Fixed a pre-existing bug while doing this: Student Dashboard's "Explore Courses" card
+  linked to "/" (the public homepage, logged-out Navbar) instead of anywhere useful for a
+  logged-in student. Now points to /student-landing.
+- ProfileMenu.jsx's student "Dashboard" link (added last session) is no longer strictly
+  necessary since login lands there directly again, but kept anyway as a quick way back
+  to the Dashboard from other pages like My Courses or the Explore page.
 ```
 
 ---

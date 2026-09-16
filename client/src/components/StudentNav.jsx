@@ -39,7 +39,12 @@ export default function StudentNav({ user, activeLink }) {
 
       <nav className="student-nav-links">
         <a href="#" className="student-nav-link">Subscribe</a>
-        <a href="#" className="student-nav-link">Explore</a>
+        <Link
+          to="/student-landing"
+          className={`student-nav-link ${activeLink === 'explore' ? 'student-nav-link--active' : ''}`}
+        >
+          Explore
+        </Link>
         <Link
           to="/mycourse"
           className={`student-nav-link ${activeLink === 'mycourse' ? 'student-nav-link--active' : ''}`}
