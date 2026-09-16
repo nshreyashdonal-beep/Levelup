@@ -203,9 +203,14 @@ verified in the browser:
       `CourseDetail.jsx` at `/courses/:id`, showing full description, sessions,
       reviews, and an enroll button; grid cards already navigated there, they
       just had nowhere to land until now)
-- [ ] Create/manage course page (instructor) — no mockup yet — uses existing
-      `POST /api/courses` (instructor-only, already built)
-- [ ] Reviews UI — no mockup yet — uses existing review routes
+- [x] Create/manage course page (instructor) — no mockup existed; built as
+      `ManageCourses.jsx` at `/manage-courses` — a create-course form (uses existing
+      `POST /api/courses`) plus a list of the instructor's own courses (existing
+      `GET /api/courses?instructor_id=`). "Manage" only goes as far as create + view —
+      no edit/delete UI since there's no PUT/DELETE route on courses yet.
+- [x] Reviews UI — built into `CourseDetail.jsx` (no separate page/mockup needed) — a
+      star-rating + comment form under the existing reviews list, using the existing
+      `POST /api/reviews`. New review is inserted straight into the list on success.
 
 **Note for whichever page gets built next:** decide up front whether `progress` (course
 completion %) is worth a real schema piece now or a placeholder to skip — it shows up in
@@ -388,6 +393,32 @@ client/src/index.css (global `body` font-family changed from `system-ui` to `'So
   any element left without its own font-family override — card titles, instructor names,
   etc. — was silently falling back to the OS's system font instead of matching everything
   around it. One-line fix, no per-page changes needed.)
+
+--- This session ---
+client/src/pages/ManageCourses.jsx (NEW — instructor Create/Manage Course page at
+  /manage-courses. Form posts to POST /api/courses; list of the instructor's own courses
+  via GET /api/courses?instructor_id=<id> [same route the Dashboard's "Active Courses"
+  stat already uses]. New course is added straight into the list on success instead of
+  re-fetching. No edit/delete — no backend route for that yet.)
+client/src/pages/ManageCourses.css (NEW)
+client/src/App.jsx (added the /manage-courses route)
+client/src/components/InstructorNav.jsx ("Create Course" link changed from a dead
+  <a href="#"> to a real Link to /manage-courses)
+client/src/pages/InstructorDashboard.jsx ("Create Course" quick-action card is now
+  clickable and navigates to /manage-courses; "Go Live"/"Schedule Offline" stay
+  non-clickable, unchanged, since those still don't have any backend behind them)
+client/src/pages/InstructorDashboard.css (added .instructor-dash-action-card--clickable
+  for the cursor style on the now-clickable card)
+
+--- This session ---
+client/src/pages/CourseDetail.jsx (added a "Leave a review" form under the reviews list —
+  star rating [1-5, click to select] + optional comment, POST /api/reviews. No
+  "already reviewed" pre-check like Enroll has, since there's no matching GET endpoint
+  and reviews don't come back with student_id to match against; a 409 from the backend is
+  just treated the same as a successful submit — the form disappears either way, since
+  there's nothing left for it to do.)
+client/src/pages/CourseDetail.css (added styles for the star-rating input, review form,
+  and login/role gating messages)
 ```
 
 ---
@@ -603,6 +634,27 @@ client/src/index.css (global `body` font-family changed from `system-ui` to `'So
   inheriting the OS default instead, which looked inconsistent within the same card/page.
   Fixed once at the root instead of patching font-family onto every individual element
   across every page's CSS file.
+- Manage Courses page treats "manage" as create + view-your-own-list only, matching what
+  the backend actually supports right now (POST + GET, no PUT/DELETE on courses) — same
+  "don't scaffold ahead" rule already applied to sessions not getting edit/cancel routes.
+  A visible note on the page says editing/deleting isn't available yet, instead of adding
+  dead buttons for it.
+- Fixed two more dead links while building this, same bug pattern as the earlier
+  Explore-Courses-linking-to-"/" fix: InstructorNav's "Create Course" was a `<a href="#">`,
+  and the Dashboard's "Create Course" quick-action card was non-clickable entirely. Both
+  now point at /manage-courses.
+- Reviews UI was built into Course Detail rather than a separate page — there's no
+  standalone "review this course" flow anywhere else in the app (mockups never had one),
+  and the reviews list it's attached to already lives there.
+- No pre-check for "have I already reviewed this course" before showing the form (unlike
+  Enroll, which checks GET /api/enrollments/me first) — there's no equivalent endpoint,
+  and GET /api/reviews doesn't return student_id to match locally against the logged-in
+  user. Simpler to just let the student submit and treat the backend's 409 the same as a
+  successful submit, since the end state (form replaced by a message) is identical either
+  way.
+- Rating input is five plain clickable ★ buttons (click one to set 1-5) instead of a star
+  library or hover-preview interaction — simplest possible thing that lets a beginner see
+  exactly what state (`reviewRating`) drives which star fills in.
 
 ---
 
@@ -703,6 +755,29 @@ client/src/index.css (global `body` font-family changed from `system-ui` to `'So
   figure; still fine since it's cheap to compute from data already being fetched.
 - Next piece: "Create/manage course page (instructor)" — no mockup yet, uses the existing
   POST /api/courses (instructor-only, already built).
+
+--- Carried from this session ---
+- Manage Courses page built: `ManageCourses.jsx` at `/manage-courses` — create-course
+  form (POST /api/courses) + list of the instructor's own courses (GET /api/courses
+  ?instructor_id=). No edit/delete yet since there's no backend route for that.
+- Fixed two dead links that pointed nowhere: InstructorNav's "Create Course" nav link, and
+  the Dashboard's "Create Course" quick-action card — both now go to /manage-courses.
+- Next piece: "Reviews UI" — no mockup yet, uses the existing review routes
+  (POST /api/reviews, GET /api/reviews?course_id=).
+
+--- Carried from this session ---
+- Reviews UI built into `CourseDetail.jsx` — a star-rating (1-5, click to select) +
+  optional comment form under the existing reviews list, posting to the existing
+  POST /api/reviews. No "already reviewed" pre-check (no matching endpoint exists); a
+  409 from the backend is treated the same as a successful submit.
+- This closes out the entire main frontend checklist branch — everything under "Frontend
+  (screen by screen)" is now checked off. What's left is the late-stage geolocation
+  feature (intentionally saved for last, per the project's own plan) and the final
+  testing/polish pass.
+- Next piece: "Geolocation / 'nearby instructors'" — backend query + frontend UI. Worth
+  deciding at the start of that session: what "nearby" means for a query (bounding box vs.
+  full Haversine distance calc) and whether location is entered as an address (needs
+  geocoding) or raw lat/lng (simpler, no geocoding dependency) for a first pass.
 ```
 
 ---

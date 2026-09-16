@@ -21,10 +21,10 @@
 //      values ("0"/"0"/"—") — there's no backend yet for enrollment
 //      counts per instructor, earnings, or rating aggregation. Faking
 //      numbers for those would be worse than an honest placeholder.
-//   4. Quick Action cards stay non-clickable, same as the mockup — Create
-//      Course has nowhere real to link to yet (that page isn't built),
-//      and Go Live / Schedule Offline depend on features that don't
-//      exist at all yet.
+//   4. Quick Action cards: "Create Course" now links to /manage-courses
+//      (that page exists now). "Go Live" and "Schedule Offline" stay
+//      non-clickable since they depend on features that don't exist at
+//      all yet.
 //
 // Uses the new InstructorNav component (components/InstructorNav.jsx),
 // pulled out of the mockup's inline TeacherNav function, same pattern as
@@ -38,7 +38,7 @@ import { API_BASE } from '../api';
 import './InstructorDashboard.css';
 
 const quickActions = [
-  { icon: '➕', title: 'Create Course', desc: 'Build and publish a new course' },
+  { icon: '➕', title: 'Create Course', desc: 'Build and publish a new course', to: '/manage-courses' },
   { icon: '🎙️', title: 'Go Live', desc: 'Start a live session with students' },
   { icon: '📍', title: 'Schedule Offline', desc: 'Set up a local meetup with students' },
 ];
@@ -113,7 +113,11 @@ export default function InstructorDashboard() {
         <h2 className="instructor-dash-section-title">Quick Actions</h2>
         <div className="instructor-dash-actions">
           {quickActions.map((action) => (
-            <div key={action.title} className="instructor-dash-action-card">
+            <div
+              key={action.title}
+              className={`instructor-dash-action-card ${action.to ? 'instructor-dash-action-card--clickable' : ''}`}
+              onClick={action.to ? () => navigate(action.to) : undefined}
+            >
               <div className="instructor-dash-action-icon">{action.icon}</div>
               <h3 className="instructor-dash-action-title">{action.title}</h3>
               <p className="instructor-dash-action-desc">{action.desc}</p>

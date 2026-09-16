@@ -229,6 +229,110 @@
   font-size: 0.95rem;
 }
 
+/* Leave a review */
+.course-detail-review-form-wrap {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.course-detail-review-thanks {
+  color: #16a34a;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.course-detail-review-login-msg {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.course-detail-review-login-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #6366f1;
+  font-weight: 600;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.course-detail-review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.course-detail-review-form-label {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.course-detail-stars-input {
+  display: flex;
+  gap: 4px;
+}
+
+.course-detail-star {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.course-detail-star--filled {
+  color: #f59e0b;
+}
+
+.course-detail-review-textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.course-detail-review-textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.course-detail-review-error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.course-detail-review-submit-btn {
+  align-self: flex-start;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.course-detail-review-submit-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.course-detail-review-submit-btn:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .course-detail-header {

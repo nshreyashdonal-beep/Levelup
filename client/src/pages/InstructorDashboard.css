@@ -100,10 +100,13 @@
   padding: 24px;
   border-radius: 16px;
   background: #eef2ff; /* one flat accent for all three cards, instead of a
-                           different pastel per card like the mockup —
-                           simpler, and none of them do anything yet anyway */
+                           different pastel per card like the mockup */
   cursor: default;
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.instructor-dash-action-card--clickable {
+  cursor: pointer;
 }
 
 .instructor-dash-action-card:hover {

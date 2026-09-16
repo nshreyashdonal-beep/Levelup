@@ -1,0 +1,181 @@
+/* src/pages/ManageCourses.css */
+/* Styling for the instructor Create/Manage Course page */
+
+.manage-courses-wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+}
+
+.manage-courses-main {
+  flex: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 40px 20px;
+}
+
+.manage-courses-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.75rem;
+  color: #111827;
+  margin: 0 0 24px;
+}
+
+.manage-courses-section-heading {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #111827;
+  margin: 0 0 16px;
+}
+
+/* Create form card */
+.manage-courses-form-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.manage-courses-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.manage-courses-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.manage-courses-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 12px;
+}
+
+.manage-courses-label:first-child {
+  margin-top: 0;
+}
+
+.manage-courses-input {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  margin-top: 6px;
+}
+
+.manage-courses-input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.manage-courses-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.manage-courses-submit-btn {
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background 0.2s ease;
+}
+
+.manage-courses-submit-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.manage-courses-submit-btn:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* Course list */
+.manage-courses-list-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.manage-courses-status {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.manage-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.manage-courses-card {
+  display: flex;
+  gap: 14px;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.manage-courses-card-badge {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.manage-courses-card-body {
+  flex: 1;
+}
+
+.manage-courses-card-title {
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.manage-courses-card-desc {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 6px;
+}
+
+.manage-courses-card-price {
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.manage-courses-note {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  margin: 20px 0 0;
+}

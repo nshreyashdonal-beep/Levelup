@@ -1,13 +1,21 @@
 // src/pages/CourseDetail.jsx
 // Individual course view — full description, scheduled sessions, reviews,
-// and an Enroll button. Reached by clicking a course card on the Explore
-// page (StudentLanding), which already calls navigate(`/courses/${id}`).
+// a leave-a-review form, and an Enroll button. Reached by clicking a
+// course card on the Explore page (StudentLanding), which already calls
+// navigate(`/courses/${id}`).
 //
 // Kept public like StudentLanding — no forced login redirect, since
 // browsing a course's details shouldn't require an account (GET
 // /api/courses/:id, /api/sessions, /api/reviews are all public routes
-// too). Only the Enroll button itself needs a logged-in student, checked
-// at click time instead of gating the whole page.
+// too). Only Enroll and the review form need a logged-in student, each
+// checked at their own point instead of gating the whole page.
+//
+// The review form has no "already reviewed" pre-check the way Enroll
+// checks GET /api/enrollments/me — there's no equivalent "my review for
+// this course" endpoint, and GET /api/reviews doesn't return student_id
+// to match against locally. Simpler: just let the student submit, and
+// treat the backend's 409 (unique constraint already exists for this)
+// the same as a successful submit — the form disappears either way.
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -31,6 +39,15 @@ export default function CourseDetail() {
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+
+  // Leave-a-review form state
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewDone, setReviewDone] = useState(false); // true after a successful
+  // submit OR a 409 (already reviewed) — either way, the form has nothing
+  // left to do, so it's replaced with a status message instead.
 
   // Who's logged in (if anyone) — same localStorage read every other
   // page uses, no redirect if it's empty.
@@ -132,6 +149,62 @@ export default function CourseDetail() {
       })
       .catch(() => setEnrollError('Something went wrong enrolling'))
       .finally(() => setEnrolling(false));
+  }
+
+  function handleReviewSubmit(e) {
+    e.preventDefault();
+
+    const token = localStorage.getItem('token');
+
+    if (!token || !user) {
+      navigate('/login');
+      return;
+    }
+
+    // Same rule the backend enforces with requireRole('student').
+    if (user.role !== 'student') {
+      setReviewError('Only students can leave reviews');
+      return;
+    }
+
+    if (!reviewRating) {
+      setReviewError('Please select a rating');
+      return;
+    }
+
+    setSubmittingReview(true);
+    setReviewError('');
+
+    fetch(`${API_BASE}/api/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        course_id: id,
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+      }),
+    })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, status: res.status, data })))
+      .then(({ ok, status, data }) => {
+        if (ok) {
+          // Add it straight into the list — the POST response doesn't
+          // join the student's name back, so use the one we already
+          // have from localStorage instead of re-fetching the whole list.
+          setReviews((prev) => [{ ...data, student_name: user.name }, ...prev]);
+          setReviewDone(true);
+        } else if (status === 409) {
+          // Already reviewed this course — nothing left for the form to
+          // do, so treat it the same as a successful submit.
+          setReviewDone(true);
+        } else {
+          setReviewError(data.error || 'Something went wrong submitting your review');
+        }
+      })
+      .catch(() => setReviewError('Could not reach the server. Is it running?'))
+      .finally(() => setSubmittingReview(false));
   }
 
   // Same session_type values the backend allows — used just to make the
@@ -256,6 +329,60 @@ export default function CourseDetail() {
               ))}
             </div>
           )}
+
+          {/* Leave a review */}
+          <div className="course-detail-review-form-wrap">
+            {reviewDone ? (
+              <p className="course-detail-review-thanks">
+                Thanks — your review has been recorded.
+              </p>
+            ) : !user ? (
+              <p className="course-detail-review-login-msg">
+                <button className="course-detail-review-login-btn" onClick={() => navigate('/login')}>
+                  Log in
+                </button>{' '}
+                as a student to leave a review.
+              </p>
+            ) : user.role !== 'student' ? (
+              <p className="course-detail-review-login-msg">Only students can leave reviews.</p>
+            ) : (
+              <form onSubmit={handleReviewSubmit} className="course-detail-review-form">
+                <p className="course-detail-review-form-label">Leave a review</p>
+
+                <div className="course-detail-stars-input">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`course-detail-star ${n <= reviewRating ? 'course-detail-star--filled' : ''}`}
+                      onClick={() => setReviewRating(n)}
+                      aria-label={`${n} star${n === 1 ? '' : 's'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="What did you think of this course? (optional)"
+                  className="course-detail-review-textarea"
+                  rows={3}
+                />
+
+                {reviewError && <p className="course-detail-review-error">{reviewError}</p>}
+
+                <button
+                  type="submit"
+                  className="course-detail-review-submit-btn"
+                  disabled={submittingReview}
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            )}
+          </div>
         </section>
       </main>
 

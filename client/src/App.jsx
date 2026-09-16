@@ -14,6 +14,7 @@ import InstructorDashboard from './pages/InstructorDashboard.jsx'
 import InstructorWelcome from './pages/InstructorWelcome.jsx'
 import MyCourses from './pages/MyCourses.jsx'
 import CourseDetail from './pages/CourseDetail.jsx'
+import ManageCourses from './pages/ManageCourses.jsx'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
       <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
       <Route path="/mycourse" element={<MyCourses />} />
       <Route path="/courses/:id" element={<CourseDetail />} />
+      <Route path="/manage-courses" element={<ManageCourses />} />
     </Routes>
   )
 }
