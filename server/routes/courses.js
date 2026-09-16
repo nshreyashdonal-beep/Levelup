@@ -69,4 +69,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/courses/:id
+// No auth needed — same public-browsing rule as the list route above.
+// Returns one course's full info (used by the Course Detail page instead
+// of filtering the already-fetched list client-side, so the page also
+// works if someone opens the URL directly without visiting Explore first).
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT courses.id, courses.title, courses.description, courses.price,
+              courses.created_at, users.name AS instructor_name
+       FROM courses
+       JOIN users ON users.id = courses.instructor_id
+       WHERE courses.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err); // print the real error in the terminal so we can debug it
+    res.status(500).json({ error: 'Something went wrong fetching the course' });
+  }
+});
+
 module.exports = router;

@@ -198,10 +198,11 @@ verified in the browser:
       - Reached two ways: StudentNav's "Explore" link (present on every student page,
         including the Dashboard), and the "Explore Courses" action card on Student
         Dashboard (fixed to point here instead of its old broken link to `/`).
-- [ ] Course browse + detail pages (basic course grid now lives on Student Landing via
-      `GET /api/courses`; still need: individual course detail view with full
-      description, sessions, reviews, enroll button, and making the grid cards
-      actually navigate there)
+- [x] Course browse + detail pages (basic course grid lives on Student Landing via
+      `GET /api/courses`; individual course detail view now built —
+      `CourseDetail.jsx` at `/courses/:id`, showing full description, sessions,
+      reviews, and an enroll button; grid cards already navigated there, they
+      just had nowhere to land until now)
 - [ ] Create/manage course page (instructor) — no mockup yet — uses existing
       `POST /api/courses` (instructor-only, already built)
 - [ ] Reviews UI — no mockup yet — uses existing review routes
@@ -365,6 +366,28 @@ client/src/pages/Login.jsx (student redirect changed back from /student-landing 
   the Explore Courses page instead)
 client/src/pages/StudentDashboard.jsx (fixed the "Explore Courses" action card, which
   was linking to "/" — now links to /student-landing)
+
+--- This session ---
+server/routes/courses.js (added GET /api/courses/:id — public, returns one course's full
+  info joined with instructor name, 404 if not found)
+client/src/pages/CourseDetail.jsx (NEW — individual course view at /courses/:id. Fetches
+  the course, its sessions [GET /api/sessions?course_id=], and its reviews [GET
+  /api/reviews?course_id=] in parallel. Average rating is computed client-side from the
+  fetched reviews since there's no avg_rating column anywhere in the schema. Enroll button
+  calls POST /api/enrollments; checks GET /api/enrollments/me on load to show "Enrolled ✓"
+  instead of re-offering enroll if the student already has. Not logged in → clicking Enroll
+  sends to /login instead of failing. Page itself has no login guard, same public-browsing
+  rule as Student Landing.)
+client/src/pages/CourseDetail.css (NEW)
+client/src/App.jsx (added the /courses/:id route)
+
+--- Bugfix this session ---
+client/src/index.css (global `body` font-family changed from `system-ui` to `'Source
+  Sans 3', sans-serif` — every page's CSS already explicitly sets Montserrat for headings
+  and Source Sans 3 for body text, but nothing had ever changed the *global default*, so
+  any element left without its own font-family override — card titles, instructor names,
+  etc. — was silently falling back to the OS's system font instead of matching everything
+  around it. One-line fix, no per-page changes needed.)
 ```
 
 ---
@@ -558,6 +581,28 @@ client/src/pages/StudentDashboard.jsx (fixed the "Explore Courses" action card, 
   "show this course's sessions", so the simpler required-param version was built instead.
 - No PUT/DELETE (edit/cancel a session) yet — kept to the same two routes (create + list)
   as every other table's first pass (courses, enrollments, reviews all started this way).
+- Course Detail: added a real `GET /api/courses/:id` route instead of filtering the list
+  already fetched on Student Landing — the detail page needs to work if someone opens the
+  URL directly (shared link, refresh) without having visited Explore first, and every other
+  resource in this app already gets its own single-item semantics for free via SQL `WHERE`.
+- Average rating on Course Detail is computed client-side from the reviews array (`GET
+  /api/reviews?course_id=`) instead of a stored `avg_rating` — no such column exists
+  anywhere in the schema, and adding one now would mean keeping it in sync on every
+  insert/delete for a number that's cheap to compute on the fly from data already being
+  fetched for the reviews section anyway.
+- Enroll button reuses `GET /api/enrollments/me` (already built for My Courses) to check
+  whether the viewing student is already enrolled, instead of adding a new
+  "am I enrolled in this one course" endpoint — one extra `.some()` on data already needed
+  elsewhere beats a new backend route for the same fact.
+- Course Detail page has no login guard (same rule as Student Landing) — browsing a
+  course's public info doesn't require an account. Only clicking Enroll checks for a
+  token, and sends logged-out visitors to /login instead of the page refusing to render.
+- Global body font switched from `system-ui` to `'Source Sans 3'` (`index.css`) — every
+  page already explicitly set Montserrat/Source Sans 3 on its own headings and paragraphs,
+  but any element without its own override (card titles, instructor names, meta text) was
+  inheriting the OS default instead, which looked inconsistent within the same card/page.
+  Fixed once at the root instead of patching font-family onto every individual element
+  across every page's CSS file.
 
 ---
 
@@ -645,6 +690,19 @@ client/src/pages/StudentDashboard.jsx (fixed the "Explore Courses" action card, 
 - ProfileMenu.jsx's student "Dashboard" link (added last session) is no longer strictly
   necessary since login lands there directly again, but kept anyway as a quick way back
   to the Dashboard from other pages like My Courses or the Explore page.
+
+--- Carried from this session ---
+- Course Detail page built: `CourseDetail.jsx` at `/courses/:id`, so the Explore page's
+  course cards (which already called `navigate(...)`) now actually go somewhere. Shows
+  full description, sessions, reviews, and an Enroll button.
+- Backend gained one new route: `GET /api/courses/:id` (public, 404 if missing).
+- Enroll button: POST /api/enrollments, pre-checks GET /api/enrollments/me to show
+  "Enrolled ✓" instead of re-enrolling, sends logged-out visitors to /login.
+- Average rating shown is computed from the fetched reviews list — flagging again (same
+  open item as MyCourses) that there's no schema support for a stored rating/progress
+  figure; still fine since it's cheap to compute from data already being fetched.
+- Next piece: "Create/manage course page (instructor)" — no mockup yet, uses the existing
+  POST /api/courses (instructor-only, already built).
 ```
 
 ---

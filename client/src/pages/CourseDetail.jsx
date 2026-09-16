@@ -1,0 +1,265 @@
+// src/pages/CourseDetail.jsx
+// Individual course view — full description, scheduled sessions, reviews,
+// and an Enroll button. Reached by clicking a course card on the Explore
+// page (StudentLanding), which already calls navigate(`/courses/${id}`).
+//
+// Kept public like StudentLanding — no forced login redirect, since
+// browsing a course's details shouldn't require an account (GET
+// /api/courses/:id, /api/sessions, /api/reviews are all public routes
+// too). Only the Enroll button itself needs a logged-in student, checked
+// at click time instead of gating the whole page.
+
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import StudentNav from '../components/StudentNav';
+import Footer from '../components/Footer';
+import { API_BASE } from '../api';
+import './CourseDetail.css';
+
+export default function CourseDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(null);
+  const [course, setCourse] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  // Enroll button state
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState('');
+
+  // Who's logged in (if anyone) — same localStorage read every other
+  // page uses, no redirect if it's empty.
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
+  // Fetch the course, its sessions, and its reviews all at once.
+  useEffect(() => {
+    setLoading(true);
+
+    Promise.all([
+      fetch(`${API_BASE}/api/courses/${id}`).then((res) => {
+        if (res.status === 404) {
+          setNotFound(true);
+          return null;
+        }
+        return res.json();
+      }),
+      fetch(`${API_BASE}/api/sessions?course_id=${id}`).then((res) => res.json()),
+      fetch(`${API_BASE}/api/reviews?course_id=${id}`).then((res) => res.json()),
+    ])
+      .then(([courseData, sessionsData, reviewsData]) => {
+        if (courseData) setCourse(courseData);
+        setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+        setReviews(Array.isArray(reviewsData) ? reviewsData : []);
+      })
+      .catch((err) => {
+        console.error('Failed to load course:', err);
+        setNotFound(true);
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // If a logged-in student is viewing, check whether they're already
+  // enrolled — reuses the existing GET /api/enrollments/me route instead
+  // of adding a new backend endpoint just for this.
+  useEffect(() => {
+    if (!user || user.role !== 'student') return;
+
+    const token = localStorage.getItem('token');
+    fetch(`${API_BASE}/api/enrollments/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.some((e) => e.course_id === id)) {
+          setAlreadyEnrolled(true);
+        }
+      })
+      .catch(() => {}); // not critical — worst case the button just doesn't pre-fill
+  }, [user, id]);
+
+  // Average rating computed from the reviews we already fetched — there's
+  // no avg_rating column in the DB, so this is the honest number instead
+  // of a made-up one.
+  const avgRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : null;
+
+  function handleEnroll() {
+    const token = localStorage.getItem('token');
+
+    // Not logged in at all → send to login instead of failing silently.
+    if (!token || !user) {
+      navigate('/login');
+      return;
+    }
+
+    // Logged in as an instructor → enrolling doesn't make sense for them
+    // (same rule the backend enforces with requireRole('student')).
+    if (user.role !== 'student') {
+      setEnrollError('Only students can enroll in courses');
+      return;
+    }
+
+    setEnrolling(true);
+    setEnrollError('');
+
+    fetch(`${API_BASE}/api/enrollments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ course_id: id }),
+    })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (ok) {
+          setAlreadyEnrolled(true);
+        } else {
+          // Backend already sends "You are already enrolled..." for the
+          // 409 case, so this covers that too instead of a separate check.
+          setEnrollError(data.error || 'Something went wrong enrolling');
+        }
+      })
+      .catch(() => setEnrollError('Something went wrong enrolling'))
+      .finally(() => setEnrolling(false));
+  }
+
+  // Same session_type values the backend allows — used just to make the
+  // label on each session card readable instead of showing "mock_test".
+  const SESSION_TYPE_LABELS = {
+    doubt: 'Doubt Session',
+    offline: 'Offline Meet',
+    mock_test: 'Mock Test',
+  };
+
+  if (loading) {
+    return (
+      <div className="course-detail-page">
+        <StudentNav user={user} activeLink="explore" />
+        <main className="course-detail-main">
+          <p className="course-detail-status">Loading course...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (notFound || !course) {
+    return (
+      <div className="course-detail-page">
+        <StudentNav user={user} activeLink="explore" />
+        <main className="course-detail-main">
+          <p className="course-detail-status">Course not found.</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="course-detail-page">
+      <StudentNav user={user} activeLink="explore" />
+
+      <main className="course-detail-main">
+        {/* Header: title, instructor, price, rating, enroll button */}
+        <section className="course-detail-header">
+          <div className="course-detail-avatar">
+            {course.title.charAt(0).toUpperCase()}
+          </div>
+
+          <div className="course-detail-header-info">
+            <h1 className="course-detail-title">{course.title}</h1>
+            <p className="course-detail-instructor">By {course.instructor_name}</p>
+            <div className="course-detail-meta">
+              <span className="course-detail-price">₹{course.price}</span>
+              <span className="course-detail-rating">
+                {avgRating ? `⭐ ${avgRating} (${reviews.length} review${reviews.length === 1 ? '' : 's'})` : 'No reviews yet'}
+              </span>
+            </div>
+          </div>
+
+          <div className="course-detail-enroll-wrap">
+            <button
+              className="course-detail-enroll-btn"
+              onClick={handleEnroll}
+              disabled={enrolling || alreadyEnrolled}
+            >
+              {alreadyEnrolled ? 'Enrolled ✓' : enrolling ? 'Enrolling...' : 'Enroll Now'}
+            </button>
+            {enrollError && <p className="course-detail-enroll-error">{enrollError}</p>}
+          </div>
+        </section>
+
+        {/* Full description */}
+        <section className="course-detail-section">
+          <h2>About this course</h2>
+          <p className="course-detail-description">
+            {course.description || 'No description provided yet.'}
+          </p>
+        </section>
+
+        {/* Sessions */}
+        <section className="course-detail-section">
+          <h2>Sessions</h2>
+          {sessions.length === 0 ? (
+            <p className="course-detail-empty">No sessions scheduled yet.</p>
+          ) : (
+            <div className="course-detail-sessions-list">
+              {sessions.map((session) => (
+                <div key={session.id} className="course-detail-session-card">
+                  <span className="course-detail-session-type">
+                    {SESSION_TYPE_LABELS[session.session_type] || session.session_type}
+                  </span>
+                  <p className="course-detail-session-title">{session.title}</p>
+                  {session.description && (
+                    <p className="course-detail-session-desc">{session.description}</p>
+                  )}
+                  <p className="course-detail-session-when">
+                    {new Date(session.scheduled_at).toLocaleString()}
+                    {session.location ? ` · ${session.location}` : ''}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Reviews */}
+        <section className="course-detail-section">
+          <h2>Reviews</h2>
+          {reviews.length === 0 ? (
+            <p className="course-detail-empty">No reviews yet.</p>
+          ) : (
+            <div className="course-detail-reviews-list">
+              {reviews.map((review) => (
+                <div key={review.id} className="course-detail-review-card">
+                  <div className="course-detail-review-header">
+                    <span className="course-detail-review-name">{review.student_name}</span>
+                    <span className="course-detail-review-rating">
+                      {'⭐'.repeat(review.rating)}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p className="course-detail-review-comment">{review.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
