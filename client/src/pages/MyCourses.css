@@ -1,0 +1,99 @@
+/* src/pages/MyCourses.css */
+/* Plain-CSS conversion of the mockup's Tailwind classes. Card content is
+   simpler than the mockup (no type/level badges, no progress bar) since
+   the real data doesn't have those fields — see MyCourses.jsx comments. */
+
+.mycourses-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.mycourses-main {
+  flex: 1;
+  padding: 0 5% 96px;
+}
+
+.mycourses-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: #111827;
+  text-align: center;
+  margin: 40px 0 24px;
+}
+
+.mycourses-status {
+  text-align: center;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin-top: 40px;
+}
+
+.mycourses-explore-link {
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mycourses-explore-link:hover {
+  text-decoration: underline;
+}
+
+.mycourses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 300px));
+  gap: 24px;
+  justify-content: center;
+}
+
+.mycourses-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.mycourses-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mycourses-card-badge {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #6366f1;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.mycourses-card-body {
+  padding: 16px;
+}
+
+.mycourses-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.mycourses-card-instructor {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0 0 8px;
+}
+
+.mycourses-card-price {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0;
+}

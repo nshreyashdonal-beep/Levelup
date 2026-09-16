@@ -34,16 +34,33 @@ router.post('/', requireAuth, requireRole('instructor'), async (req, res) => {
 });
 
 // GET /api/courses
-// No auth needed — anyone can browse the course list.
+// GET /api/courses?instructor_id=5
+// No auth needed — anyone can browse the course list. The optional
+// instructor_id query param narrows it to just one instructor's own
+// courses (used by the Instructor Dashboard to count "Active Courses").
 router.get('/', async (req, res) => {
+  const { instructor_id } = req.query;
+
   try {
-    const result = await db.query(
-      `SELECT courses.id, courses.title, courses.description, courses.price,
-              courses.created_at, users.name AS instructor_name
-       FROM courses
-       JOIN users ON users.id = courses.instructor_id
-       ORDER BY courses.created_at DESC`
-    );
+    // Same base query either way — just add a WHERE clause when
+    // instructor_id was given, instead of writing a second query.
+    const result = instructor_id
+      ? await db.query(
+          `SELECT courses.id, courses.title, courses.description, courses.price,
+                  courses.created_at, users.name AS instructor_name
+           FROM courses
+           JOIN users ON users.id = courses.instructor_id
+           WHERE courses.instructor_id = $1
+           ORDER BY courses.created_at DESC`,
+          [instructor_id]
+        )
+      : await db.query(
+          `SELECT courses.id, courses.title, courses.description, courses.price,
+                  courses.created_at, users.name AS instructor_name
+           FROM courses
+           JOIN users ON users.id = courses.instructor_id
+           ORDER BY courses.created_at DESC`
+        );
 
     res.json(result.rows);
   } catch (err) {

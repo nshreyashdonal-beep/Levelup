@@ -73,13 +73,17 @@ LevelUp/
         ├── components/
         │   ├── Navbar.jsx / Navbar.css
         │   ├── Footer.jsx / Footer.css
-        │   └── StudentNav.jsx / StudentNav.css
+        │   ├── StudentNav.jsx / StudentNav.css
+        │   └── InstructorNav.jsx / InstructorNav.css
         └── pages/
             ├── Home.jsx / Home.css
             ├── Login.jsx / Login.css
             ├── Signup.jsx / Signup.css
             ├── BecomeInstructor.jsx / BecomeInstructor.css
-            └── StudentDashboard.jsx / StudentDashboard.css
+            ├── StudentDashboard.jsx / StudentDashboard.css
+            ├── InstructorWelcome.jsx / InstructorWelcome.css
+            ├── InstructorDashboard.jsx / InstructorDashboard.css
+            └── MyCourses.jsx / MyCourses.css
 ```
 
 **Notes chapter tracking:** two separate numbering tracks — backend and frontend each
@@ -141,7 +145,7 @@ verified in the browser:
         `GET /api/enrollments/me` (already built and verified) instead of any placeholder
         array — there is currently no `progress` column anywhere, so decide then whether
         to add one or drop that part of the mockup for now.
-- [ ] **Instructor Dashboard** (`/instructor-dashboard` or similar — mockup:
+- [x] **Instructor Dashboard** (`/instructor-dashboard` — mockup:
       `Instructordashboard.jsx`)
       - Same localStorage guard pattern, but `role !== 'instructor'`.
       - Stat cards (Total Students / Active Courses / Total Earnings / Avg. Rating) are
@@ -152,12 +156,25 @@ verified in the browser:
       - "Quick Actions" (Create Course / Go Live / Schedule Offline) are just cards in the
         mockup with no click behavior — Create Course can eventually link to the
         create/manage course page below; the other two depend on features not built yet.
-- [ ] **My Courses** (`/mycourse` — mockup: `Mycourses.jsx`, path already referenced by
+- [x] **Instructor Welcome** (`/instructor-welcome` — no separate mockup; journey
+      steps/markup lifted as-is from Home.jsx's "Teacher's Path" tab)
+      - New page added after Instructor Dashboard was already built: instructors now land
+        here right after login (welcome message + the same 6-step teacher journey shown on
+        Home), with a link through to the real `/instructor-dashboard` stats page, instead
+        of dropping straight into the dashboard. Mirrors the welcome+journey feel Student
+        Dashboard already has for students.
+      - Same localStorage guard pattern, `role !== 'instructor'`.
+- [x] **My Courses** (`/mycourse` — mockup: `Mycourses.jsx`, path already referenced by
       Navbar links in other mockups)
       - Same localStorage guard pattern, `role !== 'student'`.
-      - Mockup uses a hardcoded `courses` array — replace with `GET /api/enrollments/me`.
-      - Progress bars again depend on a `progress` concept that doesn't exist in the
-        schema yet — same open question as Student Dashboard above.
+      - Mockup's hardcoded `courses` array replaced with real data from
+        `GET /api/enrollments/me` (extended this session to also join+return
+        `instructor_name`).
+      - Dropped: course type (Hybrid/Online), skill level, per-course progress %, and the
+        per-course tech logo image — none of these have a column anywhere in the schema.
+        Card image band replaced with a plain colored circle showing the title's first
+        letter instead. Flagged as follow-up, not built now (see "Late-stage" / open
+        questions below for progress %).
 - [ ] Course browse + detail pages (no mockup yet — uses existing public
       `GET /api/courses`)
 - [ ] Create/manage course page (instructor) — no mockup yet — uses existing
@@ -217,6 +234,46 @@ client/src/components/StudentNav.css
 client/src/pages/StudentDashboard.jsx (NEW — converted from Studentdashboard.jsx mockup. localStorage-guarded welcome screen with journey recap + two action cards. Does NOT show enrolled courses/progress here — that's deferred to My Courses instead.)
 client/src/pages/StudentDashboard.css
 client/src/App.jsx (added the /student-dashboard route)
+
+--- This session ---
+server/routes/courses.js (GET /api/courses now accepts an optional ?instructor_id= query param, so it can return just one instructor's own courses instead of always the full public list)
+client/src/components/InstructorNav.jsx (NEW — dashboard-only nav for logged-in instructors, pulled out of the mockup's inline TeacherNav function)
+client/src/components/InstructorNav.css
+client/src/pages/InstructorDashboard.jsx (NEW — converted from the uploaded Instructordashboard.jsx mockup. localStorage-guarded welcome screen with 4 stat cards and 3 quick-action cards. Only "Active Courses" is wired to real data via GET /api/courses?instructor_id=<id>; the other three stats stay honest placeholders since there's no backend for them yet.)
+client/src/pages/InstructorDashboard.css
+client/src/App.jsx (added the /instructor-dashboard route)
+
+--- Bugfix this session ---
+client/src/pages/Login.jsx (was still sending instructors to "/" after login — leftover
+  from before Instructor Dashboard existed. Now sends student → /student-dashboard,
+  instructor → /instructor-dashboard, anything else → /.)
+
+--- This session ---
+client/src/components/InstructorNav.jsx (restyled to match StudentNav.jsx's layout —
+  centered search bar, circular initial avatar on the right — instead of the mockup's
+  original left-to-right row with a square avatar)
+client/src/components/InstructorNav.css (rewritten to match)
+
+--- This session ---
+client/src/pages/InstructorWelcome.jsx (NEW — welcome page instructors land on right after
+  login, before the real dashboard. Shows the teacher journey lifted as-is from Home.jsx's
+  "Teacher's Path" tab, plus a link through to /instructor-dashboard.)
+client/src/pages/InstructorWelcome.css (NEW — same layout as StudentDashboard.css's
+  welcome+journey section, in the emerald palette Home.css already uses for the teacher
+  journey variant)
+client/src/App.jsx (added the /instructor-welcome route)
+client/src/pages/Login.jsx (instructor login now goes to /instructor-welcome instead of
+  straight to /instructor-dashboard)
+
+--- This session ---
+server/routes/enrollments.js (GET /api/enrollments/me now also joins users to return
+  instructor_name, for My Courses to show a real instructor name)
+client/src/pages/MyCourses.jsx (NEW — converted from the uploaded Mycourses.jsx mockup.
+  Real enrollment data via GET /api/enrollments/me. Dropped course type/level/progress %/
+  logo image — none exist in the schema. Reuses the existing StudentNav component instead
+  of redefining it inline.)
+client/src/pages/MyCourses.css
+client/src/App.jsx (added the /mycourse route)
 ```
 
 ---
@@ -317,6 +374,58 @@ client/src/App.jsx (added the /student-dashboard route)
   keeping Student Dashboard a simple welcome/navigation screen.
 - Reminder: PROGRESS.md must be updated at the end of every session that changes the repo —
   this sync happened because a previous session's updates were never pasted back in.
+- `GET /api/courses` extended with an optional `?instructor_id=` filter rather than adding
+  a brand-new route — same endpoint, same shape of response, just a narrower WHERE clause
+  when the param is present. Kept as one query built with a ternary rather than duplicating
+  the whole route as `GET /api/courses/mine`.
+- Instructor Dashboard reads role from the existing `user` object in localStorage (same fix
+  as Student Dashboard) instead of the mockup's separate `role` key.
+- Dropped `user.location` and the whole "Your Bio" section from Instructor Dashboard —
+  `/api/auth/login` only ever returns `{ id, name, email, role }`, never bio/phone/location
+  (those live in `instructor_profiles`, which login doesn't join to), so both would only
+  ever show "undefined" or silently never render.
+- Of the four stat cards, only Active Courses is wired to a real number (instructor's own
+  course count via the new `instructor_id` filter). Total Students, Total Earnings, and
+  Avg. Rating stay as honest placeholders ("0"/"0"/"—") rather than faked numbers — none of
+  enrollment-counting-per-instructor, earnings, or rating aggregation exist on the backend
+  yet. Flagged as follow-up work, not built now.
+- Quick Action cards (Create Course / Go Live / Schedule Offline) stay non-clickable, same
+  as the mockup — Create Course has no real page to link to yet (that's still an unchecked
+  checklist item), and the other two depend on features that don't exist at all.
+- Pulled the mockup's inline `TeacherNav()` function out into its own `InstructorNav.jsx`
+  component, matching the `StudentNav.jsx` pattern, so any future instructor-only page
+  (e.g. Create/Manage Course) can reuse it instead of redefining the same header again.
+- Instructor Dashboard's three quick-action cards use one flat indigo background instead of
+  the mockup's three different pastel colors — simpler, and moot anyway since none of the
+  cards do anything yet.
+- InstructorNav restyled to match StudentNav's layout (centered search bar, circular
+  initial avatar) instead of keeping the mockup's own left-to-right row with a square
+  avatar — one consistent look across both logged-in navs rather than two different ones.
+- Added an **Instructor Welcome** page (`/instructor-welcome`) as a new piece not in the
+  original mockup set — instructors now land here right after login instead of straight on
+  the stats dashboard, matching how Student Dashboard already gives students a
+  welcome+journey screen before My Courses. Journey steps/markup copied as-is from Home.jsx's
+  "Teacher's Path" tab (same `teacherSteps` data, same track/node/badge structure) rather
+  than inventing new copy, styled in the same emerald palette Home.css already uses for
+  that tab. `Login.jsx` now sends instructors to `/instructor-welcome`, which links onward
+  to `/instructor-dashboard`.
+- Instructor Welcome's link through to the dashboard is a proper "Continue to Your
+  Dashboard" section (heading + subtitle + a solid emerald pill button labeled "Go to
+  Dashboard"), matching the visual weight of Student Dashboard's action-cards section,
+  instead of a plain inline text link.
+- `GET /api/enrollments/me` extended with one more join (`users`) to return
+  `instructor_name` — same kind of small additive backend change as the `instructor_id`
+  filter on `GET /api/courses`, not a new endpoint.
+- My Courses drops course type (Hybrid/Online), skill level, and per-course progress % —
+  none of these exist anywhere in the schema, so showing them would mean making up data.
+  The open question about whether `progress` is worth a real schema addition is still
+  unresolved, carried forward as follow-up work rather than blocking this piece.
+- My Courses' card image band (mockup used a per-course tech logo image) replaced with a
+  plain colored circle showing the course title's first letter, since there's no per-course
+  icon data to show instead.
+- My Courses reuses the existing `StudentNav` component instead of redefining the same
+  header inline again like the mockup did — same reasoning as Student Dashboard extracting
+  it in the first place.
 
 ---
 

@@ -43,14 +43,18 @@ router.post('/', requireAuth, requireRole('student'), async (req, res) => {
 });
 
 // GET /api/enrollments/me
-// Returns the logged-in student's own enrollments, with course details joined in.
+// Returns the logged-in student's own enrollments, with course + instructor
+// details joined in (instructor name added for My Courses to show for real,
+// instead of the mockup's imagined field).
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const result = await db.query(
       `SELECT enrollments.id, enrollments.enrolled_at,
-              courses.id AS course_id, courses.title, courses.price
+              courses.id AS course_id, courses.title, courses.price,
+              users.name AS instructor_name
        FROM enrollments
        JOIN courses ON courses.id = enrollments.course_id
+       JOIN users ON users.id = courses.instructor_id
        WHERE enrollments.student_id = $1
        ORDER BY enrollments.enrolled_at DESC`,
       [req.user.id]

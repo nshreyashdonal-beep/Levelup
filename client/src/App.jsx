@@ -9,6 +9,9 @@ import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import BecomeInstructor from './pages/BecomeInstructor.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
+import InstructorDashboard from './pages/InstructorDashboard.jsx'
+import InstructorWelcome from './pages/InstructorWelcome.jsx'
+import MyCourses from './pages/MyCourses.jsx'
 
 function App() {
   return (
@@ -18,6 +21,9 @@ function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/become-instructor" element={<BecomeInstructor />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
+      <Route path="/instructor-welcome" element={<InstructorWelcome />} />
+      <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
+      <Route path="/mycourse" element={<MyCourses />} />
     </Routes>
   )
 }

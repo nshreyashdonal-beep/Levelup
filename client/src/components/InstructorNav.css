@@ -1,0 +1,107 @@
+/* src/components/InstructorNav.css */
+/* Same visual system as StudentNav.css (indigo accent, Outfit logo font,
+   centered search bar, circular initial avatar) so both logged-in navs
+   look consistent instead of the instructor one having its own
+   left-aligned layout. */
+
+.instructor-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.instructor-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.instructor-nav-logo-badge {
+  width: 36px;
+  height: 36px;
+  background: #6366f1;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.instructor-nav-logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.instructor-nav-search-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 288px;
+}
+
+.instructor-nav-search {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.instructor-nav-search:focus {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.instructor-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.instructor-nav-link {
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.instructor-nav-link:hover {
+  color: #4f46e5;
+}
+
+.instructor-nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid #6366f1;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.instructor-nav-avatar:hover {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Note: .instructor-nav is already `position: sticky` above, which is
+   enough to make it the positioning context for the absolutely-centered
+   search bar (any non-static position value establishes that). */

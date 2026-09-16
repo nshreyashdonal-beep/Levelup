@@ -50,10 +50,17 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Send students to their dashboard now that it exists. Instructors
-      // still go home for now — no instructor dashboard yet (next piece
-      // in PROGRESS.md's dashboards branch).
-      navigate(data.user.role === 'student' ? '/student-dashboard' : '/');
+      // Send each role to its own landing spot. Instructors land on a
+      // welcome page (journey recap) first, same idea as Student
+      // Dashboard's welcome+journey screen, with a link through to the
+      // real stats dashboard rather than dropping straight into it.
+      if (data.user.role === 'student') {
+        navigate('/student-dashboard');
+      } else if (data.user.role === 'instructor') {
+        navigate('/instructor-welcome');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError('Could not reach the server. Is it running?');
     } finally {
