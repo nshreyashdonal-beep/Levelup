@@ -1,6 +1,5 @@
 /* src/pages/Signup.css */
-/* Same visual system as Login.css (indigo accent, Montserrat/Source Sans),
-   plus the role-toggle buttons Login doesn't have. */
+/* Same visual system as Login.css with a Student-focused blue/indigo accent. */
 
 .signup-page-wrap {
   display: flex;
@@ -42,38 +41,6 @@
   font-weight: 400;
   color: #6b7280;
   margin: 0 0 24px;
-}
-
-.signup-role-toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.signup-role-btn {
-  flex: 1;
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  background: #eef2ff;
-  color: #4f46e5;
-  transition: background 0.15s;
-}
-
-.signup-role-btn:hover {
-  background: #e0e7ff;
-}
-
-.signup-role-btn-active {
-  background: #6366f1;
-  color: #fff;
-}
-
-.signup-role-btn-active:hover {
-  background: #6366f1;
 }
 
 .signup-error {

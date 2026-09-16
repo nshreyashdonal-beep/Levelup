@@ -77,18 +77,54 @@ export default function Home() {
 
       <main className="home-main">
 
-        {/* Hero image */}
-        <section className="home-hero-image">
-          <img
-            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644"
-            alt="Learning"
-          />
-        </section>
+        {/* Hero panel */}
+        <section className="home-hero-panel">
+          <div className="home-hero-content">
+            <p className="home-hero-eyebrow">LEARN LOCALLY. GROW TOGETHER.</p>
+            <h1>Learn from the best in your neighborhood.</h1>
+            <p className="home-hero-description">
+              Build practical skills with passionate instructors, flexible
+              courses, and a learning community that moves with you.
+            </p>
+            <div className="home-hero-actions">
+              <button
+                type="button"
+                onClick={() => navigate('/signup')}
+                className="home-hero-action home-hero-action--student"
+              >
+                Start learning
+                <span aria-hidden="true">→</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/become-instructor')}
+                className="home-hero-action home-hero-action--instructor"
+              >
+                Teach on LevelUp
+              </button>
+            </div>
+          </div>
 
-        {/* Hero text */}
-        <section className="home-hero-text">
-          <h1>Learn from the best in your neighborhood</h1>
-          <p>Your decentralized platform</p>
+          <div className="home-hero-visual">
+            <div className="home-hero-accent home-hero-accent--top" aria-hidden="true" />
+            <div className="home-hero-image">
+              <img
+                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644"
+                alt="Students learning together"
+              />
+            </div>
+            <div className="home-hero-note home-hero-note--top">
+              <span aria-hidden="true">✦</span>
+              Learn something new
+            </div>
+            <div className="home-hero-note home-hero-note--bottom">
+              <span className="home-hero-note-avatar">4.9</span>
+              <span>
+                <strong>Trusted learning</strong>
+                <small>By local communities</small>
+              </span>
+            </div>
+          </div>
         </section>
 
         {/* Journey section */}

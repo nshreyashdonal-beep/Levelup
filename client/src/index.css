@@ -1,5 +1,36 @@
 /* src/index.css */
-/* Global reset + the shared page wrapper every page uses. */
+/* Shared foundation used by every page and component. */
+
+:root {
+  --color-white: #ffffff;
+  --color-page-background: #f8f9fb;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-soft: #4b5563;
+
+  --color-student-primary: #6366f1;
+  --color-student-primary-dark: #4f46e5;
+  --color-student-soft: #eef2ff;
+  --color-student-soft-hover: #e0e7ff;
+
+  --color-instructor-primary: #10b981;
+  --color-instructor-primary-dark: #059669;
+  --color-instructor-soft: #ecfdf5;
+  --color-instructor-soft-hover: #d1fae5;
+
+  --color-error: #dc2626;
+  --color-error-background: #fef2f2;
+  --color-error-border: #fecaca;
+
+  --radius-small: 6px;
+  --radius-medium: 8px;
+  --radius-large: 16px;
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --transition-fast: 0.15s ease;
+}
 
 * {
   box-sizing: border-box;
@@ -8,6 +39,24 @@
 body {
   margin: 0;
   font-family: 'Source Sans 3', sans-serif;
+  color: var(--color-text);
+  background: var(--color-page-background);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.35);
+  outline-offset: 2px;
 }
 
 .page {

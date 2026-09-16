@@ -3,6 +3,7 @@
 // newsletter signup box. Styling lives in Footer.css (colocated).
 
 import './Footer.css'
+import BrandLogo from './BrandLogo.jsx'
 
 const companyLinks = ["About Us", "Contact", "Privacy Policy"]
 
@@ -14,13 +15,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="footer-brand">
           <div className="footer-brand-row">
-            <div className="footer-logo-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L4.5 13.5H11L10 22L20.5 9.5H14L13 2Z"
-                  fill="white" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="footer-brand-name">Level Up</span>
+            <BrandLogo variant="footer" compact />
           </div>
           <p className="footer-brand-blurb">
             Empowering learners worldwide with practical,<br />career-ready skills.
@@ -49,6 +44,9 @@ export default function Footer() {
         {/* Newsletter */}
         <div className="footer-newsletter">
           <h3 className="footer-heading">Newsletter</h3>
+          <p className="footer-newsletter-description">
+            Get practical learning ideas and new course updates.
+          </p>
           <div className="footer-newsletter-row">
             <input
               type="email"

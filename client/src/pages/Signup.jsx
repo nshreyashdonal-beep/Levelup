@@ -6,10 +6,8 @@
 // different from the mockup's imagined one:
 //   1. Dropped the "Location" field — the users table has no location
 //      column (geolocation is being built last, see PROGRESS.md).
-//   2. Added a real Student/Instructor toggle. The mockup's Signup didn't
-//      have one (it always posted role-less to /api/students/signup), but
-//      our actual /api/auth/register takes a real `role` field the
-//      backend uses — so here the toggle actually does something.
+//   2. This public signup is student-only. Instructors use the separate
+//      Become Instructor page, so registration always sends role: "student".
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,7 +19,6 @@ import './Signup.css';
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState('student');
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +36,7 @@ export default function Signup() {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, role }),
+        body: JSON.stringify({ ...formData, role: 'student' }),
       });
 
       const data = await res.json();
@@ -67,28 +64,8 @@ export default function Signup() {
         <div className="signup-card">
           {/* Left — Form */}
           <div className="signup-form-side">
-            <h2 className="signup-title">
-              {role === 'student' ? 'Create Student Account' : 'Create Instructor Account'}
-            </h2>
+            <h2 className="signup-title">Create Student Account</h2>
             <p className="signup-subtitle">Join LevelUp and find instructors near you.</p>
-
-            {/* Role toggle */}
-            <div className="signup-role-toggle">
-              <button
-                type="button"
-                onClick={() => setRole('student')}
-                className={`signup-role-btn ${role === 'student' ? 'signup-role-btn-active' : ''}`}
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('instructor')}
-                className={`signup-role-btn ${role === 'instructor' ? 'signup-role-btn-active' : ''}`}
-              >
-                Instructor
-              </button>
-            </div>
 
             {error && <div className="signup-error">{error}</div>}
 

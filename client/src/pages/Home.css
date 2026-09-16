@@ -12,10 +12,127 @@
 
 /* Hero */
 
-.home-hero-image {
-  width: 100%;
-  height: 400px;
+.home-hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+  gap: 48px;
+  max-width: 1280px;
+  min-height: 500px;
+  margin: 28px auto 32px;
+  padding: 68px 8%;
   overflow: hidden;
+  border: 1px solid #e0e7ff;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #f7f8ff 0%, #ffffff 58%);
+}
+
+.home-hero-content {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+}
+
+.home-hero-eyebrow {
+  margin: 0 0 20px;
+  color: var(--color-student-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.home-hero-panel h1 {
+  max-width: 520px;
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2.6rem, 4.4vw, 4.15rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.home-hero-description {
+  max-width: 520px;
+  margin: 26px 0 0;
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.home-hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.home-hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 18px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.home-hero-action:hover {
+  transform: translateY(-2px);
+}
+
+.home-hero-action--student {
+  background: var(--color-student-primary);
+  color: var(--color-white);
+  box-shadow: 0 7px 16px rgba(99, 102, 241, 0.2);
+}
+
+.home-hero-action--student:hover {
+  background: var(--color-student-primary-dark);
+}
+
+.home-hero-action--instructor {
+  border-color: #a7f3d0;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+}
+
+.home-hero-action--instructor:hover {
+  background: var(--color-instructor-soft-hover);
+}
+
+.home-hero-visual {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  min-height: 350px;
+  min-width: 0;
+}
+
+.home-hero-accent {
+  position: absolute;
+  top: 3px;
+  right: 6%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #dfe3ff;
+}
+
+.home-hero-image {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: min(100%, 500px);
+  height: 315px;
+  overflow: hidden;
+  border: 8px solid #ffffff;
+  border-radius: 40% 24% 38% 28%;
+  transform: rotate(-3deg);
+  box-shadow: 0 18px 32px rgba(31, 41, 55, 0.14);
 }
 
 .home-hero-image img {
@@ -24,25 +141,139 @@
   object-fit: cover;
 }
 
-.home-hero-text {
-  text-align: center;
-  padding: 40px 16px 0;
+.home-hero-note {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  color: var(--color-text);
+  box-shadow: 0 9px 22px rgba(31, 41, 55, 0.14);
 }
 
-.home-hero-text h1 {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
-  font-size: 1.875rem;
-  color: #111827;
-  margin: 0 0 8px;
+.home-hero-note--top {
+  top: 50px;
+  right: -2%;
+  gap: 7px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 0.8rem;
 }
 
-.home-hero-text p {
-  font-family: 'Source Sans 3', sans-serif;
-  font-weight: 300;
-  font-size: 1.25rem;
-  color: #6b7280;
-  margin: 8px 0 0;
+.home-hero-note--top span {
+  color: var(--color-student-primary);
+}
+
+.home-hero-note--bottom {
+  bottom: 12px;
+  left: 3%;
+  gap: 10px;
+  padding: 10px 16px 10px 10px;
+  border-radius: 10px;
+}
+
+.home-hero-note-avatar {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.home-hero-note strong,
+.home-hero-note small {
+  display: block;
+}
+
+.home-hero-note strong {
+  font-size: 0.8rem;
+}
+
+.home-hero-note small {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 860px) {
+  .home-hero-panel {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    min-height: auto;
+    margin: 16px 16px 24px;
+    padding: 52px 32px 40px;
+  }
+
+  .home-hero-panel h1 {
+    font-size: clamp(2.6rem, 9vw, 4rem);
+  }
+
+  .home-hero-visual {
+    min-height: 310px;
+  }
+
+  .home-hero-image {
+    right: 4%;
+    width: 88%;
+    height: 270px;
+  }
+
+  .home-hero-note--top {
+    right: 0;
+  }
+
+  .home-hero-note--bottom {
+    left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-hero-panel {
+    padding: 40px 22px 28px;
+  }
+
+  .home-hero-description {
+    font-size: 1rem;
+  }
+
+  .home-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .home-hero-action {
+    justify-content: center;
+  }
+
+  .home-hero-visual {
+    min-height: 255px;
+  }
+
+  .home-hero-accent {
+    width: 110px;
+    height: 110px;
+  }
+
+  .home-hero-image {
+    top: 30px;
+    height: 215px;
+  }
+
+  .home-hero-note--top {
+    top: 34px;
+    padding: 11px 12px;
+    font-size: 0.72rem;
+  }
+
+  .home-hero-note--bottom {
+    bottom: 0;
+    padding-right: 12px;
+  }
 }
 
 /* Shared section heading */
@@ -67,60 +298,72 @@
 /* Journey section */
 
 .home-journey {
-  padding: 64px 5% 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 84px 5% 28px;
   text-align: center;
-  background: #fff;
+  border-top: 1px solid #eef0f8;
+  border-radius: 20px 20px 0 0;
+  background: var(--color-white);
 }
 
 .journey-tabs {
   display: inline-flex;
-  background: #f3f4f6;
-  padding: 4px;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--color-border);
   border-radius: 9999px;
-  margin-bottom: 40px;
+  margin: 4px 0 44px;
+  background: #f9fafb;
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
 }
 
 .journey-tab {
-  padding: 8px 24px;
+  min-width: 142px;
+  padding: 10px 22px;
   border-radius: 9999px;
   border: none;
   background: transparent;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--color-text-soft);
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .journey-tab:hover {
-  color: #111827;
+  color: var(--color-text);
 }
 
 .journey-tab--student.active {
-  background: #6366f1;
-  color: #fff;
+  background: var(--color-student-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
 }
 
 .journey-tab--teacher.active {
-  background: #10b981;
-  color: #fff;
+  background: var(--color-instructor-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
 .journey-track {
   position: relative;
   display: flex;
   justify-content: space-between;
-  padding: 0 16px;
-  margin-top: 8px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 12px 8px;
 }
 
 .journey-track-line {
   position: absolute;
-  top: 28px;
-  left: 32px;
-  right: 32px;
-  border-top: 2px dashed #c7d2fe;
+  top: 50px;
+  left: 10%;
+  right: 10%;
+  border-top: 2px solid #c7d2fe;
+  opacity: 0.9;
 }
 
 .journey-track--teacher .journey-track-line {
@@ -133,48 +376,61 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 130px;
+  max-width: 150px;
+  min-width: 0;
+  padding: 0 8px;
   position: relative;
   z-index: 1;
 }
 
 .journey-node {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #6366f1;
-  background: #eef2ff;
+  border: 3px solid var(--color-student-primary);
+  background: var(--color-student-soft);
   font-size: 1.25rem;
   position: relative;
+  box-shadow: 0 0 0 6px var(--color-white);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.journey-step:hover .journey-node {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 6px var(--color-white), 0 8px 16px rgba(99, 102, 241, 0.16);
 }
 
 .journey-track--teacher .journey-node {
-  border-color: #10b981;
-  background: #ecfdf5;
+  border-color: var(--color-instructor-primary);
+  background: var(--color-instructor-soft);
+}
+
+.journey-track--teacher .journey-step:hover .journey-node {
+  box-shadow: 0 0 0 6px var(--color-white), 0 8px 16px rgba(16, 185, 129, 0.16);
 }
 
 .journey-node--final {
-  background: #6366f1;
-  color: #fff;
+  background: var(--color-student-primary);
+  color: var(--color-white);
   border-color: transparent;
 }
 
 .journey-track--teacher .journey-node--final {
-  background: #10b981;
+  background: var(--color-instructor-primary);
 }
 
 .journey-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 20px;
-  height: 20px;
+  top: -6px;
+  right: -6px;
+  width: 21px;
+  height: 21px;
   border-radius: 9999px;
-  background: #6366f1;
-  color: #fff;
+  background: var(--color-student-primary);
+  color: var(--color-white);
   font-size: 0.625rem;
   font-weight: 700;
   display: flex;
@@ -183,21 +439,78 @@
 }
 
 .journey-track--teacher .journey-badge {
-  background: #10b981;
+  background: var(--color-instructor-primary);
 }
 
 .journey-step-label {
-  margin-top: 8px;
+  margin: 14px 0 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1f2937;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.35;
 }
 
 .journey-step-sub {
-  font-size: 0.6875rem;
-  color: #9ca3af;
-  margin: 2px 0 0;
+  max-width: 130px;
+  margin: 5px auto 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .home-journey {
+    padding: 64px 20px 24px;
+  }
+
+  .journey-tabs {
+    margin-bottom: 32px;
+  }
+
+  .journey-track {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 12px;
+    padding: 0;
+  }
+
+  .journey-track-line {
+    display: none;
+  }
+
+  .journey-step {
+    max-width: none;
+    padding: 0 4px;
+  }
+}
+
+@media (max-width: 460px) {
+  .home-journey h2 {
+    font-size: 1.6rem;
+  }
+
+  .home-section-subtitle {
+    line-height: 1.5;
+  }
+
+  .journey-tabs {
+    display: flex;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .journey-tab {
+    min-width: 0;
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.72rem;
+  }
+
+  .journey-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 14px;
+  }
 }
 
 /* How it works */

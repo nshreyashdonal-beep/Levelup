@@ -1,99 +1,248 @@
 /* src/pages/MyCourses.css */
-/* Plain-CSS conversion of the mockup's Tailwind classes. Card content is
-   simpler than the mockup (no type/level badges, no progress bar) since
-   the real data doesn't have those fields — see MyCourses.jsx comments. */
 
 .mycourses-wrap {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
+  flex-direction: column;
 }
 
 .mycourses-main {
+  width: min(1180px, calc(100% - 48px));
   flex: 1;
-  padding: 0 5% 96px;
+  margin: 0 auto;
+  padding: 64px 0 96px;
+}
+
+.mycourses-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 34px;
+}
+
+.mycourses-eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-student-primary-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
 }
 
 .mycourses-title {
+  margin: 0;
+  color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
-  font-size: 1.5rem;
-  color: #111827;
-  text-align: center;
-  margin: 40px 0 24px;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
 }
 
-.mycourses-status {
-  text-align: center;
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 0.9375rem;
-  color: #6b7280;
-  margin-top: 40px;
+.mycourses-subtitle {
+  max-width: 500px;
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-.mycourses-explore-link {
-  color: #6366f1;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.mycourses-explore-link:hover {
-  text-decoration: underline;
+.mycourses-count {
+  flex-shrink: 0;
+  padding: 9px 13px;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: var(--color-student-soft);
+  color: var(--color-student-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .mycourses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 300px));
-  gap: 24px;
-  justify-content: center;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .mycourses-card {
-  background: #fff;
-  border-radius: 16px;
+  display: flex;
+  min-height: 290px;
+  flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.04);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
-.mycourses-card:hover {
+.mycourses-card:hover,
+.mycourses-card:focus-visible {
+  border-color: #a5b4fc;
+  box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .mycourses-card-badge {
-  height: 100px;
   display: flex;
+  min-height: 124px;
   align-items: center;
   justify-content: center;
-  background: #eef2ff;
-  color: #6366f1;
+  background: linear-gradient(135deg, var(--color-student-soft), #e0e7ff);
+  color: var(--color-student-primary);
   font-family: 'Montserrat', sans-serif;
-  font-size: 2.5rem;
+  font-size: 2.7rem;
   font-weight: 700;
 }
 
 .mycourses-card-body {
-  padding: 16px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.mycourses-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mycourses-card-label {
+  color: var(--color-student-primary-dark);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mycourses-card-arrow {
+  color: var(--color-student-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .mycourses-card-title {
-  font-size: 1rem;
+  margin: 12px 0 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #111827;
-  margin: 0 0 4px;
+  line-height: 1.4;
 }
 
 .mycourses-card-instructor {
-  font-size: 0.875rem;
-  color: #9ca3af;
-  margin: 0 0 8px;
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.mycourses-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .mycourses-card-price {
-  font-family: 'Source Sans 3', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4b5563;
   margin: 0;
+  color: var(--color-student-primary-dark);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mycourses-card-action {
+  color: var(--color-student-primary-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mycourses-card-action span {
+  margin-left: 4px;
+  font-size: 1rem;
+}
+
+.mycourses-status-card {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  border: 1px dashed #c7d2fe;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8faff, #ffffff);
+  text-align: center;
+}
+
+.mycourses-status-icon {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 15px;
+  background: var(--color-student-soft);
+  color: var(--color-student-primary);
+  font-size: 1.4rem;
+}
+
+.mycourses-status-title {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.mycourses-status-card > span {
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.mycourses-explore-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  padding: 11px 16px;
+  border-radius: 9px;
+  background: var(--color-student-primary);
+  color: var(--color-white);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.mycourses-explore-link:hover {
+  background: var(--color-student-primary-dark);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  .mycourses-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .mycourses-main {
+    width: min(100% - 32px, 520px);
+    padding: 48px 0 68px;
+  }
+
+  .mycourses-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mycourses-grid {
+    grid-template-columns: 1fr;
+  }
 }

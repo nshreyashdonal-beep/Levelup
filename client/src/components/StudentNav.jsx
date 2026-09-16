@@ -15,22 +15,14 @@
 
 import { Link } from 'react-router-dom';
 import ProfileMenu from './ProfileMenu.jsx';
+import BrandLogo from './BrandLogo.jsx';
 import './StudentNav.css';
 
 export default function StudentNav({ user, activeLink }) {
   return (
     <header className="student-nav">
       <Link to="/" className="student-nav-logo">
-        <div className="student-nav-logo-badge">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M13 2L4.5 13.5H11L10 22L20.5 9.5H14L13 2Z"
-              fill="white" stroke="white" strokeWidth="1.2"
-              strokeLinejoin="round" strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <span className="student-nav-logo-text">Level Up</span>
+        <BrandLogo compact />
       </Link>
 
       <div className="student-nav-search-wrap">

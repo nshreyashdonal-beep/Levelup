@@ -2,47 +2,69 @@
 // Site header shown on every page: logo, center nav links + search,
 // and login/signup buttons. Styling lives in Navbar.css (colocated).
 
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import BrandLogo from './BrandLogo.jsx'
 import './Navbar.css'
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  function closeMenu() {
+    setMenuOpen(false)
+  }
+
   return (
     <header className="navbar">
-      {/* Logo */}
-      <Link to="/" className="navbar-logo">
-        <div className="navbar-logo-badge">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M13 2L4.5 13.5H11L10 22L20.5 9.5H14L13 2Z"
-              fill="white" stroke="white" strokeWidth="1.2"
-              strokeLinejoin="round" strokeLinecap="round"
+      <div className="navbar-inner">
+        <Link to="/" className="navbar-logo" onClick={closeMenu}>
+          <BrandLogo />
+        </Link>
+
+        <button
+          type="button"
+          className="navbar-menu-button"
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((wasOpen) => !wasOpen)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <div className={`navbar-content ${menuOpen ? 'navbar-content-open' : ''}`}>
+          <nav className="navbar-center" aria-label="Main navigation">
+            <a href="#" className="navbar-link" onClick={closeMenu}>
+              Subscribe
+            </a>
+            <Link to="/become-instructor" className="navbar-link" onClick={closeMenu}>
+              Become Instructor
+            </Link>
+          </nav>
+
+          <div className="navbar-search-wrap">
+            <svg className="navbar-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M16 16L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search courses..."
+              aria-label="Search courses"
+              className="navbar-search"
             />
-          </svg>
+          </div>
+
+          <div className="navbar-auth">
+            <Link to="/login" className="btn btn-outline" onClick={closeMenu}>
+              Log in
+            </Link>
+            <Link to="/signup" className="btn btn-solid" onClick={closeMenu}>
+              Get started
+            </Link>
+          </div>
         </div>
-        <span className="navbar-logo-text">Level Up</span>
-      </Link>
-
-      {/* Center nav */}
-      <nav className="navbar-center">
-        <a href="#" className="navbar-link">Subscribe</a>
-        <input
-          type="text"
-          placeholder="Search..."
-          className="navbar-search"
-        />
-        <Link to="/become-instructor" className="navbar-link">
-          Become Instructor
-        </Link>
-      </nav>
-
-      {/* Auth buttons */}
-      <div className="navbar-auth">
-        <Link to="/login" className="btn btn-outline">
-          Login
-        </Link>
-        <Link to="/signup" className="btn btn-solid">
-          Signup
-        </Link>
       </div>
     </header>
   )

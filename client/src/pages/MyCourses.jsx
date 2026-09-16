@@ -66,6 +66,10 @@ export default function MyCourses() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  const openCourse = (courseId) => {
+    navigate(`/courses/${courseId}`);
+  };
+
   if (!user) return null;
 
   return (
@@ -73,29 +77,73 @@ export default function MyCourses() {
       <StudentNav user={user} activeLink="mycourse" />
 
       <main className="mycourses-main">
-        <h2 className="mycourses-title">My Courses</h2>
+        <div className="mycourses-heading">
+          <div>
+            <p className="mycourses-eyebrow">YOUR LEARNING SPACE</p>
+            <h1 className="mycourses-title">My Courses</h1>
+            <p className="mycourses-subtitle">
+              Continue learning from the courses you have joined.
+            </p>
+          </div>
+          {!loading && courses.length > 0 && (
+            <span className="mycourses-count">
+              {courses.length} {courses.length === 1 ? 'course' : 'courses'} enrolled
+            </span>
+          )}
+        </div>
 
-        {loading && <p className="mycourses-status">Loading your courses...</p>}
+        {loading && (
+          <div className="mycourses-status-card">
+            <div className="mycourses-status-icon" aria-hidden="true">✦</div>
+            <p className="mycourses-status-title">Loading your courses...</p>
+            <span>Getting your learning space ready.</span>
+          </div>
+        )}
 
         {!loading && courses.length === 0 && (
-          <p className="mycourses-status">
-            You haven't enrolled in any courses yet.{' '}
-            <Link to="/" className="mycourses-explore-link">Explore courses →</Link>
-          </p>
+          <div className="mycourses-status-card">
+            <div className="mycourses-status-icon" aria-hidden="true">📚</div>
+            <p className="mycourses-status-title">You have no enrolled courses yet.</p>
+            <span>Find a course and start building your learning journey.</span>
+            <Link to="/student-landing" className="mycourses-explore-link">
+              Explore courses <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         )}
 
         {!loading && courses.length > 0 && (
           <div className="mycourses-grid">
             {courses.map((course) => (
-              <div key={course.id} className="mycourses-card">
+              <div
+                key={course.id}
+                className="mycourses-card"
+                onClick={() => openCourse(course.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openCourse(course.id);
+                  }
+                }}
+                role="button"
+                tabIndex="0"
+              >
                 <div className="mycourses-card-badge">
                   {course.title.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="mycourses-card-body">
-                  <p className="mycourses-card-title">{course.title}</p>
+                  <div className="mycourses-card-topline">
+                    <span className="mycourses-card-label">ENROLLED</span>
+                    <span className="mycourses-card-arrow" aria-hidden="true">↗</span>
+                  </div>
+                  <h2 className="mycourses-card-title">{course.title}</h2>
                   <p className="mycourses-card-instructor">by {course.instructor_name}</p>
-                  <p className="mycourses-card-price">₹{course.price}</p>
+                  <div className="mycourses-card-footer">
+                    <p className="mycourses-card-price">₹{course.price}</p>
+                    <span className="mycourses-card-action">
+                      Continue <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

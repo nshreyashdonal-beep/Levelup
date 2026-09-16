@@ -14,22 +14,14 @@
 
 import { Link } from 'react-router-dom';
 import ProfileMenu from './ProfileMenu.jsx';
+import BrandLogo from './BrandLogo.jsx';
 import './InstructorNav.css';
 
 export default function InstructorNav({ user }) {
   return (
     <header className="instructor-nav">
       <Link to="/" className="instructor-nav-logo">
-        <div className="instructor-nav-logo-badge">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M13 2L4.5 13.5H11L10 22L20.5 9.5H14L13 2Z"
-              fill="white" stroke="white" strokeWidth="1.2"
-              strokeLinejoin="round" strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <span className="instructor-nav-logo-text">Level Up</span>
+        <BrandLogo variant="instructor" compact />
       </Link>
 
       <div className="instructor-nav-search-wrap">
