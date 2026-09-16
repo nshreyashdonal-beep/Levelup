@@ -72,12 +72,14 @@ LevelUp/
         │   └── forms.css
         ├── components/
         │   ├── Navbar.jsx / Navbar.css
-        │   └── Footer.jsx / Footer.css
+        │   ├── Footer.jsx / Footer.css
+        │   └── StudentNav.jsx / StudentNav.css
         └── pages/
             ├── Home.jsx / Home.css
-            ├── Login.jsx
+            ├── Login.jsx / Login.css
             ├── Signup.jsx / Signup.css
-            └── BecomeInstructor.jsx / BecomeInstructor.css
+            ├── BecomeInstructor.jsx / BecomeInstructor.css
+            └── StudentDashboard.jsx / StudentDashboard.css
 ```
 
 **Notes chapter tracking:** two separate numbering tracks — backend and frontend each
@@ -131,7 +133,7 @@ actually has, before wiring it up. Build **one at a time, in this order**, ticki
 box only once it's wired to real data (not just static/placeholder content) and manually
 verified in the browser:
 
-- [ ] **Student Dashboard** (`/dashboard` or similar — mockup: `Studentdashboard.jsx`)
+- [x] **Student Dashboard** (`/student-dashboard` — mockup: `Studentdashboard.jsx`)
       - Reuses the student/teacher "journey" section styling from Home.
       - Reads `user` from `localStorage` (same pattern as Login/Signup already use) and
         redirects to `/login` if missing or `role !== 'student'`.
@@ -208,6 +210,13 @@ client/src/pages/Signup.jsx        (removed Student/Instructor role toggle — t
 client/src/pages/BecomeInstructor.jsx (NEW — instructor-only signup page. No role toggle, always sends role: "instructor". Fields: name, email, password, bio, phone, location. Posts to the real /api/auth/register, not the old imagined /api/instructors/signup.)
 client/src/pages/BecomeInstructor.css (NEW — reuses Signup.css's layout/classes, overrides the indigo accent to the emerald "#10b981" already used for the teacher variant in Home.css, via a `.instructor-theme` wrapper class)
 client/src/App.jsx     (added the /become-instructor route, which previously had a dead link pointing to it from Navbar/Home)
+
+--- Synced this session (built previously, PROGRESS.md wasn't updated at the time) ---
+client/src/components/StudentNav.jsx (NEW — dashboard-only nav for logged-in students, separate from the public Navbar which is for logged-out visitors)
+client/src/components/StudentNav.css
+client/src/pages/StudentDashboard.jsx (NEW — converted from Studentdashboard.jsx mockup. localStorage-guarded welcome screen with journey recap + two action cards. Does NOT show enrolled courses/progress here — that's deferred to My Courses instead.)
+client/src/pages/StudentDashboard.css
+client/src/App.jsx (added the /student-dashboard route)
 ```
 
 ---
@@ -295,6 +304,19 @@ client/src/App.jsx     (added the /become-instructor route, which previously had
   `Mycourses.jsx`), each with a sub-checklist of what needs to change from mockup-imagined
   data to real backend calls — same pattern already proven with Become Instructor, so
   future sessions don't re-litigate "should this hit the real API" per page.
+- Student Dashboard reads role from the existing `user` object in localStorage rather than
+  a separate `role` key, since Login.jsx already stores the whole user object and a second
+  key risks going out of sync with it.
+- Student Dashboard drops the mockup's "location" field — /api/auth/login never returns a
+  location, even for instructors, so it would just render "undefined".
+- Student Dashboard uses a dedicated StudentNav component instead of the public Navbar —
+  Navbar shows Login/Signup buttons meant for logged-out visitors and made this page look
+  identical to the homepage in an earlier draft.
+- Enrolled courses + progress were NOT put on Student Dashboard despite the checklist
+  wording implying they'd live there — deferred entirely to the My Courses page instead,
+  keeping Student Dashboard a simple welcome/navigation screen.
+- Reminder: PROGRESS.md must be updated at the end of every session that changes the repo —
+  this sync happened because a previous session's updates were never pasted back in.
 
 ---
 
