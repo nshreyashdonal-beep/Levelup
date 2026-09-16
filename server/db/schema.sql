@@ -84,3 +84,25 @@ CREATE TABLE instructor_profiles (
   phone VARCHAR(20),
   location VARCHAR(150)
 );
+
+-- ============================================================
+-- sessions table
+-- One extra "event" tied to a course: a doubt session, an
+-- offline in-person meet, or a mock test. All three share the
+-- same shape (a course, a time, who's running it), so one table
+-- with a `session_type` column instead of three separate tables.
+-- Created by the course's instructor.
+-- ============================================================
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id UUID NOT NULL REFERENCES courses(id),
+  session_type VARCHAR(20) NOT NULL CHECK (session_type IN ('doubt', 'offline', 'mock_test')),
+  title VARCHAR(150) NOT NULL,
+  description TEXT,
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  location VARCHAR(150),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Speeds up "show all sessions for this course" queries
+CREATE INDEX idx_sessions_course ON sessions(course_id);

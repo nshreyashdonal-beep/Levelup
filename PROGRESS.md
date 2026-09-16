@@ -116,7 +116,7 @@ Two branches from here:
 - [x] `enrollments` table
 - [x] `reviews` table
 - [x] `instructor_profiles` table (created + verified in pgAdmin)
-- [ ] `sessions` table (doubt sessions / offline meets / mock tests)
+- [x] `sessions` table (doubt sessions / offline meets / mock tests)
 
 ### Backend logic
 - [x] Auth: register/login routes (bcrypt password hashing, JWT)
@@ -315,6 +315,16 @@ client/src/components/StudentNav.css (removed the now-unused .student-nav-avatar
   moved into ProfileMenu.css)
 client/src/components/InstructorNav.css (removed the now-unused .instructor-nav-avatar
   rules, same move)
+
+--- This session ---
+server/db/schema.sql (now also includes sessions table — doubt sessions / offline meets /
+  mock tests, one table with a session_type CHECK column. Paste the SQL into pgAdmin's
+  Query Tool and run it before building routes against it.)
+server/routes/sessions.js (NEW — POST /api/sessions [instructor-only, must own the course],
+  GET /api/sessions?course_id=<id> [public, requires course_id]; verified via Hoppscotch:
+  201 on success, 403 when posting to another instructor's course, 400 on invalid
+  session_type, 200 with the session listed on GET)
+server/server.js (mounted the new session routes under /api/sessions)
 ```
 
 ---
@@ -484,6 +494,30 @@ client/src/components/InstructorNav.css (removed the now-unused .instructor-nav-
 - Log out is the first place `localStorage`'s `token`/`user` keys get cleared — previous
   sessions only ever wrote them (Login) or read them (dashboard guards), never removed
   them.
+- `sessions` table uses one table with a `session_type` CHECK ('doubt'/'offline'/
+  'mock_test') instead of three separate tables — all three share the same shape (course +
+  scheduled_at + optional location/description), same reasoning as reusing `users.role`
+  instead of splitting students/instructors into two tables.
+- No separate `instructor_id` column on `sessions` — it's derivable via
+  `sessions.course_id` → `courses.instructor_id`, so it isn't duplicated.
+- `location` on `sessions` is nullable since only offline-type sessions need it; doubt
+  sessions and mock tests leave it blank.
+- Table only, no routes yet — same as how `instructor_profiles` was table-only before its
+  route logic (in `auth.js`) came in a later session. `server/routes/sessions.js` is
+  follow-up work, not built this session.
+- `server/routes/sessions.js`: POST checks `session_type` against the same three allowed
+  values as the DB's CHECK constraint, BEFORE inserting — so a bad value gets a clear
+  400 error instead of a raw Postgres error bubbling up. Same "validate early" pattern as
+  reviews.js checking rating 1-5.
+- POST /api/sessions looks up the course first and compares `courses.instructor_id` to
+  `req.user.id` before inserting — an instructor can only add sessions to courses they
+  own, not any course on the platform. `requireRole('instructor')` alone isn't enough
+  since it only checks the *role*, not *which* instructor.
+- GET /api/sessions requires `?course_id=` (unlike GET /api/courses, which allows browsing
+  everything) — there's no "show every session on the platform" use case yet, only
+  "show this course's sessions", so the simpler required-param version was built instead.
+- No PUT/DELETE (edit/cancel a session) yet — kept to the same two routes (create + list)
+  as every other table's first pass (courses, enrollments, reviews all started this way).
 
 ---
 
@@ -524,8 +558,16 @@ client/src/components/InstructorNav.css (removed the now-unused .instructor-nav-
   what each one needs translated from mockup to real backend calls.
 - Open question to settle before/during Student Dashboard or My Courses: is course
   "progress" (% complete) worth a real schema addition now, or a placeholder to skip for
-  later? Both those mockups show a progress bar with no backing data yet.
+  later? Both those mockups show a progress bar with no backing data yet. Still unresolved.
 - Next piece: Student Dashboard (first item in the new dashboards branch).
+
+--- Carried from this session ---
+- `sessions` table + routes fully verified: table created in pgAdmin, and
+  server/routes/sessions.js tested via Hoppscotch — POST 201 (own course), POST 403
+  (someone else's course), POST 400 (invalid session_type), GET 200 (session listed by
+  course_id). Backend foundation checklist section is now fully checked off.
+- Next piece: "Course browse + detail pages" (frontend, no mockup yet, uses the existing
+  public GET /api/courses).
 ```
 
 ---

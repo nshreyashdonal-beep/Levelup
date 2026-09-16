@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const courseRoutes = require('./routes/courses');
 const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
+const sessionRoutes = require('./routes/sessions');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -31,6 +32,9 @@ app.use('/api/enrollments', enrollmentRoutes);
 
 // All review routes live under /api/reviews
 app.use('/api/reviews', reviewRoutes);
+
+// All session routes live under /api/sessions
+app.use('/api/sessions', sessionRoutes);
 
 // Temporary test route to prove the middleware works — remove once real
 // protected routes (courses, etc.) exist to test against instead.
