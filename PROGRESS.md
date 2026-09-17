@@ -100,14 +100,19 @@ increment independently, based on which one a session actually works on.
 
 Mark `[x]` when a piece is done **and** verified (server runs, or table shows up in pgAdmin).
 
-Two branches from here:
-- **Branch 0** — the main line below (everything already in this checklist: remaining
-  backend tables, course browse/create/review UI, geolocation, testing).
-- **Branch 1** — a side quest that jumped the queue (see its own section after Branch 0
-  below). Once Branch 1 is finished, come back here and resume Branch 0 at the next
-  unchecked item.
+**Branch numbering:** every branch, in every phase, gets a permanent number the first
+time it's created — numbers are never reused or reassigned. "Main" is always Branch 1.
+Use `Branch N (Name)` everywhere a branch is referenced (checklist headers, Files
+Created entries, Decisions Log, session handshake).
 
-### Branch 0 — Main line
+Two branches from here:
+- **Branch 1 (Main)** — the main line below (everything already in this checklist:
+  remaining backend tables, course browse/create/review UI, geolocation, testing).
+- **Branch 2 (Profile menu dropdown)** — a side quest that jumped the queue (see its own
+  section after Branch 1 below). Once Branch 2 is finished, come back here and resume
+  Branch 1 at the next unchecked item.
+
+### Branch 1 (Main) — Main line
 
 ### Backend foundation
 - [x] Minimal project skeleton: `package.json`, `.gitignore`, `server.js` with a basic
@@ -226,9 +231,9 @@ both Student Dashboard and My Courses mockups but nothing in the current schema 
 - [ ] Basic backend tests
 - [ ] Manual QA pass, loading/error states
 
-### Branch 1 — Profile menu dropdown
+### Branch 2 (Profile menu dropdown)
 
-Side quest, not part of the Branch 0 order above: the avatar circle in StudentNav/
+Side quest, not part of the Branch 1 (Main) order above: the avatar circle in StudentNav/
 InstructorNav did nothing on click. Reference: a screenshot of Udemy's own profile
 dropdown (avatar + name/email header, then grouped links, then Log out).
 
@@ -247,6 +252,13 @@ dropdown (avatar + name/email header, then grouped links, then Log out).
 ---
 
 ## 2. Files Created So Far
+
+> **Format going forward:** every new entry lives inside its own branch's Files Created
+> So Far, grouped under a `### Session N (Branch N (Name))` heading — each branch counts
+> its own sessions independently (Branch 3's Session 1 and Branch 4's Session 1 are
+> unrelated; there's no single project-wide session count). Entries below this point
+> predate the convention (Phase 1 had no session numbers) and are left as historical
+> record, not rewritten.
 
 ```
 server/package.json   (express, dotenv, pg, cors, bcryptjs, jsonwebtoken)
@@ -789,16 +801,63 @@ client/src/pages/CourseDetail.css (added styles for the star-rating input, revie
 
 ### Session Rules
 
-- **Session counter:** track how many sessions have worked on Phase 2 (see counter below). Increment by 1 at the start of every new Phase 2 session.
-- **At the start of every new session**, ask the user which branch they're working on this session (e.g. `Main` or `InstructorFunctionalities`).
-  - If the user says **Main**, then every entry added to that session's "Files Created So Far" must mention the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
+- **No global session counter.** Each branch tracks its own session count
+  independently, inside its own "Files Created So Far" — there is no single number
+  shared across branches. Branch 3's Session 1 and Branch 4's Session 1 are unrelated;
+  whichever branch you're working in this time gets its own next number.
+- **Every branch has a permanent number** (never reused/reassigned — see the numbering
+  convention under Section 1). Always refer to a branch as `Branch N (Name)`.
+
+- **Opening handshake — do this before writing or touching any code:**
+  1. Claude reads this file, finds the branch the user names, looks at the highest
+     `### Session N (Branch N (Name))` heading already listed under that branch's Files
+     Created So Far, and states back: *"Branch [N] ([Name]) — last recorded Session
+     [N]. Last unchecked checklist item for this branch: [X]."* (If the branch has no
+     Session headings yet, this will be its Session 1.)
+  2. The user confirms or corrects it (e.g. "yes, continue" / "no, work on task Y
+     instead").
+  3. Only after that confirmation does building start. This catches a stale/mismatched
+     file or a misread checklist item before any work is wasted on the wrong thing.
+
+- **Writing happens incrementally, not in one batch at the end.** After each file or
+  task is finished — not saved up until the whole session wraps — Claude immediately
+  gives a small paste-ready update for just that piece, as two separate things:
+  ```
+  ✅ Done: <file> — <what/why, one line>
+  → 1. Tick the box in Section 1, that branch's checklist, tagged with a session badge:
+       - [x] <checklist item> [Session N]
+  → 2. Add to that branch's Files Created So Far, under
+       "### Session N (Branch N (Name))" (files only — no checklist text here):
+       - <file>: <what/why>
+  ```
+  The `[Session N]` badge always matches that branch's own session number (never a
+  global count) — the same N as the `### Session N (Branch N (Name))` heading the file
+  landed under. If a task spans more than one session, tag it with the session it was
+  *completed* in, not the one it was started in.
+  The user pastes it in right away before the next task starts. This means a session
+  that dies mid-way (context/window limit) only ever loses the *current, unsaved* piece
+  — never the whole session's work, since everything before it was already saved off.
+
+- **If a session's window/context runs out before a final wrap-up:** the chat may still
+  be open even if a full new response can't be generated. Send a short, cheap recovery
+  message in that same conversation: *"Just give me the PROGRESS.md paste-ready update
+  for everything done in this chat so far — checklist ticks, files, decisions. Nothing
+  else."* Claude can still read back over its own earlier messages and reconstruct the
+  write-up even without doing new work. If the chat is fully dead and no recovery
+  message goes through, and the code was never pasted into PROGRESS.md piece-by-piece,
+  the only fallback is writing the entry by hand from the actual code already saved to
+  the repo — the codebase is the ground truth; the write-up is just prose describing it.
+
+- **At the start of every new session**, ask the user which branch they're working on this session (e.g. `Branch 1 (Main)` or `Branch 3 (InstructorFunctionalities)`).
+  - Every entry added goes straight into that branch's own "Files Created So Far",
+    grouped under a `### Session N (Branch N (Name))` heading — N being that specific
+    branch's own next session number, not a project-wide count.
   - If the branch chosen has **no tasks currently listed** in its checklist, ask the user which task(s) they want to work on before starting, and add them to that branch's checklist. This applies to any branch, not just one in particular.
 
-**Session counter:** 2
+### Branch 1 (Main)
 
-### Branch Main
-
-Carried over from Phase 1 — unfinished/open items, not yet started or not fully resolved.
+Continues the same Branch 1 (Main) from Phase 1 — carried-over, unfinished/open items,
+not yet started or not fully resolved.
 
 #### Checklist
 
@@ -816,25 +875,55 @@ Carried over from Phase 1 — unfinished/open items, not yet started or not full
 - [ ] Sessions: add edit/cancel routes — currently create + list only
 - [ ] Reviews: add an "already reviewed" pre-check before showing the review form (no matching GET endpoint exists yet; a duplicate submit currently just silently no-ops on the backend's 409)
 
-### Branch InstructorFunctionalities
+### Branch 3 (InstructorFunctionalities)
 
 #### Checklist
 
 - [x] Welcome page should act as a mediator between login and the Instructor Dashboard —
       every way an instructor reaches "Dashboard" (top nav link, profile-menu link) should
       land on the Welcome page first; only that page's "Open Dashboard →" card should go
-      on to the real /instructor-dashboard.
+      on to the real /instructor-dashboard. [Session 1]
 
-### Branch InstructorUI
+**Course management (schema agreed, not yet built) — final shape: `courses` gets new
+columns (`category`, `level`, `delivery_mode`, `language`, `thumbnail_url`,
+`duration_weeks`, `capacity`, `know_your_curriculum`, `outcomes`, `status`); new
+`course_modules` table (module = major section, `status` 'planned'|'available'); new
+`course_lectures` table (lecture = actual content inside a module, `content`,
+`video_url`, `duration_minutes`, `status` 'planned'|'available'). `know_your_curriculum`
+= instructor's advertised roadmap (free text); `course_modules`/`course_lectures` =
+what's actually built so far — the two are allowed to differ (live/hybrid courses grow
+their real content over time). Student course view = Title, Level, Price, Description,
+Outcomes, Curriculum.**
+
+- [ ] Write schema: `courses` new columns + `course_modules` table + `course_lectures`
+      table (via pgAdmin Query Tool, per project convention — no migration script)
+- [ ] `POST /api/courses` — create course route (instructor)
+- [ ] `POST /api/courses/:id/modules` — add a module to a course
+- [ ] `POST /api/modules/:id/lectures` — add a lecture to a module
+- [ ] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
+      curriculum, joined from `course_modules`/`course_lectures`, ordered by `position`)
+- [ ] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
+      planned→available) and edit existing fields
+- [ ] Validation + auth checks — only the instructor who owns the course can create/edit
+      its modules and lectures
+- [ ] Create Course form (frontend) — wire up the placeholder "+ Create Course" button on
+      My Courses (instructor)
+- [ ] Add Module screen (frontend)
+- [ ] Add Lecture screen (frontend, nested under a module)
+- [ ] Student-facing course view page (frontend) — Title, Level, Price, Description,
+      Outcomes, Curriculum
+- [ ] Instructor course management dashboard (frontend) — list own courses, edit, publish
+
+### Branch 4 (InstructorUI)
 
 #### Checklist
 
 - [x] "My Courses" (instructor) should show only the courses this instructor has created —
-      not a combined create-form + list page.
+      not a combined create-form + list page. [Session 1]
 - [x] Add a "Create Course" button on that page (the actual create-course page is a future
-      piece — button is a placeholder for now, not wired to a route yet).
+      piece — button is a placeholder for now, not wired to a route yet). [Session 1]
 
-### Files Created So Far
+### Session 1 (Branch 4 (InstructorUI))
 
 ```
 client/src/pages/ManageCourses.jsx (rewritten — dropped the inline "Create a New Course"
@@ -868,9 +957,9 @@ client/src/components/InstructorNav.jsx ("Create Course" nav link relabeled to
   button to it.
 ```
 
---- Carried from Session 1 (Branch InstructorUI) ---
+--- Carried from Session 1 (Branch 4 (InstructorUI)) ---
 
-### Session 2 Update (Branch InstructorUI) — ManageCourses Rebuild
+### Session 2 (Branch 4 (InstructorUI)) — ManageCourses Rebuild
 
 #### Checklist Status (Session 2)
 
@@ -931,12 +1020,12 @@ client/src/pages/ManageCourses.css (InstructorUI — new stylesheet following Ma
   real edit/delete affordances.
 ```
 
---- Carried from previous session (Branch InstructorFunctionalities) ---
+--- Carried from previous session (Branch 3 (InstructorFunctionalities)) ---
 
-### Files Created So Far
+### Session 1 (Branch 3 (InstructorFunctionalities))
 
 ```
-client/src/components/InstructorNav.jsx (InstructorFunctionalities — "Dashboard" nav
+client/src/components/InstructorNav.jsx (Branch 3 (InstructorFunctionalities) — "Dashboard" nav
   link now points to /instructor-welcome instead of straight to /instructor-dashboard)
 client/src/components/ProfileMenu.jsx (InstructorFunctionalities — "Instructor Dashboard"
   dropdown link now points to /instructor-welcome instead of straight to
@@ -971,27 +1060,62 @@ Continue the LevelUp project from where PROGRESS.md leaves off.
 Attached/linked: my repo (clone or unzip it) and PROGRESS.md.
 
 Rules for this session:
-1. Read PROGRESS.md first — the checklist, decisions log, and current repo layout are your
+
+0. OPENING HANDSHAKE — do this before touching any code:
+   a. Ask which branch I'm working on this session, then find that branch's own Files
+      Created So Far and its highest existing "### Session N (Branch N (Name))" heading.
+      State back: "Branch [N] ([Name]) — last recorded Session [N]. Last unchecked
+      checklist item for this branch: [X]." (No heading yet for this branch = it's
+      Session 1.)
+   b. Wait for me to confirm or correct it (e.g. "yes, continue" / "no, work on task Y
+      instead").
+   c. Only start building after I confirm.
+
+1. Read PROGRESS.md fully — the checklist, decisions log, and current repo layout are your
    only memory of this project. Don't assume anything not written there.
-2. Build ONLY the next unchecked checklist item. Don't jump ahead, don't build multiple
-   pieces at once.
+2. Build ONLY the next unchecked checklist item for that branch (or the task I named in
+   step 0b). Don't jump ahead, don't build multiple pieces at once.
 3. Write the simplest, most beginner-friendly code possible — plain functions, plain SQL,
    short files, comments that explain *why* a line exists. No frameworks, patterns, or
    abstractions beyond what this one piece needs.
 4. Don't scaffold the full future directory structure. Only create the files/folders this
    piece actually needs. The repo only ever reflects what exists right now.
-5. Phase 2 session rules:
-   - Increment the "Session counter" under Phase 2 by 1 at the start of this session.
-   - Ask me which branch I'm working on this session (e.g. `Main` or `InstructorFunctionalities`).
-   - If I say `Main`, every entry added to this session's "Files Created So Far" must mention
-     the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
+5. INCREMENTAL WRITES — do not save the PROGRESS.md update for the end. As soon as one
+   file or task is finished, immediately give me a paste-ready update for just that
+   piece, as two separate things:
+   ✅ Done: <file> — <what/why, one line>
+   → 1. Tick the box in Section 1, this branch's checklist, tagged with a session badge:
+        - [x] <checklist item> [Session N]
+   → 2. Add to this branch's Files Created So Far, under
+        "### Session N (Branch N (Name))" (files only — no checklist text here):
+        - <file>: <what/why>
+   The [Session N] badge always matches this branch's own session number (never a global
+   count) — same N as the Session heading the file lands under. If a task spans more than
+   one session, tag it with the session it was *completed* in.
+   I'll paste it in right away before you start the next piece. This means if the session
+   window runs out mid-task, only the current unsaved piece is at risk — not the whole
+   session.
+6. Branch/session rules:
+   - There is no project-wide session counter — each branch counts its own sessions
+     independently, based on the highest "### Session N" heading already listed under
+     that specific branch's Files Created So Far.
+   - Every branch has a permanent number — never invent a new one for an existing
+     branch, and never reuse a number.
    - If the branch I choose has no tasks currently listed in its checklist, ask me which
      task(s) I want to work on before starting, and add them to that branch's checklist.
      This applies to any branch, not just one in particular.
-6. When done, give me:
+7. When done, give me:
    - the new/changed files (as a diff or full files, whichever is clearer for a beginner to apply)
-   - the exact text to paste into PROGRESS.md's "Files Created So Far", "Decisions Log",
+   - the exact text to paste into that branch's "Files Created So Far", "Decisions Log",
      "Repo layout", and checklist (with the box ticked) before my next session.
    - if notes were generated this session, update the "Notes chapter tracking" line for
      whichever track (backend/frontend) was used.
+
+RECOVERY — if the session window/context runs out before step 7 happens:
+   - If the chat is still open, send: "Just give me the PROGRESS.md paste-ready update
+     for everything done in this chat so far — checklist ticks, files, decisions. Nothing
+     else." Claude can reconstruct it from its own earlier messages in the same chat.
+   - If the chat is fully dead and nothing was pasted in via step 5 along the way, write
+     the entry by hand from the code already sitting in your repo — the repo is the
+     ground truth; PROGRESS.md is just prose describing it.
 ```
