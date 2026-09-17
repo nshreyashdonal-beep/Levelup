@@ -782,7 +782,60 @@ client/src/pages/CourseDetail.css (added styles for the star-rating input, revie
 
 ---
 
-## 5. Next Session Prompt (copy-paste this each time)
+## Phase 2
+
+### Session Rules
+
+- **Session counter:** track how many sessions have worked on Phase 2 (see counter below). Increment by 1 at the start of every new Phase 2 session.
+- **At the start of every new session**, ask the user which branch they're working on this session (e.g. `Main` or `InstructorFunctionalities`).
+  - If the user says **Main**, then every entry added to that session's "Files Created So Far" must mention the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
+  - If the branch chosen has **no tasks currently listed** in its checklist, ask the user which task(s) they want to work on before starting, and add them to that branch's checklist. This applies to any branch, not just one in particular.
+
+**Session counter:** 0
+
+### Branch Main
+
+Carried over from Phase 1 — unfinished/open items, not yet started or not fully resolved.
+
+#### Checklist
+
+**Late-stage differentiator**
+- [ ] Geolocation / "nearby instructors" — backend query + frontend UI
+
+**Testing & polish**
+- [ ] Basic backend tests
+- [ ] Manual QA pass, loading/error states
+
+**Open items carried forward (checked off in Phase 1 but not fully resolved)**
+- [ ] Decide whether `progress` (course completion %) gets a real schema column, or stays dropped for good
+- [ ] Instructor Dashboard: wire up Total Students, Total Earnings, Avg. Rating (currently hardcoded placeholders — only Active Courses is real)
+- [ ] Courses: add edit/delete (PUT/DELETE) — Manage Courses is currently create + view only
+- [ ] Sessions: add edit/cancel routes — currently create + list only
+- [ ] Reviews: add an "already reviewed" pre-check before showing the review form (no matching GET endpoint exists yet; a duplicate submit currently just silently no-ops on the backend's 409)
+
+### Branch InstructorFunctionalities
+
+#### Checklist
+
+- (none yet)
+
+### Files Created So Far
+
+```
+```
+
+### Decisions Log
+
+-
+
+### Known Issues / TODO Carried Between Sessions
+
+```
+```
+
+---
+
+## 5. Session Prompt (copy-paste this each time)
 
 ```
 Continue the LevelUp project from where PROGRESS.md leaves off.
@@ -799,7 +852,15 @@ Rules for this session:
    abstractions beyond what this one piece needs.
 4. Don't scaffold the full future directory structure. Only create the files/folders this
    piece actually needs. The repo only ever reflects what exists right now.
-5. When done, give me:
+5. Phase 2 session rules:
+   - Increment the "Session counter" under Phase 2 by 1 at the start of this session.
+   - Ask me which branch I'm working on this session (e.g. `Main` or `InstructorFunctionalities`).
+   - If I say `Main`, every entry added to this session's "Files Created So Far" must mention
+     the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
+   - If the branch I choose has no tasks currently listed in its checklist, ask me which
+     task(s) I want to work on before starting, and add them to that branch's checklist.
+     This applies to any branch, not just one in particular.
+6. When done, give me:
    - the new/changed files (as a diff or full files, whichever is clearer for a beginner to apply)
    - the exact text to paste into PROGRESS.md's "Files Created So Far", "Decisions Log",
      "Repo layout", and checklist (with the box ticked) before my next session.
