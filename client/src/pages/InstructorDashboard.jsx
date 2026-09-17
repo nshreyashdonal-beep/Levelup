@@ -126,7 +126,7 @@ export default function InstructorDashboard() {
         </div>
       </main>
 
-      <Footer />
+      <Footer variant="instructor" />
     </div>
   );
 }

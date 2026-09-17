@@ -45,7 +45,7 @@ export default function ProfileMenu({ user }) {
   return (
     <div className="profile-menu" ref={menuRef}>
       <div
-        className="profile-menu-avatar"
+        className={`profile-menu-avatar ${isInstructor ? 'profile-menu-avatar--instructor' : ''}`}
         onClick={() => setOpen((wasOpen) => !wasOpen)}
       >
         {initial}
@@ -54,7 +54,9 @@ export default function ProfileMenu({ user }) {
       {open && (
         <div className="profile-menu-dropdown">
           <div className="profile-menu-header">
-            <div className="profile-menu-header-avatar">{initial}</div>
+            <div className={`profile-menu-header-avatar ${isInstructor ? 'profile-menu-header-avatar--instructor' : ''}`}>
+              {initial}
+            </div>
             <div>
               <div className="profile-menu-name">{user?.name}</div>
               <div className="profile-menu-email">{user?.email}</div>
@@ -65,7 +67,7 @@ export default function ProfileMenu({ user }) {
             {isInstructor ? (
               <Link
                 to="/instructor-dashboard"
-                className="profile-menu-link"
+                className="profile-menu-link profile-menu-link--instructor"
                 onClick={() => setOpen(false)}
               >
                 Instructor Dashboard

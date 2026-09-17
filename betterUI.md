@@ -161,10 +161,10 @@ or tests were run.
 
 ## 10. Instructor Welcome — `/instructor-welcome`
 
-- [ ] Improve the welcome hierarchy, journey content, and primary actions.
-- [ ] Keep the green/emerald instructor theme consistent.
-- [ ] Preserve role checks, navigation targets, and displayed content.
-- [ ] Verify responsive behavior and loading/error states.
+- [x] Improve the welcome hierarchy, journey content, and primary actions.
+- [x] Keep the green/emerald instructor theme consistent.
+- [x] Preserve role checks, navigation targets, and displayed content.
+- [x] Verify responsive behavior and loading/error states.
 
 ## 11. Instructor Dashboard — `/instructor-dashboard`
 

@@ -1,8 +1,5 @@
 /* src/components/InstructorNav.css */
-/* Same visual system as StudentNav.css (indigo accent, Outfit logo font,
-   centered search bar, circular initial avatar) so both logged-in navs
-   look consistent instead of the instructor one having its own
-   left-aligned layout. */
+/* Instructor navigation uses the shared layout with emerald accents. */
 
 .instructor-nav {
   position: sticky;
@@ -60,8 +57,8 @@
 }
 
 .instructor-nav-search:focus {
-  border-color: #a5b4fc;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #6ee7b7;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .instructor-nav-links {
@@ -79,7 +76,7 @@
 }
 
 .instructor-nav-link:hover {
-  color: #4f46e5;
+  color: var(--color-instructor-primary-dark);
 }
 
 /* Avatar + dropdown is now ProfileMenu.jsx/.css, shared with StudentNav,

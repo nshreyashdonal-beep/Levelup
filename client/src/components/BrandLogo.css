@@ -65,6 +65,19 @@
   color: #a5b4fc;
 }
 
+.brand-logo-instructor-footer .brand-logo-up {
+  color: #6ee7b7;
+}
+
+.brand-logo-instructor-footer .brand-logo-level {
+  color: #f3fbf6;
+}
+
+.brand-logo-instructor-footer .brand-logo-mark {
+  background: #22b982;
+  box-shadow: 0 4px 12px rgba(34, 185, 130, 0.24);
+}
+
 .brand-logo-compact {
   gap: 8px;
 }

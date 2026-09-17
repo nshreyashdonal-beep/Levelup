@@ -7,15 +7,17 @@ import BrandLogo from './BrandLogo.jsx'
 
 const companyLinks = ["About Us", "Contact", "Privacy Policy"]
 
-export default function Footer() {
+export default function Footer({ variant = 'student' }) {
+  const isInstructor = variant === 'instructor'
+
   return (
-    <footer className="footer">
+    <footer className={`footer footer--${variant}`}>
       <div className="footer-top">
 
         {/* Brand */}
         <div className="footer-brand">
           <div className="footer-brand-row">
-            <BrandLogo variant="footer" compact />
+            <BrandLogo variant={isInstructor ? 'instructor-footer' : 'footer'} compact />
           </div>
           <p className="footer-brand-blurb">
             Empowering learners worldwide with practical,<br />career-ready skills.

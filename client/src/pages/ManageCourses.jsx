@@ -199,7 +199,7 @@ export default function ManageCourses() {
         </section>
       </main>
 
-      <Footer />
+      <Footer variant="instructor" />
     </div>
   );
 }

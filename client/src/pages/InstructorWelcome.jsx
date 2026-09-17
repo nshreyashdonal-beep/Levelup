@@ -1,19 +1,6 @@
 // src/pages/InstructorWelcome.jsx
-// New page: what an instructor sees right after logging in, before the
-// real Instructor Dashboard (stat cards + quick actions). Same idea as
-// StudentDashboard.jsx (welcome message + journey track), but for
-// instructors, plus a "Continue to Your Dashboard" section with a button
-// through to the actual dashboard.
-//
-// The journey steps + track markup are lifted as-is from the "Teacher's
-// Path" tab on Home.jsx (teacherSteps array and JourneyTrack's JSX) —
-// not reinvented — so this page shows the exact same 6-step teacher
-// journey a visitor already saw on the homepage, just without the tab
-// toggle (there's only one journey to show here, the instructor's own).
-//
-// Same localStorage guard pattern as StudentDashboard/InstructorDashboard:
-// reads `user` from localStorage, redirects to /login if missing or
-// role !== 'instructor'.
+// Instructor welcome screen with the same welcome, journey, and action-card
+// structure as StudentDashboard, using the instructor's emerald theme.
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -53,16 +40,16 @@ export default function InstructorWelcome() {
       <InstructorNav user={user} />
 
       <main className="instructor-welcome-main">
-        {/* Welcome */}
         <div className="instructor-welcome-header">
           <h1 className="instructor-welcome-title">Welcome {user.name}!</h1>
         </div>
 
+        {/* Email */}
         <div className="instructor-welcome-info-bar">
           <span>{user.email}</span>
         </div>
 
-        {/* Journey — same steps/markup as Home.jsx's "Teacher's Path" tab */}
+        {/* Journey */}
         <section className="instructor-welcome-journey">
           <h2 className="instructor-welcome-section-title">Your Journey on LevelUp</h2>
 
@@ -81,17 +68,30 @@ export default function InstructorWelcome() {
           </div>
         </section>
 
-        {/* Link through to the real dashboard */}
-        <section className="instructor-welcome-cta">
-          <h2 className="instructor-welcome-section-title">Continue to Your Dashboard</h2>
-          <p className="instructor-welcome-cta-subtitle">View your courses, stats, and quick actions</p>
-          <Link to="/instructor-dashboard" className="instructor-welcome-cta-btn">
-            Go to Dashboard
-          </Link>
+        {/* Action cards */}
+        <section className="instructor-welcome-actions">
+          <h2 className="instructor-welcome-section-title">Start Your Teaching Journey</h2>
+          <p className="instructor-welcome-actions-subtitle">Choose what you want to do next on LevelUp</p>
+
+          <div className="instructor-welcome-action-cards">
+            <Link to="/manage-courses" className="instructor-welcome-action-card">
+              <div className="instructor-welcome-action-icon">📦</div>
+              <h3 className="instructor-welcome-action-title">Manage Courses</h3>
+              <p className="instructor-welcome-action-desc">Create, edit, and publish your courses</p>
+              <span className="instructor-welcome-action-link">Manage Courses →</span>
+            </Link>
+
+            <Link to="/instructor-dashboard" className="instructor-welcome-action-card">
+              <div className="instructor-welcome-action-icon">📊</div>
+              <h3 className="instructor-welcome-action-title">Instructor Dashboard</h3>
+              <p className="instructor-welcome-action-desc">View your courses, stats, and quick actions</p>
+              <span className="instructor-welcome-action-link">Open Dashboard →</span>
+            </Link>
+          </div>
         </section>
       </main>
 
-      <Footer />
+      <Footer variant="instructor" />
     </div>
   );
 }

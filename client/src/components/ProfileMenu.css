@@ -1,7 +1,6 @@
 /* src/components/ProfileMenu.css */
-/* Same indigo accent as StudentNav/InstructorNav's old plain avatar div,
-   so swapping one for the other doesn't change how the nav looks until
-   you actually click it. */
+/* The profile menu defaults to the Student indigo accent and switches to
+   emerald when rendered for an instructor. */
 
 .profile-menu {
   position: relative;
@@ -24,6 +23,16 @@
 
 .profile-menu-avatar:hover {
   background: #6366f1;
+  color: #fff;
+}
+
+.profile-menu-avatar--instructor {
+  border-color: var(--color-instructor-primary);
+  color: var(--color-instructor-primary-dark);
+}
+
+.profile-menu-avatar--instructor:hover {
+  background: var(--color-instructor-primary);
   color: #fff;
 }
 
@@ -60,6 +69,10 @@
   flex-shrink: 0;
 }
 
+.profile-menu-header-avatar--instructor {
+  background: var(--color-instructor-primary);
+}
+
 .profile-menu-name {
   font-size: 0.875rem;
   font-weight: 600;
@@ -91,6 +104,11 @@
 
 .profile-menu-link:hover {
   background: #f3f4f6;
+}
+
+.profile-menu-link--instructor:hover {
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
 }
 
 .profile-menu-logout {

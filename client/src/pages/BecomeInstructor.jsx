@@ -175,7 +175,7 @@ export default function BecomeInstructor() {
         </div>
       </main>
 
-      <Footer />
+      <Footer variant="instructor" />
     </div>
   );
 }
