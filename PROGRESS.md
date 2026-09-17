@@ -791,7 +791,7 @@ client/src/pages/CourseDetail.css (added styles for the star-rating input, revie
   - If the user says **Main**, then every entry added to that session's "Files Created So Far" must mention the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
   - If the branch chosen has **no tasks currently listed** in its checklist, ask the user which task(s) they want to work on before starting, and add them to that branch's checklist. This applies to any branch, not just one in particular.
 
-**Session counter:** 0
+**Session counter:** 1
 
 ### Branch Main
 
@@ -819,18 +819,47 @@ Carried over from Phase 1 — unfinished/open items, not yet started or not full
 
 - (none yet)
 
+### Branch InstructorUI
+
+#### Checklist
+
+- [x] "My Courses" (instructor) should show only the courses this instructor has created —
+      not a combined create-form + list page.
+- [x] Add a "Create Course" button on that page (the actual create-course page is a future
+      piece — button is a placeholder for now, not wired to a route yet).
+
 ### Files Created So Far
 
 ```
+client/src/pages/ManageCourses.jsx (rewritten — dropped the inline "Create a New Course"
+  form. Page now shows only the instructor's own courses list, renamed heading to
+  "My Courses", plus a placeholder "+ Create Course" button — not wired to a route yet,
+  since the dedicated create-course page doesn't exist. Follows the same "don't fake it"
+  pattern already used elsewhere in this repo, e.g. Instructor Dashboard's non-clickable
+  Go Live/Schedule Offline cards.)
+client/src/pages/ManageCourses.css (removed the now-unused create-form styles; added
+  styles for the placeholder Create Course button)
+client/src/components/InstructorNav.jsx ("Create Course" nav link relabeled to
+  "My Courses" — still points at /manage-courses, since that route is now a courses list
+  instead of a create form)
 ```
 
 ### Decisions Log
 
--
+- Kept the route as `/manage-courses` rather than renaming it, since renaming would touch
+  every other link that already points there (InstructorNav, InstructorDashboard's
+  quick-action card) — only the page's content and the nav label changed, not the URL.
+- The "Create Course" button on this page is intentionally non-functional (no route to
+  send it to yet) rather than linking to `/manage-courses` again — that would be circular
+  since this page already is Manage Courses now. The real create-course page is future
+  work.
 
 ### Known Issues / TODO Carried Between Sessions
 
 ```
+- Create Course page doesn't exist yet — the button on My Courses (instructor) is a
+  placeholder. Next InstructorUI piece: build the actual create-course page and wire the
+  button to it.
 ```
 
 ---

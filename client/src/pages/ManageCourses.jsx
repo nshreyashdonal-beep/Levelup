@@ -1,16 +1,13 @@
 // src/pages/ManageCourses.jsx
-// Instructor-only page: a form to create a new course, plus a list of
-// courses this instructor already has. No mockup existed for this one
-// (src.rar never included it), so the layout is built plain from scratch
-// to match the rest of the instructor-facing pages.
+// Instructor-only page, reached via InstructorNav's "My Courses" link.
 //
-// "Manage" only goes as far as the backend currently allows: create
-// (POST /api/courses) and view your own list (GET /api/courses
-// ?instructor_id=<id>, same route already used for the Dashboard's
-// "Active Courses" stat). There's no PUT/DELETE on courses yet — same
-// situation as sessions having no edit/cancel route yet — so there's no
-// edit or delete button here. Adding those is follow-up work once that
-// backend route exists, not something to fake with dead buttons now.
+// Previously this page had BOTH a "create a course" form and a list of the
+// instructor's own courses on one page. Split apart: this page now shows
+// ONLY the list of courses this instructor has created, plus a
+// "+ Create Course" button. The actual create-course page doesn't exist
+// yet (future piece), so the button is a placeholder for now rather than
+// a dead link to nowhere — same "don't fake it" pattern already used for
+// Instructor Dashboard's non-clickable Go Live / Schedule Offline cards.
 //
 // Same instructor-only guard as InstructorDashboard.jsx, and reuses
 // InstructorNav the same way every other instructor page does.
@@ -28,10 +25,6 @@ export default function ManageCourses() {
 
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
-
-  const [formData, setFormData] = useState({ title: '', description: '', price: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
 
   // Guard: only logged-in instructors get past this page — same check
   // as InstructorDashboard.jsx.
@@ -61,53 +54,6 @@ export default function ManageCourses() {
     if (user) loadCourses(user.id);
   }, [user]);
 
-  function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    if (!formData.title.trim()) {
-      setFormError('Title is required');
-      return;
-    }
-
-    setSubmitting(true);
-    setFormError('');
-
-    const token = localStorage.getItem('token');
-
-    fetch(`${API_BASE}/api/courses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        // Backend defaults price to 0 if left out entirely, but an empty
-        // string would otherwise get sent as-is — so send undefined
-        // instead when the field was left blank.
-        price: formData.price === '' ? undefined : formData.price,
-      }),
-    })
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (!ok) {
-          setFormError(data.error || 'Something went wrong creating the course');
-          return;
-        }
-        // New course created — clear the form and put it straight into
-        // the list instead of re-fetching the whole thing again.
-        setFormData({ title: '', description: '', price: '' });
-        setCourses((prev) => [data, ...prev]);
-      })
-      .catch(() => setFormError('Could not reach the server. Is it running?'))
-      .finally(() => setSubmitting(false));
-  }
-
   if (!user) return null;
 
   return (
@@ -115,63 +61,28 @@ export default function ManageCourses() {
       <InstructorNav user={user} />
 
       <main className="manage-courses-main">
-        <h1 className="manage-courses-title">Manage Courses</h1>
+        <div className="manage-courses-header-row">
+          <h1 className="manage-courses-title">My Courses</h1>
 
-        {/* Create course form */}
-        <section className="manage-courses-form-card">
-          <h2 className="manage-courses-section-heading">Create a New Course</h2>
+          {/* Real create-course page doesn't exist yet — this button is a
+              placeholder for that future piece, not wired to a route. */}
+          <button
+            type="button"
+            className="manage-courses-create-btn"
+            disabled
+            title="Coming soon"
+          >
+            + Create Course
+          </button>
+        </div>
 
-          {formError && <div className="manage-courses-error">{formError}</div>}
-
-          <form onSubmit={handleSubmit} className="manage-courses-form">
-            <label className="manage-courses-label">Title</label>
-            <input
-              name="title"
-              type="text"
-              placeholder="e.g. Intro to Docker"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="manage-courses-input"
-            />
-
-            <label className="manage-courses-label">Description</label>
-            <textarea
-              name="description"
-              placeholder="What will students learn in this course?"
-              value={formData.description}
-              onChange={handleChange}
-              className="manage-courses-input manage-courses-textarea"
-              rows={4}
-            />
-
-            <label className="manage-courses-label">Price (₹)</label>
-            <input
-              name="price"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0"
-              value={formData.price}
-              onChange={handleChange}
-              className="manage-courses-input"
-            />
-
-            <button type="submit" disabled={submitting} className="manage-courses-submit-btn">
-              {submitting ? 'Creating...' : 'Create Course'}
-            </button>
-          </form>
-        </section>
-
-        {/* Existing courses list */}
         <section className="manage-courses-list-section">
-          <h2 className="manage-courses-section-heading">Your Courses</h2>
-
           {loadingCourses ? (
             <p className="manage-courses-status">Loading your courses...</p>
           ) : courses.length === 0 ? (
             <p className="manage-courses-status">
-              You haven't created any courses yet — use the form above to add your first one.
+              You haven't created any courses yet — use "Create Course" above once that
+              page is ready.
             </p>
           ) : (
             <div className="manage-courses-list">
