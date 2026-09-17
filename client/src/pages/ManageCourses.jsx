@@ -1,16 +1,27 @@
 // src/pages/ManageCourses.jsx
-// Instructor-only page, reached via InstructorNav's "My Courses" link.
+// Instructor-only "My Courses" page, reached via InstructorNav's "My
+// Courses" link and InstructorWelcome's "Manage Courses" action card.
 //
-// Previously this page had BOTH a "create a course" form and a list of the
-// instructor's own courses on one page. Split apart: this page now shows
-// ONLY the list of courses this instructor has created, plus a
-// "+ Create Course" button. The actual create-course page doesn't exist
-// yet (future piece), so the button is a placeholder for now rather than
-// a dead link to nowhere — same "don't fake it" pattern already used for
-// Instructor Dashboard's non-clickable Go Live / Schedule Offline cards.
+// Restyled/restructured this session to match the layout MyCourses.jsx
+// (the student "My Courses" page) already uses — eyebrow + title + count
+// badge header, a loading/empty status card, and a card grid — but built
+// entirely with the Instructor emerald tokens and components per
+// instructions.md, not by importing or branching on the student page.
+// See instructions.md sections 1-7: Instructor pages must stay on the
+// green/emerald visual language, reuse InstructorNav + Footer
+// variant="instructor", and behavior (guards, routes, API calls, empty/
+// loading states) must not change during a visual-only pass.
 //
-// Same instructor-only guard as InstructorDashboard.jsx, and reuses
-// InstructorNav the same way every other instructor page does.
+// Behavior preserved from before this pass:
+//   - Same instructor-only guard as InstructorDashboard.jsx.
+//   - Same data source: GET /api/courses?instructor_id= (no new endpoint).
+//   - "+ Create Course" is still a disabled placeholder — the real
+//     create-course page doesn't exist yet, so it's not wired to a route.
+//   - Cards are still NOT clickable and don't link anywhere — there's no
+//     edit/detail route for an instructor's own course yet, so making the
+//     card look interactive (cursor pointer, arrow icon, hover lift) would
+//     be a fake affordance. Instead each card carries a small "Manage —
+//     coming soon" tag, and the page keeps the same note explaining why.
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +35,7 @@ export default function ManageCourses() {
   const [user, setUser] = useState(null);
 
   const [courses, setCourses] = useState([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // Guard: only logged-in instructors get past this page — same check
   // as InstructorDashboard.jsx.
@@ -41,73 +52,101 @@ export default function ManageCourses() {
 
   // Load this instructor's own courses — same route the Dashboard's
   // "Active Courses" count already uses.
-  function loadCourses(instructorId) {
-    setLoadingCourses(true);
-    fetch(`${API_BASE}/api/courses?instructor_id=${instructorId}`)
+  useEffect(() => {
+    if (!user) return;
+
+    setLoading(true);
+    fetch(`${API_BASE}/api/courses?instructor_id=${user.id}`)
       .then((res) => res.json())
       .then((data) => setCourses(Array.isArray(data) ? data : []))
-      .catch(() => setCourses([]))
-      .finally(() => setLoadingCourses(false));
-  }
-
-  useEffect(() => {
-    if (user) loadCourses(user.id);
+      .catch(() => setCourses([])) // if the request fails, just show the empty state
+      .finally(() => setLoading(false));
   }, [user]);
 
   if (!user) return null;
 
   return (
-    <div className="manage-courses-wrap">
+    <div className="managecourses-wrap">
       <InstructorNav user={user} />
 
-      <main className="manage-courses-main">
-        <div className="manage-courses-header-row">
-          <h1 className="manage-courses-title">My Courses</h1>
+      <main className="managecourses-main">
+        <div className="managecourses-heading">
+          <div>
+            <p className="managecourses-eyebrow">YOUR TEACHING SPACE</p>
+            <h1 className="managecourses-title">My Courses</h1>
+            <p className="managecourses-subtitle">
+              The courses you've created and published on LevelUp.
+            </p>
+          </div>
 
-          {/* Real create-course page doesn't exist yet — this button is a
-              placeholder for that future piece, not wired to a route. */}
-          <button
-            type="button"
-            className="manage-courses-create-btn"
-            disabled
-            title="Coming soon"
-          >
-            + Create Course
-          </button>
+          <div className="managecourses-heading-actions">
+            {!loading && courses.length > 0 && (
+              <span className="managecourses-count">
+                {courses.length} {courses.length === 1 ? 'course' : 'courses'} created
+              </span>
+            )}
+
+            {/* Real create-course page doesn't exist yet — this button is a
+                placeholder for that future piece, not wired to a route. */}
+            <button
+              type="button"
+              className="managecourses-create-btn"
+              disabled
+              title="Coming soon"
+            >
+              + Create Course
+            </button>
+          </div>
         </div>
 
-        <section className="manage-courses-list-section">
-          {loadingCourses ? (
-            <p className="manage-courses-status">Loading your courses...</p>
-          ) : courses.length === 0 ? (
-            <p className="manage-courses-status">
-              You haven't created any courses yet — use "Create Course" above once that
-              page is ready.
-            </p>
-          ) : (
-            <div className="manage-courses-list">
+        {loading && (
+          <div className="managecourses-status-card">
+            <div className="managecourses-status-icon" aria-hidden="true">✦</div>
+            <p className="managecourses-status-title">Loading your courses...</p>
+            <span>Getting your teaching space ready.</span>
+          </div>
+        )}
+
+        {!loading && courses.length === 0 && (
+          <div className="managecourses-status-card">
+            <div className="managecourses-status-icon" aria-hidden="true">📦</div>
+            <p className="managecourses-status-title">You haven't created any courses yet.</p>
+            <span>Use "Create Course" above once that page is ready.</span>
+          </div>
+        )}
+
+        {!loading && courses.length > 0 && (
+          <>
+            <div className="managecourses-grid">
               {courses.map((course) => (
-                <div key={course.id} className="manage-courses-card">
-                  <div className="manage-courses-card-badge">
+                <div key={course.id} className="managecourses-card">
+                  <div className="managecourses-card-badge">
                     {course.title.charAt(0).toUpperCase()}
                   </div>
-                  <div className="manage-courses-card-body">
-                    <p className="manage-courses-card-title">{course.title}</p>
+
+                  <div className="managecourses-card-body">
+                    <div className="managecourses-card-topline">
+                      <span className="managecourses-card-label">CREATED</span>
+                    </div>
+                    <h2 className="managecourses-card-title">{course.title}</h2>
                     {course.description && (
-                      <p className="manage-courses-card-desc">{course.description}</p>
+                      <p className="managecourses-card-desc">{course.description}</p>
                     )}
-                    <p className="manage-courses-card-price">₹{course.price}</p>
+                    <div className="managecourses-card-footer">
+                      <p className="managecourses-card-price">₹{course.price}</p>
+                      <span className="managecourses-card-tag">Manage — coming soon</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
 
-          <p className="manage-courses-note">
-            Editing or deleting a course isn't available yet — that needs its own backend
-            route that doesn't exist yet.
-          </p>
-        </section>
+            <p className="managecourses-note">
+              Editing or deleting a course isn't available yet — that needs its own
+              backend route that doesn't exist yet.
+            </p>
+          </>
+        )}
       </main>
 
       <Footer variant="instructor" />

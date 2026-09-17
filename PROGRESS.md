@@ -74,7 +74,8 @@ LevelUp/
         │   ├── Navbar.jsx / Navbar.css
         │   ├── Footer.jsx / Footer.css
         │   ├── StudentNav.jsx / StudentNav.css
-        │   └── InstructorNav.jsx / InstructorNav.css
+        │   ├── InstructorNav.jsx / InstructorNav.css
+        │   └── ProfileMenu.jsx / ProfileMenu.css
         └── pages/
             ├── Home.jsx / Home.css
             ├── Login.jsx / Login.css
@@ -83,7 +84,9 @@ LevelUp/
             ├── StudentDashboard.jsx / StudentDashboard.css
             ├── InstructorWelcome.jsx / InstructorWelcome.css
             ├── InstructorDashboard.jsx / InstructorDashboard.css
-            └── MyCourses.jsx / MyCourses.css
+            ├── MyCourses.jsx / MyCourses.css
+            ├── CourseDetail.jsx / CourseDetail.css
+            └── ManageCourses.jsx / ManageCourses.css
 ```
 
 **Notes chapter tracking:** two separate numbering tracks — backend and frontend each
@@ -791,7 +794,7 @@ client/src/pages/CourseDetail.css (added styles for the star-rating input, revie
   - If the user says **Main**, then every entry added to that session's "Files Created So Far" must mention the branch name in brackets, e.g. `client/src/pages/Foo.jsx (Main)`.
   - If the branch chosen has **no tasks currently listed** in its checklist, ask the user which task(s) they want to work on before starting, and add them to that branch's checklist. This applies to any branch, not just one in particular.
 
-**Session counter:** 1
+**Session counter:** 2
 
 ### Branch Main
 
@@ -817,7 +820,10 @@ Carried over from Phase 1 — unfinished/open items, not yet started or not full
 
 #### Checklist
 
-- (none yet)
+- [x] Welcome page should act as a mediator between login and the Instructor Dashboard —
+      every way an instructor reaches "Dashboard" (top nav link, profile-menu link) should
+      land on the Welcome page first; only that page's "Open Dashboard →" card should go
+      on to the real /instructor-dashboard.
 
 ### Branch InstructorUI
 
@@ -860,6 +866,99 @@ client/src/components/InstructorNav.jsx ("Create Course" nav link relabeled to
 - Create Course page doesn't exist yet — the button on My Courses (instructor) is a
   placeholder. Next InstructorUI piece: build the actual create-course page and wire the
   button to it.
+```
+
+--- Carried from Session 1 (Branch InstructorUI) ---
+
+### Session 2 Update (Branch InstructorUI) — ManageCourses Rebuild
+
+#### Checklist Status (Session 2)
+
+- [x] "My Courses" (instructor) should show only the courses this instructor has created —
+      not a combined create-form + list page.
+- [x] Add a "Create Course" button on that page (the actual create-course page is a future
+      piece — button is a placeholder for now, not wired to a route yet).
+- [x] **Rebuild ManageCourses.jsx to match MyCourses.jsx structure** — same card grid design,
+      instructor theme colors, proper loading/empty states, "Manage — coming soon" affordance
+      instead of fake "Continue →" clickability.
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/ManageCourses.jsx (InstructorUI — completely rebuilt to mirror
+  MyCourses.jsx structure: header with eyebrow + title + subtitle + course count badge,
+  loading/empty state cards, 3-column card grid. Uses instructor theme colors
+  (--color-instructor-* / emerald, no indigo leaked in). Course cards are NOT clickable
+  since no edit/detail route exists yet — instead shows a quiet "Manage — coming soon" tag
+  to avoid fake affordances. "+ Create Course" button remains as placeholder, disabled.
+  Verified: npm run build passed, 59 modules, no errors.)
+
+client/src/pages/ManageCourses.css (InstructorUI — new stylesheet following ManageCourses.jsx
+  rebuild. All colors use --color-instructor-* variables per instructions.md §3. Card grid,
+  loading states, empty state, and "Manage — coming soon" tag styling. No color bleed from
+  student theme.)
+```
+
+#### Decisions Log
+
+- **Matched structure, not reused component.** Instead of importing MyCourses.jsx and wrapping
+  it with instructor conditionals, rebuilt ManageCourses from scratch using the same skeleton
+  (header + status card + 3-column grid) but with instructor-specific classnames and theme.
+  Keeps the codebase simpler and avoids role-conditional branches in shared components (per
+  the project's "simplest possible" rule).
+
+- **No clickable card affordances.** Unlike MyCourses' "Continue →" arrow, ManageCourses cards
+  show "Manage — coming soon" because no instructor course-edit route exists yet. Honesty
+  over fake interactivity — matches the project pattern already used in Instructor Dashboard's
+  non-clickable "Go Live" / "Schedule Offline" cards.
+
+- **Emerald theming locked in.** Every color is `--color-instructor-*` — verified no indigo
+  values or student-theme colors slipped into ManageCourses.css.
+
+- **Placeholder Create Course button kept.** Not wired to a route yet (the dedicated
+  create-course page is a future piece). Follows instructions.md §7 (no changes to placeholder
+  behavior without that page existing).
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Create Course page doesn't exist yet — the button on My Courses (instructor) is a
+  placeholder. Next InstructorUI piece: build the actual create-course page and wire the
+  button to it.
+
+- Manage Courses (instructor) cards show "Manage — coming soon" tag. Once edit/delete routes
+  are built (per Branch Main's open item: "Courses: add edit/delete"), replace this tag with
+  real edit/delete affordances.
+```
+
+--- Carried from previous session (Branch InstructorFunctionalities) ---
+
+### Files Created So Far
+
+```
+client/src/components/InstructorNav.jsx (InstructorFunctionalities — "Dashboard" nav
+  link now points to /instructor-welcome instead of straight to /instructor-dashboard)
+client/src/components/ProfileMenu.jsx (InstructorFunctionalities — "Instructor Dashboard"
+  dropdown link now points to /instructor-welcome instead of straight to
+  /instructor-dashboard)
+```
+
+### Decisions Log
+
+- Login already redirected instructors to `/instructor-welcome`, and
+  `InstructorWelcome.jsx`'s "Open Dashboard →" card already linked correctly to
+  `/instructor-dashboard` — neither needed to change. The actual bug was two other entry
+  points bypassing the welcome page by linking straight to `/instructor-dashboard`:
+  InstructorNav's "Dashboard" link and ProfileMenu's "Instructor Dashboard" link. Both
+  were repointed to `/instructor-welcome` so the welcome page is now the single mediator
+  every path into the dashboard has to pass through.
+- No new route or page was needed — this was a two-line link-target fix, not a new
+  feature, so no new files were created.
+
+### Known Issues / TODO Carried Between Sessions
+
+```
+- (none new this session — the Create Course page item above is still open)
 ```
 
 ---

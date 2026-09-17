@@ -31,7 +31,7 @@ export default function InstructorNav({ user }) {
       <nav className="instructor-nav-links">
         <a href="#" className="instructor-nav-link">Subscribe</a>
         <Link to="/manage-courses" className="instructor-nav-link">My Courses</Link>
-        <Link to="/instructor-dashboard" className="instructor-nav-link">Dashboard</Link>
+        <Link to="/instructor-welcome" className="instructor-nav-link">Dashboard</Link>
         <ProfileMenu user={user} />
       </nav>
     </header>

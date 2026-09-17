@@ -66,7 +66,7 @@ export default function ProfileMenu({ user }) {
           <div className="profile-menu-section">
             {isInstructor ? (
               <Link
-                to="/instructor-dashboard"
+                to="/instructor-welcome"
                 className="profile-menu-link profile-menu-link--instructor"
                 onClick={() => setOpen(false)}
               >

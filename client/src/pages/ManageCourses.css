@@ -1,124 +1,255 @@
 /* src/pages/ManageCourses.css */
-/* Styling for the instructor "My Courses" page (list only — the create
-   form was dropped when this page split into list + future create page). */
+/* Instructor "My Courses" page. Structured to match MyCourses.css (the
+   student page) — same heading/count/status-card/grid layout — but built
+   entirely from the Instructor emerald tokens per instructions.md, and
+   with no hover-lift/cursor-pointer affordances since cards aren't
+   clickable yet (no edit/detail route exists for an instructor's own
+   course). */
 
-.manage-courses-wrap {
+.managecourses-wrap {
+  display: flex;
   min-height: 100vh;
-  display: flex;
   flex-direction: column;
-  background: #f9fafb;
 }
 
-.manage-courses-main {
+.managecourses-main {
+  width: min(1180px, calc(100% - 48px));
   flex: 1;
-  max-width: 800px;
   margin: 0 auto;
-  width: 100%;
-  padding: 40px 20px;
+  padding: 64px 0 96px;
 }
 
-.manage-courses-header-row {
+.managecourses-heading {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 0 0 24px;
+  gap: 24px;
+  margin-bottom: 34px;
 }
 
-.manage-courses-title {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
-  font-size: 1.75rem;
-  color: var(--color-text);
+.managecourses-eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.managecourses-title {
   margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.managecourses-subtitle {
+  max-width: 500px;
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.managecourses-heading-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.managecourses-count {
+  padding: 9px 13px;
+  border: 1px solid var(--color-instructor-soft-hover);
+  border-radius: 999px;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 /* Placeholder button — no create-course page exists yet, so this is
    disabled rather than linking anywhere fake. */
-.manage-courses-create-btn {
-  background: var(--color-instructor-primary);
-  color: white;
+.managecourses-create-btn {
   border: none;
-  border-radius: 6px;
-  padding: 10px 18px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: var(--radius-large);
+  background: var(--color-instructor-primary);
+  color: var(--color-white);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 11px 18px;
   cursor: not-allowed;
   opacity: 0.65;
 }
 
-/* Course list */
-.manage-courses-list-section {
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 24px;
+.managecourses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.manage-courses-status {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-}
-
-.manage-courses-list {
+.managecourses-card {
   display: flex;
+  min-height: 260px;
   flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface, var(--color-white));
+  box-shadow: var(--shadow-card);
 }
 
-.manage-courses-card {
+.managecourses-card-badge {
   display: flex;
-  gap: 14px;
-  border: 1px solid #f3f4f6;
-  border-radius: 6px;
-  padding: 14px;
-}
-
-.manage-courses-card-badge {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    var(--color-instructor-primary) 0%,
-    var(--color-instructor-primary-dark) 100%
-  );
-  display: flex;
+  min-height: 110px;
   align-items: center;
   justify-content: center;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  color: white;
-  font-size: 1.1rem;
-}
-
-.manage-courses-card-body {
-  flex: 1;
-}
-
-.manage-courses-card-title {
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0 0 4px;
-}
-
-.manage-courses-card-desc {
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  margin: 0 0 6px;
-}
-
-.manage-courses-card-price {
+  background: linear-gradient(135deg, var(--color-instructor-soft), var(--color-instructor-soft-hover));
   color: var(--color-instructor-primary-dark);
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
 }
 
-.manage-courses-note {
-  color: #9ca3af;
+.managecourses-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.managecourses-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.managecourses-card-label {
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.managecourses-card-title {
+  margin: 12px 0 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.managecourses-card-desc {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  /* Keep long descriptions from blowing out card height. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.managecourses-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-instructor-soft);
+}
+
+.managecourses-card-price {
+  margin: 0;
+  color: var(--color-instructor-primary-dark);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.managecourses-card-tag {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.managecourses-status-card {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  border: 1px dashed var(--color-instructor-soft-hover);
+  border-radius: var(--radius-large);
+  background: linear-gradient(135deg, var(--color-instructor-soft), var(--color-white));
+  text-align: center;
+}
+
+.managecourses-status-icon {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 15px;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary);
+  font-size: 1.4rem;
+}
+
+.managecourses-status-title {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.managecourses-status-card > span {
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.managecourses-note {
+  margin: 22px 0 0;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
-  margin: 20px 0 0;
+}
+
+@media (max-width: 900px) {
+  .managecourses-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .managecourses-main {
+    width: min(100% - 32px, 520px);
+    padding: 48px 0 68px;
+  }
+
+  .managecourses-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .managecourses-heading-actions {
+    align-items: flex-start;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .managecourses-grid {
+    grid-template-columns: 1fr;
+  }
 }
