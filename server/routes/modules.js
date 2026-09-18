@@ -46,4 +46,43 @@ router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req,
   }
 });
 
+// PATCH /api/modules/:id
+// Requires: logged in AND role = 'instructor'
+// Body: any subset of { title, position, status } — same partial-update
+// pattern as PATCH /api/courses/:id (COALESCE keeps a field's current
+// value when it isn't sent). Used to flip a module's status from
+// 'planned' to 'available' once it actually has content, or just to
+// rename/reorder it.
+// `status` isn't restricted to planned->available only in JS — the DB's
+// CHECK constraint (status IN ('planned', 'available')) already stops
+// invalid values from being saved.
+// No ownership check yet (anyone with an instructor account can edit any
+// module id) — same known gap as the other module/lecture routes, covered
+// by the later "Validation + auth checks" checklist item.
+router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
+  const { id } = req.params;
+  const { title, position, status } = req.body;
+
+  try {
+    const result = await db.query(
+      `UPDATE course_modules
+       SET title = COALESCE($2, title),
+           position = COALESCE($3::integer, position),
+           status = COALESCE($4, status)
+       WHERE id = $1
+       RETURNING id, course_id, title, position, status, created_at`,
+      [id, title, position, status]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err); // print the real error in the terminal so we can debug it
+    res.status(500).json({ error: 'Something went wrong updating the module' });
+  }
+});
+
 module.exports = router;

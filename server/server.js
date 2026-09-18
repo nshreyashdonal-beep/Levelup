@@ -8,6 +8,7 @@ const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const courseRoutes = require('./routes/courses');
 const moduleRoutes = require('./routes/modules');
+const lectureRoutes = require('./routes/lectures');
 const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
 const sessionRoutes = require('./routes/sessions');
@@ -30,6 +31,9 @@ app.use('/api/courses', courseRoutes);
 
 // All module routes live under /api/modules (e.g. POST /api/modules/:id/lectures)
 app.use('/api/modules', moduleRoutes);
+
+// All lecture routes live under /api/lectures (e.g. PATCH /api/lectures/:id)
+app.use('/api/lectures', lectureRoutes);
 
 // All enrollment routes live under /api/enrollments
 app.use('/api/enrollments', enrollmentRoutes);

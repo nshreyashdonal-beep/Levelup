@@ -215,5 +215,86 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PATCH /api/courses/:id
+// Requires: logged in AND role = 'instructor'
+// Body: any subset of the course's editable fields, including `status`
+// (e.g. { status: 'published' } to publish a draft course).
+// Every field is optional here — COALESCE keeps a column's existing value
+// when that field isn't sent, so an instructor can flip just `status`
+// without resending the whole course, same partial-update idea as the
+// POST route's optional fields.
+// `status` isn't restricted to draft->published only — the DB's CHECK
+// constraint (status IN ('draft', 'published')) is what actually stops
+// invalid values, so there's no extra JS logic needed to enforce that here.
+// No ownership check yet (anyone with an instructor account can edit any
+// course id) — same known gap as the modules/lectures routes, covered by
+// the later "Validation + auth checks" checklist item.
+router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    price,
+    category,
+    level,
+    delivery_mode,
+    language,
+    thumbnail_url,
+    duration_weeks,
+    capacity,
+    curriculum,
+    outcomes,
+    status,
+  } = req.body;
+
+  try {
+    const result = await db.query(
+      `UPDATE courses
+       SET title = COALESCE($2, title),
+           description = COALESCE($3, description),
+           price = COALESCE($4::numeric, price),
+           category = COALESCE($5, category),
+           level = COALESCE($6, level),
+           delivery_mode = COALESCE($7, delivery_mode),
+           language = COALESCE($8, language),
+           thumbnail_url = COALESCE($9, thumbnail_url),
+           duration_weeks = COALESCE($10::integer, duration_weeks),
+           capacity = COALESCE($11::integer, capacity),
+           curriculum = COALESCE($12, curriculum),
+           outcomes = COALESCE($13, outcomes),
+           status = COALESCE($14, status)
+       WHERE id = $1
+       RETURNING id, title, description, price, instructor_id, created_at,
+                 category, level, delivery_mode, language, thumbnail_url,
+                 duration_weeks, capacity, curriculum, outcomes, status`,
+      [
+        id,
+        title,
+        description,
+        price,
+        category,
+        level,
+        delivery_mode,
+        language,
+        thumbnail_url,
+        duration_weeks,
+        capacity,
+        curriculum,
+        outcomes,
+        status,
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err); // print the real error in the terminal so we can debug it
+    res.status(500).json({ error: 'Something went wrong updating the course' });
+  }
+});
+
 module.exports = router;
 

@@ -902,8 +902,8 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
 - [x] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
       curriculum, joined from `course_modules`/`course_lectures`, ordered by
       `position`) [Session 4]
-- [ ] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
-      planned→available) and edit existing fields
+- [x] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
+      planned→available) and edit existing fields [Session 5]
 - [ ] Validation + auth checks — only the instructor who owns the course can create/edit
       its modules and lectures
 - [ ] Create Course form (frontend) — wire up the placeholder "+ Create Course" button on
@@ -1192,6 +1192,63 @@ server/routes/courses.js (Branch 3 (InstructorFunctionalities) — extended the
   checks" item or the future PATCH-to-publish route.
 - Next Branch 3 piece: PATCH routes to flip `status` (course: draft→published;
   module/lecture: planned→available) and edit existing fields.
+```
+
+### Session 5 (Branch 3 (InstructorFunctionalities)) — PATCH Routes
+
+#### Checklist Status (Session 5)
+
+- [x] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
+      planned→available) and edit existing fields
+
+#### Files Created/Updated So Far
+
+```
+server/routes/courses.js (Branch 3 (InstructorFunctionalities) — added
+  PATCH /api/courses/:id. Any subset of editable fields (incl. status)
+  can be sent; COALESCE keeps a column's current value when a field is
+  omitted. status isn't restricted in JS to draft->published only — the
+  DB CHECK constraint already enforces valid values. No ownership check
+  yet, same known gap as the other instructor routes.)
+
+server/routes/modules.js (Branch 3 (InstructorFunctionalities) — added
+  PATCH /api/modules/:id. Same partial-update pattern as the courses
+  PATCH route, covers title/position/status.)
+
+server/routes/lectures.js (Branch 3 (InstructorFunctionalities) — new
+  file. New route PATCH /api/lectures/:id, same partial-update pattern,
+  covers title/content/video_url/duration_minutes/position/status. Lives
+  at a top-level /api/lectures path (not nested under /api/modules) for
+  the same reason modules.js isn't nested under /api/courses — matches
+  the one-router-per-resource convention.)
+
+server/server.js (Branch 3 (InstructorFunctionalities) — required the
+  new lectures.js router and mounted it at /api/lectures, alongside the
+  existing /api/auth, /api/courses, /api/modules, /api/enrollments,
+  /api/reviews, /api/sessions mounts.)
+```
+
+#### Decisions Log
+
+- **New router file (`lectures.js`) instead of adding PATCH to modules.js** —
+  a lecture is edited by its own id, not nested under a module id in the URL,
+  so it gets its own top-level /api/lectures path, same reasoning as why
+  modules.js isn't nested under /api/courses.
+- **status flip enforced by DB, not JS** — all three PATCH routes accept any
+  string for `status` and let each table's existing CHECK constraint reject
+  invalid values, rather than writing JS logic to only allow the "next"
+  status in sequence. Keeps the routes simple and consistent with how
+  status defaults were already handled on the POST routes.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- No ownership check yet on any instructor route (create or edit) — any
+  instructor account can currently modify any course/module/lecture id,
+  not just their own. Covered by the "Validation + auth checks" checklist
+  item, still next up after this.
+- Next Branch 3 piece: Validation + auth checks — only the instructor who
+  owns the course can create/edit its modules and lectures.
 ```
 
 ---
