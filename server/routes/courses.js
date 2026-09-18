@@ -147,27 +147,68 @@ router.get('/', async (req, res) => {
 
 // GET /api/courses/:id
 // No auth needed — same public-browsing rule as the list route above.
-// Returns one course's full info (used by the Course Detail page instead
-// of filtering the already-fetched list client-side, so the page also
-// works if someone opens the URL directly without visiting Explore first).
+// Returns one course's full info, extended for the student-facing course view:
+// all the Branch 3 fields (category, level, delivery_mode, language,
+// thumbnail_url, duration_weeks, capacity, curriculum, outcomes, status) plus
+// the course's modules and each module's lectures, both ordered by `position`
+// so the frontend can render them in the right order without re-sorting.
+// Used by the Course Detail page instead of filtering the already-fetched list
+// client-side, so the page also works if someone opens the URL directly
+// without visiting Explore first.
+// No status filter here (e.g. hiding 'draft' courses from students) — that's
+// left for a later piece since it isn't part of this checklist item.
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await db.query(
+    const courseResult = await db.query(
       `SELECT courses.id, courses.title, courses.description, courses.price,
-              courses.created_at, users.name AS instructor_name
+              courses.created_at, users.name AS instructor_name,
+              courses.category, courses.level, courses.delivery_mode,
+              courses.language, courses.thumbnail_url, courses.duration_weeks,
+              courses.capacity, courses.curriculum, courses.outcomes,
+              courses.status
        FROM courses
        JOIN users ON users.id = courses.instructor_id
        WHERE courses.id = $1`,
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (courseResult.rows.length === 0) {
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    res.json(result.rows[0]);
+    const course = courseResult.rows[0];
+
+    const modulesResult = await db.query(
+      `SELECT id, title, position, status, created_at
+       FROM course_modules
+       WHERE course_id = $1
+       ORDER BY position ASC`,
+      [id]
+    );
+
+    const lecturesResult = await db.query(
+      `SELECT course_lectures.id, course_lectures.module_id, course_lectures.title,
+              course_lectures.content, course_lectures.video_url,
+              course_lectures.duration_minutes, course_lectures.position,
+              course_lectures.status, course_lectures.created_at
+       FROM course_lectures
+       JOIN course_modules ON course_modules.id = course_lectures.module_id
+       WHERE course_modules.course_id = $1
+       ORDER BY course_lectures.position ASC`,
+      [id]
+    );
+
+    // Nest each lecture under its module (single query above, grouped here in
+    // JS) instead of a query per module — one round trip for all lectures,
+    // matching the number of queries no matter how many modules a course has.
+    course.modules = modulesResult.rows.map((mod) => ({
+      ...mod,
+      lectures: lecturesResult.rows.filter((lec) => lec.module_id === mod.id),
+    }));
+
+    res.json(course);
   } catch (err) {
     console.error(err); // print the real error in the terminal so we can debug it
     res.status(500).json({ error: 'Something went wrong fetching the course' });
@@ -175,3 +216,4 @@ router.get('/:id', async (req, res) => {
 });
 
 module.exports = router;
+

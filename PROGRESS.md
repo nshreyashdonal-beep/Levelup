@@ -899,8 +899,9 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
 - [x] `POST /api/courses` — create course route (instructor) [Session 2]
 - [x] `POST /api/courses/:id/modules` — add a module to a course [Session 2]
 - [x] `POST /api/modules/:id/lectures` — add a lecture to a module [Session 3]
-- [ ] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
-      curriculum, joined from `course_modules`/`course_lectures`, ordered by `position`)
+- [x] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
+      curriculum, joined from `course_modules`/`course_lectures`, ordered by
+      `position`) [Session 4]
 - [ ] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
       planned→available) and edit existing fields
 - [ ] Validation + auth checks — only the instructor who owns the course can create/edit
@@ -1146,6 +1147,51 @@ server/server.js (Branch 3 (InstructorFunctionalities) — required in the new
   ordered by position). Note the existing GET /api/courses/:id route is currently
   a bare version (no modules/lectures join) — this item extends it, doesn't
   create a new one.
+```
+
+### Session 4 (Branch 3 (InstructorFunctionalities)) — Student-Facing Course View
+
+#### Checklist Status (Session 4)
+
+- [x] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
+      curriculum, joined from `course_modules`/`course_lectures`, ordered by `position`)
+
+#### Files Created/Updated So Far
+
+```
+server/routes/courses.js (Branch 3 (InstructorFunctionalities) — extended the
+  existing GET /api/courses/:id route. Now selects all Branch 3 course fields
+  (category, level, delivery_mode, language, thumbnail_url, duration_weeks,
+  capacity, curriculum, outcomes, status) instead of just the original
+  title/description/price. Also runs two more queries — course_modules for the
+  course (ordered by position) and course_lectures for those modules (ordered by
+  position) — and nests lectures under their module in JS before responding.
+  Three queries total per request (course, modules, lectures) regardless of how
+  many modules/lectures exist, rather than one query per module.)
+```
+
+#### Decisions Log
+
+- **Three queries (course, modules, lectures) instead of one big join** — a
+  single SQL join across courses → course_modules → course_lectures would
+  duplicate the course row per lecture and need de-duplication in JS anyway;
+  three simple queries plus a JS `.map()`/`.filter()` to nest lectures under
+  their module is more readable and stays at a fixed query count no matter how
+  many modules a course has.
+- **No `status = 'published'` filter added** — students could technically load a
+  draft course by hitting this route directly with its id. Left as-is since
+  filtering isn't part of this checklist item; flagged below for whenever access
+  control is tightened.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- GET /api/courses/:id has no status filter — a 'draft' course is fetchable by
+  anyone who has (or guesses) its id, same as a 'published' one. Not part of
+  this checklist item; worth revisiting alongside the later "Validation + auth
+  checks" item or the future PATCH-to-publish route.
+- Next Branch 3 piece: PATCH routes to flip `status` (course: draft→published;
+  module/lecture: planned→available) and edit existing fields.
 ```
 
 ---
