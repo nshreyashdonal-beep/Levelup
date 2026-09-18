@@ -13,7 +13,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const router = express.Router();
 
 // PATCH /api/lectures/:id
-// Requires: logged in AND role = 'instructor'
+// Requires: logged in AND role = 'instructor' AND the instructor owns the course containing this lecture
 // Body: any subset of { title, content, video_url, duration_minutes,
 // position, status } — same partial-update pattern as the course/module
 // PATCH routes (COALESCE keeps a field's current value when it isn't
@@ -22,14 +22,30 @@ const router = express.Router();
 // `status` isn't restricted to planned->available only in JS — the DB's
 // CHECK constraint (status IN ('planned', 'available')) already stops
 // invalid values from being saved.
-// No ownership check yet (anyone with an instructor account can edit any
-// lecture id) — same known gap as the modules route, covered by the later
-// "Validation + auth checks" checklist item.
 router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
   const { title, content, video_url, duration_minutes, position, status } = req.body;
 
   try {
+    // Check ownership: does this instructor own the course that contains this lecture?
+    // Lecture → Module → Course → Instructor
+    const lectureCheck = await db.query(
+      `SELECT courses.instructor_id
+       FROM course_lectures
+       JOIN course_modules ON course_modules.id = course_lectures.module_id
+       JOIN courses ON courses.id = course_modules.course_id
+       WHERE course_lectures.id = $1`,
+      [id]
+    );
+
+    if (lectureCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Lecture not found' });
+    }
+
+    if (lectureCheck.rows[0].instructor_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only edit lectures in your own courses' });
+    }
+
     const result = await db.query(
       `UPDATE course_lectures
        SET title = COALESCE($2, title),

@@ -77,15 +77,12 @@ router.post('/', requireAuth, requireRole('instructor'), async (req, res) => {
 });
 
 // POST /api/courses/:id/modules
-// Requires: logged in AND role = 'instructor'
+// Requires: logged in AND role = 'instructor' AND the instructor owns this course
 // Body: { title, position }
 // Adds one module (a major section, e.g. "Week 1: Basics") to a course.
 // Only `title` is required — `position` defaults to 0 (DB column default) if not
 // given, and `status` always starts as 'planned' (also a DB default) since a module
 // has no lectures yet when it's first created.
-// No ownership check yet (anyone with an instructor account can add a module to any
-// course id) — that's its own later checklist item: "Validation + auth checks — only
-// the instructor who owns the course can create/edit its modules and lectures".
 router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
   const { title, position } = req.body;
@@ -95,6 +92,20 @@ router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, 
   }
 
   try {
+    // Check ownership: does this instructor own this course?
+    const courseCheck = await db.query(
+      `SELECT instructor_id FROM courses WHERE id = $1`,
+      [id]
+    );
+
+    if (courseCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    if (courseCheck.rows[0].instructor_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only add modules to your own courses' });
+    }
+
     const result = await db.query(
       `INSERT INTO course_modules (course_id, title, position)
        VALUES ($1, $2, COALESCE($3::integer, 0))
@@ -216,7 +227,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // PATCH /api/courses/:id
-// Requires: logged in AND role = 'instructor'
+// Requires: logged in AND role = 'instructor' AND the instructor owns this course
 // Body: any subset of the course's editable fields, including `status`
 // (e.g. { status: 'published' } to publish a draft course).
 // Every field is optional here — COALESCE keeps a column's existing value
@@ -226,9 +237,6 @@ router.get('/:id', async (req, res) => {
 // `status` isn't restricted to draft->published only — the DB's CHECK
 // constraint (status IN ('draft', 'published')) is what actually stops
 // invalid values, so there's no extra JS logic needed to enforce that here.
-// No ownership check yet (anyone with an instructor account can edit any
-// course id) — same known gap as the modules/lectures routes, covered by
-// the later "Validation + auth checks" checklist item.
 router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
   const {
@@ -248,6 +256,20 @@ router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) =>
   } = req.body;
 
   try {
+    // Check ownership: does this instructor own this course?
+    const courseCheck = await db.query(
+      `SELECT instructor_id FROM courses WHERE id = $1`,
+      [id]
+    );
+
+    if (courseCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    if (courseCheck.rows[0].instructor_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only edit your own courses' });
+    }
+
     const result = await db.query(
       `UPDATE courses
        SET title = COALESCE($2, title),

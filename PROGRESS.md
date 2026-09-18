@@ -904,8 +904,8 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
       `position`) [Session 4]
 - [x] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
       planned→available) and edit existing fields [Session 5]
-- [ ] Validation + auth checks — only the instructor who owns the course can create/edit
-      its modules and lectures
+- [x] Validation + auth checks — only the instructor who owns the course can create/edit
+      its modules and lectures [Session 6]
 - [ ] Create Course form (frontend) — wire up the placeholder "+ Create Course" button on
       My Courses (instructor)
 - [ ] Add Module screen (frontend)
@@ -1249,6 +1249,68 @@ server/server.js (Branch 3 (InstructorFunctionalities) — required the
   item, still next up after this.
 - Next Branch 3 piece: Validation + auth checks — only the instructor who
   owns the course can create/edit its modules and lectures.
+```
+
+### Session 6 (Branch 3 (InstructorFunctionalities)) — Validation + Auth Checks
+
+#### Checklist Status (Session 6)
+
+- [x] Validation + auth checks — only the instructor who owns the course can
+      create/edit its modules and lectures
+
+#### Files Created/Updated So Far
+
+```
+server/routes/courses.js (Branch 3 (InstructorFunctionalities) — added
+  ownership checks to POST /:id/modules and PATCH /:id. Before adding a
+  module or editing a course, the route queries the course's instructor_id
+  and compares it to req.user.id; returns 404 if the course isn't found,
+  403 if the instructor doesn't own it, otherwise proceeds with the
+  operation.)
+
+server/routes/modules.js (Branch 3 (InstructorFunctionalities) — added
+  ownership checks to POST /:id/lectures and PATCH /:id. Before adding a
+  lecture or editing a module, the route queries the course's instructor_id
+  via the module -> course JOIN chain; returns 404 if the module isn't
+  found, 403 if the instructor doesn't own the parent course, otherwise
+  proceeds.)
+
+server/routes/lectures.js (Branch 3 (InstructorFunctionalities) — added
+  ownership check to PATCH /:id. Before editing a lecture, the route
+  queries the course's instructor_id via the lecture -> module -> course
+  JOIN chain; returns 404 if the lecture isn't found, 403 if the
+  instructor doesn't own the parent course, otherwise proceeds.)
+```
+
+#### Decisions Log
+
+- **Ownership checked before any write operation** — the POST and PATCH
+  instructor routes now reject with 403 Forbidden if the logged-in instructor
+  doesn't own the course (or the module's/lecture's parent course), layered on
+  top of the existing requireAuth + requireRole('instructor') middleware.
+- **404 before 403** — a missing resource returns 404 Not Found first; 403 is
+  only returned once the resource is known to exist but belongs to someone else.
+- **Ownership resolved through the parent chain** — modules and lectures have
+  no instructor_id of their own, so ownership is looked up by JOINing up to
+  courses.instructor_id (lecture -> module -> course) in a single query.
+- **No cascading deletes yet** — there are no DELETE routes for courses,
+  modules or lectures, so orphaned modules/lectures aren't a concern yet;
+  revisit if DELETE routes are added.
+- **Checks are read-only before the write** — the ownership lookup doesn't
+  mutate the database, so a failed check is lightweight.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- The "No ownership check yet" gap noted in Session 5 is now closed for all
+  five instructor write routes (POST /api/courses/:id/modules,
+  POST /api/modules/:id/lectures, PATCH /api/courses/:id,
+  PATCH /api/modules/:id, PATCH /api/lectures/:id).
+- Next Branch 3 piece: Frontend — Create Course form (wire up the
+  placeholder "+ Create Course" button on My Courses). Backend for
+  modules/lectures is now complete and auth-guarded.
+- Remaining Branch 3 frontend items: Add Module screen, Add Lecture screen,
+  student-facing course view page, instructor course management dashboard.
 ```
 
 ---

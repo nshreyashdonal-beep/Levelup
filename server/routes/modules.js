@@ -12,17 +12,13 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const router = express.Router();
 
 // POST /api/modules/:id/lectures
-// Requires: logged in AND role = 'instructor'
+// Requires: logged in AND role = 'instructor' AND the instructor owns the course containing this module
 // Body: { title, content, video_url, duration_minutes, position }
 // Adds one lecture (actual content, e.g. a video or text lesson) to a module.
 // Only `title` is required — everything else is optional, `position` defaults
 // to 0 (DB column default) if not given, and `status` always starts as
 // 'planned' (also a DB default) since a lecture has no content marked live yet
 // when it's first created.
-// No ownership check yet (anyone with an instructor account can add a lecture
-// to any module id) — same known gap as the modules route in courses.js,
-// covered by the later checklist item: "Validation + auth checks — only the
-// instructor who owns the course can create/edit its modules and lectures".
 router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
   const { title, content, video_url, duration_minutes, position } = req.body;
@@ -32,6 +28,23 @@ router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req,
   }
 
   try {
+    // Check ownership: does this instructor own the course that contains this module?
+    const moduleCheck = await db.query(
+      `SELECT course_modules.course_id, courses.instructor_id
+       FROM course_modules
+       JOIN courses ON courses.id = course_modules.course_id
+       WHERE course_modules.id = $1`,
+      [id]
+    );
+
+    if (moduleCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    if (moduleCheck.rows[0].instructor_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only add lectures to your own course modules' });
+    }
+
     const result = await db.query(
       `INSERT INTO course_lectures (module_id, title, content, video_url, duration_minutes, position)
        VALUES ($1, $2, $3, $4, $5, COALESCE($6::integer, 0))
@@ -47,7 +60,7 @@ router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req,
 });
 
 // PATCH /api/modules/:id
-// Requires: logged in AND role = 'instructor'
+// Requires: logged in AND role = 'instructor' AND the instructor owns the course containing this module
 // Body: any subset of { title, position, status } — same partial-update
 // pattern as PATCH /api/courses/:id (COALESCE keeps a field's current
 // value when it isn't sent). Used to flip a module's status from
@@ -56,14 +69,28 @@ router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req,
 // `status` isn't restricted to planned->available only in JS — the DB's
 // CHECK constraint (status IN ('planned', 'available')) already stops
 // invalid values from being saved.
-// No ownership check yet (anyone with an instructor account can edit any
-// module id) — same known gap as the other module/lecture routes, covered
-// by the later "Validation + auth checks" checklist item.
 router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
   const { title, position, status } = req.body;
 
   try {
+    // Check ownership: does this instructor own the course that contains this module?
+    const moduleCheck = await db.query(
+      `SELECT course_modules.course_id, courses.instructor_id
+       FROM course_modules
+       JOIN courses ON courses.id = course_modules.course_id
+       WHERE course_modules.id = $1`,
+      [id]
+    );
+
+    if (moduleCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    if (moduleCheck.rows[0].instructor_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only edit your own course modules' });
+    }
+
     const result = await db.query(
       `UPDATE course_modules
        SET title = COALESCE($2, title),
