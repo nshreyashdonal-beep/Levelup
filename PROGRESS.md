@@ -906,9 +906,9 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
       planned→available) and edit existing fields [Session 5]
 - [x] Validation + auth checks — only the instructor who owns the course can create/edit
       its modules and lectures [Session 6]
-- [ ] Create Course form (frontend) — wire up the placeholder "+ Create Course" button on
-      My Courses (instructor)
-- [ ] Add Module screen (frontend)
+- [x] Create Course form (frontend) — wire up the placeholder "+ Create Course" button on
+      My Courses (instructor) [Session 7]
+- [x] Add Module screen (frontend) [Session 7]
 - [ ] Add Lecture screen (frontend, nested under a module)
 - [ ] Student-facing course view page (frontend) — Title, Level, Price, Description,
       Outcomes, Curriculum
@@ -1311,6 +1311,85 @@ server/routes/lectures.js (Branch 3 (InstructorFunctionalities) — added
   modules/lectures is now complete and auth-guarded.
 - Remaining Branch 3 frontend items: Add Module screen, Add Lecture screen,
   student-facing course view page, instructor course management dashboard.
+```
+
+### Session 7 (Branch 3 (InstructorFunctionalities)) — Create Course Form
+
+#### Checklist Status (Session 7)
+
+- [x] Create Course form (frontend) — wire up the placeholder "+ Create Course"
+      button on My Courses (instructor)
+- [x] Add Module screen (frontend)
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/CreateCourse.jsx (Branch 3 (InstructorFunctionalities) —
+  new instructor-only form for creating a draft course. It collects the
+  backend's optional course fields, sends an authenticated POST /api/courses
+  request, shows server/network errors, and returns to My Courses after
+  success.)
+
+client/src/pages/CreateCourse.css (Branch 3 (InstructorFunctionalities) —
+  new responsive emerald-themed form styling using the shared instructor
+  design tokens, with accessible labels, focus states, error state, and
+  mobile layout.)
+
+client/src/pages/ManageCourses.jsx (Branch 3 (InstructorFunctionalities) —
+  changed the "+ Create Course" control from a disabled placeholder to a
+  button that navigates to /create-course and updated the empty-state copy.)
+
+client/src/pages/ManageCourses.css (Branch 3 (InstructorFunctionalities) —
+  enabled the create button's pointer, hover, transition, and focus states.)
+
+client/src/App.jsx (Branch 3 (InstructorFunctionalities) — registered the
+  /create-course route for the new form.)
+
+client/src/pages/AddModule.jsx (Branch 3 (InstructorFunctionalities) —
+  new instructor-only module form. It loads the selected course, lists its
+  existing modules, sends an authenticated POST /api/courses/:id/modules
+  request, and updates the list after a successful add.)
+
+client/src/pages/AddModule.css (Branch 3 (InstructorFunctionalities) —
+  new responsive emerald-themed module form and existing-module list styling.)
+
+client/src/pages/ManageCourses.jsx (Branch 3 (InstructorFunctionalities) —
+  added an Add Module action to each course card and linked it to the new
+  course module route.)
+
+client/src/pages/ManageCourses.css (Branch 3 (InstructorFunctionalities) —
+  added themed button, hover, and focus styles for the Add Module action.)
+
+client/src/App.jsx (Branch 3 (InstructorFunctionalities) — registered the
+  /courses/:courseId/modules route.)
+```
+
+#### Decisions Log
+
+- The form uses the existing instructor role guard pattern and shared
+  InstructorNav/Footer components; unauthenticated or non-instructor users
+  are redirected to `/login`.
+- New courses are created as drafts by the existing backend default. The
+  frontend does not add a publish control because publishing belongs to the
+  later course-management dashboard task.
+- Empty optional fields are omitted from the request payload, while the
+  required title is validated by the browser and backend.
+- The Add Module screen uses the existing public course detail response to
+  show the current module list, then uses the authenticated nested POST route
+  for creation. The backend remains responsible for ownership enforcement.
+- Session 7 is closed after completing the Create Course form and Add Module
+  screen. The next session should implement the Add Lecture screen nested
+  under a module.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Add Lecture screen (frontend, nested under a module)
+- Student-facing course view page (frontend)
+- Instructor course management dashboard (frontend) — list own courses, edit,
+  publish
+- npm run lint and npm run build were blocked in this environment because
+  command execution permission was denied; git diff --check passed.
 ```
 
 ---

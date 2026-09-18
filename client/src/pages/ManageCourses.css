@@ -70,8 +70,6 @@
   font-weight: 700;
 }
 
-/* Placeholder button — no create-course page exists yet, so this is
-   disabled rather than linking anywhere fake. */
 .managecourses-create-btn {
   border: none;
   border-radius: var(--radius-large);
@@ -80,8 +78,18 @@
   font-size: 0.85rem;
   font-weight: 700;
   padding: 11px 18px;
-  cursor: not-allowed;
-  opacity: 0.65;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.managecourses-create-btn:hover {
+  background: var(--color-instructor-primary-dark);
+  transform: translateY(-1px);
+}
+
+.managecourses-create-btn:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.3);
+  outline-offset: 2px;
 }
 
 .managecourses-grid {
@@ -171,11 +179,25 @@
   font-weight: 700;
 }
 
-.managecourses-card-tag {
-  color: var(--color-text-muted);
+.managecourses-card-manage-btn {
+  border: 1px solid var(--color-instructor-soft-hover);
+  border-radius: var(--radius-medium);
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  padding: 8px 10px;
+  cursor: pointer;
   font-size: 0.72rem;
-  font-weight: 600;
-  font-style: italic;
+  font-weight: 700;
+}
+
+.managecourses-card-manage-btn:hover {
+  border-color: var(--color-instructor-primary);
+  background: var(--color-instructor-soft-hover);
+}
+
+.managecourses-card-manage-btn:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.3);
+  outline-offset: 2px;
 }
 
 .managecourses-status-card {

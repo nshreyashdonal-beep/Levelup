@@ -15,8 +15,7 @@
 // Behavior preserved from before this pass:
 //   - Same instructor-only guard as InstructorDashboard.jsx.
 //   - Same data source: GET /api/courses?instructor_id= (no new endpoint).
-//   - "+ Create Course" is still a disabled placeholder — the real
-//     create-course page doesn't exist yet, so it's not wired to a route.
+//   - "+ Create Course" links to the instructor create-course form.
 //   - Cards are still NOT clickable and don't link anywhere — there's no
 //     edit/detail route for an instructor's own course yet, so making the
 //     card look interactive (cursor pointer, arrow icon, hover lift) would
@@ -86,13 +85,10 @@ export default function ManageCourses() {
               </span>
             )}
 
-            {/* Real create-course page doesn't exist yet — this button is a
-                placeholder for that future piece, not wired to a route. */}
             <button
               type="button"
               className="managecourses-create-btn"
-              disabled
-              title="Coming soon"
+              onClick={() => navigate('/create-course')}
             >
               + Create Course
             </button>
@@ -111,7 +107,7 @@ export default function ManageCourses() {
           <div className="managecourses-status-card">
             <div className="managecourses-status-icon" aria-hidden="true">📦</div>
             <p className="managecourses-status-title">You haven't created any courses yet.</p>
-            <span>Use "Create Course" above once that page is ready.</span>
+            <span>Use the button above to start your first draft course.</span>
           </div>
         )}
 
@@ -134,7 +130,13 @@ export default function ManageCourses() {
                     )}
                     <div className="managecourses-card-footer">
                       <p className="managecourses-card-price">₹{course.price}</p>
-                      <span className="managecourses-card-tag">Manage — coming soon</span>
+                      <button
+                        type="button"
+                        className="managecourses-card-manage-btn"
+                        onClick={() => navigate(`/courses/${course.id}/modules`)}
+                      >
+                        Add Module
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -142,8 +144,8 @@ export default function ManageCourses() {
             </div>
 
             <p className="managecourses-note">
-              Editing or deleting a course isn't available yet — that needs its own
-              backend route that doesn't exist yet.
+              Add modules now; lecture creation and full course editing will be added in
+              the next course-management pieces.
             </p>
           </>
         )}
