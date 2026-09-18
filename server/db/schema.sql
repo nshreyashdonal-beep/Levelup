@@ -106,3 +106,68 @@ CREATE TABLE sessions (
 
 -- Speeds up "show all sessions for this course" queries
 CREATE INDEX idx_sessions_course ON sessions(course_id);
+
+-- ============================================================
+-- courses table — new columns (Branch 3 / InstructorFunctionalities)
+-- Everything a student needs to see on the course view page, plus
+-- fields instructors fill in while building the course.
+-- `status` gates visibility: students should only ever see 'published'
+-- courses in browse/search — 'draft' courses are still being built.
+-- `curriculum` is the instructor's advertised roadmap
+-- (free text) — separate from course_modules/course_lectures below,
+-- which track what's actually built so far. The two are allowed to
+-- differ on purpose (live/hybrid courses grow their real content
+-- over time, but the advertised plan doesn't need to change).
+-- ============================================================
+ALTER TABLE courses
+  ADD COLUMN category VARCHAR(100),
+  ADD COLUMN level VARCHAR(20) CHECK (level IN ('beginner', 'intermediate', 'advanced')),
+  ADD COLUMN delivery_mode VARCHAR(20) CHECK (delivery_mode IN ('online', 'offline', 'hybrid')),
+  ADD COLUMN language VARCHAR(50),
+  ADD COLUMN thumbnail_url TEXT,
+  ADD COLUMN duration_weeks INTEGER,
+  ADD COLUMN capacity INTEGER,
+  ADD COLUMN curriculum TEXT,
+  ADD COLUMN outcomes TEXT,
+  ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+
+-- ============================================================
+-- course_modules table
+-- A module is one major section of a course (e.g. "Week 1: Basics").
+-- `position` controls the display order on the course view page.
+-- `status` tracks whether this module's content actually exists yet
+-- ('planned' = on the roadmap, 'available' = built and ready).
+-- ============================================================
+CREATE TABLE course_modules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  course_id UUID NOT NULL REFERENCES courses(id),
+  title VARCHAR(150) NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'planned' CHECK (status IN ('planned', 'available')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Speeds up "show all modules for this course, in order" queries
+CREATE INDEX idx_course_modules_course ON course_modules(course_id);
+
+-- ============================================================
+-- course_lectures table
+-- A lecture is one piece of actual content inside a module
+-- (a video, a text lesson, etc). Same 'planned'/'available' status
+-- idea as modules, and its own `position` for ordering within
+-- the module.
+-- ============================================================
+CREATE TABLE course_lectures (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_id UUID NOT NULL REFERENCES course_modules(id),
+  title VARCHAR(150) NOT NULL,
+  content TEXT,
+  video_url TEXT,
+  duration_minutes INTEGER,
+  position INTEGER NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'planned' CHECK (status IN ('planned', 'available')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Speeds up "show all lectures for this module, in order" queries
+CREATE INDEX idx_course_lectures_module ON course_lectures(module_id);

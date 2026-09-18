@@ -1,6 +1,7 @@
 // routes/courses.js
-// Two routes: create a course (instructors only) and browse all courses
-// (anyone, even logged-out visitors, can see the list).
+// Routes: create a course (instructors only), add a module to a course
+// (instructors only), and browse all courses (anyone, even logged-out
+// visitors, can see the list).
 
 const express = require('express');
 const db = require('../config/db');
@@ -10,9 +11,27 @@ const router = express.Router();
 
 // POST /api/courses
 // Requires: logged in AND role = 'instructor'
-// Body: { title, description, price }
+// Body: { title, description, price, category, level, delivery_mode, language,
+//         thumbnail_url, duration_weeks, capacity, curriculum, outcomes }
+// Only `title` is required — everything else is optional so an instructor can
+// create a bare-bones course now and fill in the rest later. New courses always
+// start as `status = 'draft'` (the DB column default) — there's no way to set
+// status here yet; that comes with the future PATCH route that publishes a course.
 router.post('/', requireAuth, requireRole('instructor'), async (req, res) => {
-  const { title, description, price } = req.body;
+  const {
+    title,
+    description,
+    price,
+    category,
+    level,
+    delivery_mode,
+    language,
+    thumbnail_url,
+    duration_weeks,
+    capacity,
+    curriculum,
+    outcomes,
+  } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'title is required' });
@@ -20,16 +39,73 @@ router.post('/', requireAuth, requireRole('instructor'), async (req, res) => {
 
   try {
     const result = await db.query(
-      `INSERT INTO courses (title, description, price, instructor_id)
-       VALUES ($1, $2, COALESCE($3::numeric, 0), $4)
-       RETURNING id, title, description, price, instructor_id, created_at`,
-      [title, description, price, req.user.id]
+      `INSERT INTO courses (
+         title, description, price, instructor_id,
+         category, level, delivery_mode, language, thumbnail_url,
+         duration_weeks, capacity, curriculum, outcomes
+       )
+       VALUES (
+         $1, $2, COALESCE($3::numeric, 0), $4,
+         $5, $6, $7, $8, $9,
+         $10, $11, $12, $13
+       )
+       RETURNING id, title, description, price, instructor_id, created_at,
+                 category, level, delivery_mode, language, thumbnail_url,
+                 duration_weeks, capacity, curriculum, outcomes, status`,
+      [
+        title,
+        description,
+        price,
+        req.user.id,
+        category,
+        level,
+        delivery_mode,
+        language,
+        thumbnail_url,
+        duration_weeks,
+        capacity,
+        curriculum,
+        outcomes,
+      ]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err); // print the real error in the terminal so we can debug it
     res.status(500).json({ error: 'Something went wrong creating the course' });
+  }
+});
+
+// POST /api/courses/:id/modules
+// Requires: logged in AND role = 'instructor'
+// Body: { title, position }
+// Adds one module (a major section, e.g. "Week 1: Basics") to a course.
+// Only `title` is required — `position` defaults to 0 (DB column default) if not
+// given, and `status` always starts as 'planned' (also a DB default) since a module
+// has no lectures yet when it's first created.
+// No ownership check yet (anyone with an instructor account can add a module to any
+// course id) — that's its own later checklist item: "Validation + auth checks — only
+// the instructor who owns the course can create/edit its modules and lectures".
+router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, res) => {
+  const { id } = req.params;
+  const { title, position } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: 'title is required' });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO course_modules (course_id, title, position)
+       VALUES ($1, $2, COALESCE($3::integer, 0))
+       RETURNING id, course_id, title, position, status, created_at`,
+      [id, title, position]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err); // print the real error in the terminal so we can debug it
+    res.status(500).json({ error: 'Something went wrong adding the module' });
   }
 });
 
