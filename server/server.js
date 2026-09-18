@@ -7,6 +7,7 @@ const cors = require('cors');
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const courseRoutes = require('./routes/courses');
+const moduleRoutes = require('./routes/modules');
 const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
 const sessionRoutes = require('./routes/sessions');
@@ -26,6 +27,9 @@ app.use('/api/auth', authRoutes);
 
 // All course routes live under /api/courses (e.g. POST /api/courses, GET /api/courses)
 app.use('/api/courses', courseRoutes);
+
+// All module routes live under /api/modules (e.g. POST /api/modules/:id/lectures)
+app.use('/api/modules', moduleRoutes);
 
 // All enrollment routes live under /api/enrollments
 app.use('/api/enrollments', enrollmentRoutes);

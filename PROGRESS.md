@@ -898,7 +898,7 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
       table (via pgAdmin Query Tool, per project convention — no migration script) [Session 2]
 - [x] `POST /api/courses` — create course route (instructor) [Session 2]
 - [x] `POST /api/courses/:id/modules` — add a module to a course [Session 2]
-- [ ] `POST /api/modules/:id/lectures` — add a lecture to a module
+- [x] `POST /api/modules/:id/lectures` — add a lecture to a module [Session 3]
 - [ ] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
       curriculum, joined from `course_modules`/`course_lectures`, ordered by `position`)
 - [ ] `PATCH` routes to flip `status` (course: draft→published; module/lecture:
@@ -1104,6 +1104,48 @@ server/routes/courses.js (Branch 3 (InstructorFunctionalities) — extended
   can currently add a module to any course id, not just their own. Covered by the
   later "Validation + auth checks" checklist item.
 - Next Branch 3 piece: POST /api/modules/:id/lectures — add a lecture to a module.
+```
+
+### Session 3 (Branch 3 (InstructorFunctionalities)) — Add Lecture Route
+
+#### Checklist Status (Session 3)
+
+- [x] `POST /api/modules/:id/lectures` — add a lecture to a module
+
+#### Files Created/Updated So Far
+
+```
+server/routes/modules.js (Branch 3 (InstructorFunctionalities) — new file. New
+  route POST /api/modules/:id/lectures — adds one lecture to a module, only title
+  required, content/video_url/duration_minutes/position all optional, position
+  defaults to 0 and status defaults to 'planned' via DB defaults. No ownership
+  check yet (same known gap as the modules route).)
+
+server/server.js (Branch 3 (InstructorFunctionalities) — required in the new
+  modules.js router and mounted it at /api/modules, alongside the existing
+  /api/auth, /api/courses, /api/enrollments, /api/reviews, /api/sessions
+  mounts.)
+```
+
+#### Decisions Log
+
+- **New router file (`modules.js`) instead of adding the route to `courses.js`** —
+  the checklist path is `/api/modules/:id/lectures`, a top-level `/api/modules`
+  path, not nested under `/api/courses`. Matches the project's one-router-per-
+  resource convention already used for auth/courses/enrollments/reviews/sessions.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- No ownership check yet on POST /api/modules/:id/lectures — any instructor
+  account can currently add a lecture to any module id, not just one on a course
+  they own. Same known gap as the modules route, covered by the later
+  "Validation + auth checks" checklist item.
+- Next Branch 3 piece: GET /api/courses/:id — student-facing course view (course
+  fields + outcomes + curriculum, joined from course_modules/course_lectures,
+  ordered by position). Note the existing GET /api/courses/:id route is currently
+  a bare version (no modules/lectures join) — this item extends it, doesn't
+  create a new one.
 ```
 
 ---
