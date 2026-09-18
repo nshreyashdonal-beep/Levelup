@@ -884,21 +884,20 @@ not yet started or not fully resolved.
       land on the Welcome page first; only that page's "Open Dashboard →" card should go
       on to the real /instructor-dashboard. [Session 1]
 
-**Course management (schema agreed, not yet built) — final shape: `courses` gets new
-columns (`category`, `level`, `delivery_mode`, `language`, `thumbnail_url`,
-`duration_weeks`, `capacity`, `know_your_curriculum`, `outcomes`, `status`); new
-`course_modules` table (module = major section, `status` 'planned'|'available'); new
-`course_lectures` table (lecture = actual content inside a module, `content`,
-`video_url`, `duration_minutes`, `status` 'planned'|'available'). `know_your_curriculum`
-= instructor's advertised roadmap (free text); `course_modules`/`course_lectures` =
-what's actually built so far — the two are allowed to differ (live/hybrid courses grow
-their real content over time). Student course view = Title, Level, Price, Description,
-Outcomes, Curriculum.**
+**Course management — final shape: `courses` gets new columns (`category`, `level`,
+`delivery_mode`, `language`, `thumbnail_url`, `duration_weeks`, `capacity`,
+`curriculum`, `outcomes`, `status`); new `course_modules` table (module = major
+section, `status` 'planned'|'available'); new `course_lectures` table (lecture =
+actual content inside a module, `content`, `video_url`, `duration_minutes`, `status`
+'planned'|'available'). `curriculum` = instructor's advertised roadmap (free text);
+`course_modules`/`course_lectures` = what's actually built so far — the two are
+allowed to differ (live/hybrid courses grow their real content over time). Student
+course view = Title, Level, Price, Description, Outcomes, Curriculum.**
 
-- [ ] Write schema: `courses` new columns + `course_modules` table + `course_lectures`
-      table (via pgAdmin Query Tool, per project convention — no migration script)
-- [ ] `POST /api/courses` — create course route (instructor)
-- [ ] `POST /api/courses/:id/modules` — add a module to a course
+- [x] Write schema: `courses` new columns + `course_modules` table + `course_lectures`
+      table (via pgAdmin Query Tool, per project convention — no migration script) [Session 2]
+- [x] `POST /api/courses` — create course route (instructor) [Session 2]
+- [x] `POST /api/courses/:id/modules` — add a module to a course [Session 2]
 - [ ] `POST /api/modules/:id/lectures` — add a lecture to a module
 - [ ] `GET /api/courses/:id` — student-facing course view (course fields + outcomes +
       curriculum, joined from `course_modules`/`course_lectures`, ordered by `position`)
@@ -1048,6 +1047,63 @@ client/src/components/ProfileMenu.jsx (InstructorFunctionalities — "Instructor
 
 ```
 - (none new this session — the Create Course page item above is still open)
+```
+
+--- Carried from Session 1 (Branch 3 (InstructorFunctionalities)) ---
+
+### Session 2 (Branch 3 (InstructorFunctionalities)) — Course Management Schema + Create Routes
+
+#### Checklist Status (Session 2)
+
+- [x] Write schema: `courses` new columns + `course_modules` table + `course_lectures`
+      table (via pgAdmin Query Tool, per project convention — no migration script)
+- [x] `POST /api/courses` — create course route (instructor)
+- [x] `POST /api/courses/:id/modules` — add a module to a course
+
+#### Files Created/Updated So Far
+
+```
+server/db/schema.sql (Branch 3 (InstructorFunctionalities) — added `courses` new
+  columns: category, level, delivery_mode, language, thumbnail_url, duration_weeks,
+  capacity, curriculum, outcomes, status (default 'draft', CHECK 'draft'|'published').
+  New course_modules table (title, position, status 'planned'|'available', FK to
+  courses). New course_lectures table (title, content, video_url, duration_minutes,
+  position, status 'planned'|'available', FK to course_modules). Indexes added on
+  both new tables' foreign keys. Verified in pgAdmin.)
+
+server/routes/courses.js (Branch 3 (InstructorFunctionalities) — extended
+  POST /api/courses to accept the new Branch 3 fields (category, level,
+  delivery_mode, language, thumbnail_url, duration_weeks, capacity, curriculum,
+  outcomes) alongside the original title/description/price; title remains the only
+  required field, new courses still default to status = 'draft'. Added new route
+  POST /api/courses/:id/modules — adds one module to a course, only title required,
+  position/status use DB defaults. No ownership check yet on either route — that's
+  its own later checklist item. Top file comment updated to describe all three
+  routes.)
+```
+
+#### Decisions Log
+
+- **`know_your_curriculum` renamed to `curriculum`** before the schema was ever run
+  in pgAdmin, so no rename migration was needed — the column was created directly
+  as `curriculum`. All PROGRESS.md references to the old name updated to match.
+- **`status` defaults to `'draft'`** on new courses and gates visibility — a future
+  "browse published courses" query should filter on `status = 'published'`; there's
+  no publish route yet (planned as a later `PATCH` checklist item).
+- **`level` and `delivery_mode` use `CHECK` constraints** instead of free text,
+  matching how `role` and `session_type` are already constrained elsewhere in this
+  schema.
+- **No ownership check on either new route yet** (any instructor can add a module to
+  any course id) — deliberately not bundled in here since "Validation + auth checks"
+  is its own separate checklist item further down.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- No ownership check yet on POST /api/courses/:id/modules — any instructor account
+  can currently add a module to any course id, not just their own. Covered by the
+  later "Validation + auth checks" checklist item.
+- Next Branch 3 piece: POST /api/modules/:id/lectures — add a lecture to a module.
 ```
 
 ---
