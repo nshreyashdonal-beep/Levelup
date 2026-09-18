@@ -131,10 +131,12 @@ router.get('/', async (req, res) => {
   try {
     // Same base query either way — just add a WHERE clause when
     // instructor_id was given, instead of writing a second query.
+    // `status` is included so the instructor's own "My Courses" page can
+    // split a course into the Published or Draft section (Branch 3, Session 8).
     const result = instructor_id
       ? await db.query(
           `SELECT courses.id, courses.title, courses.description, courses.price,
-                  courses.created_at, users.name AS instructor_name
+                  courses.created_at, courses.status, users.name AS instructor_name
            FROM courses
            JOIN users ON users.id = courses.instructor_id
            WHERE courses.instructor_id = $1
@@ -143,7 +145,7 @@ router.get('/', async (req, res) => {
         )
       : await db.query(
           `SELECT courses.id, courses.title, courses.description, courses.price,
-                  courses.created_at, users.name AS instructor_name
+                  courses.created_at, courses.status, users.name AS instructor_name
            FROM courses
            JOIN users ON users.id = courses.instructor_id
            ORDER BY courses.created_at DESC`

@@ -92,6 +92,47 @@
   outline-offset: 2px;
 }
 
+/* Branch 3, Session 8: Draft/Published sections, replacing the single
+   mixed grid + per-card status badge this page used before. */
+
+.managecourses-section {
+  margin-bottom: 40px;
+}
+
+.managecourses-section-title {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.managecourses-section-subtitle {
+  margin: 4px 0 18px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.managecourses-section-empty {
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px dashed var(--color-instructor-soft-hover);
+  border-radius: var(--radius-large);
+  background: var(--color-instructor-soft);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.managecourses-publish-error {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-medium);
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
 .managecourses-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -179,6 +220,11 @@
   font-weight: 700;
 }
 
+.managecourses-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .managecourses-card-manage-btn {
   border: 1px solid var(--color-instructor-soft-hover);
   border-radius: var(--radius-medium);
@@ -198,6 +244,31 @@
 .managecourses-card-manage-btn:focus-visible {
   outline: 3px solid rgba(16, 185, 129, 0.3);
   outline-offset: 2px;
+}
+
+.managecourses-card-publish-btn {
+  border: none;
+  border-radius: var(--radius-medium);
+  background: var(--color-instructor-primary);
+  color: var(--color-white);
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.managecourses-card-publish-btn:hover {
+  background: var(--color-instructor-primary-dark);
+}
+
+.managecourses-card-publish-btn:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.3);
+  outline-offset: 2px;
+}
+
+.managecourses-card-publish-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .managecourses-status-card {

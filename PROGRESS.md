@@ -912,7 +912,8 @@ course view = Title, Level, Price, Description, Outcomes, Curriculum.**
 - [ ] Add Lecture screen (frontend, nested under a module)
 - [ ] Student-facing course view page (frontend) — Title, Level, Price, Description,
       Outcomes, Curriculum
-- [ ] Instructor course management dashboard (frontend) — list own courses, edit, publish
+- [x] Instructor course management dashboard (frontend) — list own courses, edit,
+      publish (list + publish done; edit still open, see Known Issues) [Session 8]
 
 ### Branch 4 (InstructorUI)
 
@@ -1390,6 +1391,79 @@ client/src/App.jsx (Branch 3 (InstructorFunctionalities) — registered the
   publish
 - npm run lint and npm run build were blocked in this environment because
   command execution permission was denied; git diff --check passed.
+```
+
+---
+
+### Session 8 (Branch 3 (InstructorFunctionalities)) — Manage Courses: Published/Draft Sections + Publish Action
+
+#### Checklist Status (Session 8)
+
+- [x] Instructor course management dashboard (frontend) — list own courses, edit,
+      publish (list + publish done; edit still open)
+
+#### Files Created/Updated So Far
+
+```
+server/routes/courses.js (Branch 3 (InstructorFunctionalities) — added
+  `courses.status` to the two SELECTs in GET /api/courses (both the public
+  list and the ?instructor_id= list) so the frontend can tell a draft
+  course from a published one. No other route behavior changed.)
+
+client/src/pages/ManageCourses.jsx (Branch 3 (InstructorFunctionalities) —
+  replaced the single mixed course grid with two labeled sections, "Draft
+  Courses" and "Published Courses", split from the existing course list by
+  `course.status`. Draft cards get a new "Publish" button that calls the
+  existing PATCH /api/courses/:id route with { status: 'published' } and
+  updates that course in local state on success, moving its card to the
+  Published section without a refetch. Published cards are unchanged
+  (still just Add Module). Each section shows its own small empty-state
+  message when it has no courses.)
+
+client/src/pages/ManageCourses.css (Branch 3 (InstructorFunctionalities) —
+  added section heading/subtitle/empty-state styles, a shared publish-error
+  banner style, a card-actions row to hold two buttons side by side, and
+  the new publish button's styles (emerald fill, hover, focus, disabled).)
+```
+
+#### Decisions Log
+
+- Chose two labeled sections over a small status badge on each card, per
+  the user's direction this session — status is now structural (which
+  section a card is in) rather than a label that's easy to miss, and the
+  Draft section is the natural place for the new Publish action instead of
+  it being buried in a mixed grid.
+- No new API route: `PATCH /api/courses/:id` already supported flipping
+  `status` since Session 5. The only backend change was adding `status` to
+  the list query's SELECT, since the list route wasn't returning it before.
+- Draft is treated as "anything not published" (`status !== 'published'`)
+  rather than checking for `status === 'draft'` specifically, since the
+  DB's CHECK constraint only allows those two values anyway.
+- Publish is a per-card optimistic-ish update: on success the one course's
+  status is patched in local state (no full refetch); on failure a shared
+  error banner is shown above the sections and the button re-enables so the
+  instructor can retry.
+- "Edit" from the checklist item's wording is intentionally not built this
+  session — there's still no edit form for a course's own fields (title,
+  price, description, etc.), only the status flip. Kept as an open item
+  below rather than silently dropped.
+- Did not touch the public GET /api/courses or GET /api/courses/:id routes
+  to hide drafts from students — that's a separate, already-flagged gap
+  (see existing code comment in courses.js) and out of scope for this
+  checklist item, which was about the instructor's own dashboard.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Add Lecture screen (frontend, nested under a module)
+- Student-facing course view page (frontend)
+- Course edit form (frontend) — title/price/description/etc. for an
+  existing course; only the draft/published status flip exists so far
+- GET /api/courses and GET /api/courses/:id still return draft courses to
+  everyone, including students — no status filter yet (flagged in Session 4
+  and still open)
+- npm run build was run and passed in this environment; npm run lint was
+  not run (not part of this piece's change).
 ```
 
 ---

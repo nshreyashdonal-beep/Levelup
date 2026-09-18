@@ -2,15 +2,20 @@
 // Instructor-only "My Courses" page, reached via InstructorNav's "My
 // Courses" link and InstructorWelcome's "Manage Courses" action card.
 //
-// Restyled/restructured this session to match the layout MyCourses.jsx
-// (the student "My Courses" page) already uses — eyebrow + title + count
-// badge header, a loading/empty status card, and a card grid — but built
-// entirely with the Instructor emerald tokens and components per
-// instructions.md, not by importing or branching on the student page.
-// See instructions.md sections 1-7: Instructor pages must stay on the
-// green/emerald visual language, reuse InstructorNav + Footer
-// variant="instructor", and behavior (guards, routes, API calls, empty/
-// loading states) must not change during a visual-only pass.
+// Restyled/restructured in an earlier session to match the layout
+// MyCourses.jsx (the student "My Courses" page) already uses — eyebrow +
+// title + count badge header, a loading/empty status card, and a card
+// grid — but built entirely with the Instructor emerald tokens and
+// components per instructions.md, not by importing or branching on the
+// student page.
+//
+// Branch 3, Session 8: instead of one mixed grid with a status badge on
+// each card, courses are now split into two labeled sections — Published
+// Courses and Draft Courses — so status is obvious from where a card sits,
+// not just a small label on it. Draft cards get a new "Publish" button
+// that calls the existing PATCH /api/courses/:id route (built in
+// Session 5) with { status: 'published' }; nothing new on the backend
+// except returning `status` from the list query.
 //
 // Behavior preserved from before this pass:
 //   - Same instructor-only guard as InstructorDashboard.jsx.
@@ -35,6 +40,12 @@ export default function ManageCourses() {
 
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Which course is currently being published (disables just that card's
+  // button instead of every button on the page) + one shared error message
+  // if a publish request fails.
+  const [publishingId, setPublishingId] = useState(null);
+  const [publishError, setPublishError] = useState('');
 
   // Guard: only logged-in instructors get past this page — same check
   // as InstructorDashboard.jsx.
@@ -61,6 +72,44 @@ export default function ManageCourses() {
       .catch(() => setCourses([])) // if the request fails, just show the empty state
       .finally(() => setLoading(false));
   }, [user]);
+
+  // Flip one course from draft to published using the existing PATCH
+  // route, then update it in local state so the card moves from the
+  // Draft section to the Published section without a full refetch.
+  async function publishCourse(courseId) {
+    setPublishingId(courseId);
+    setPublishError('');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/courses/${courseId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ status: 'published' }),
+      });
+
+      if (!response.ok) {
+        setPublishError('Could not publish the course. Please try again.');
+        return;
+      }
+
+      setCourses((current) =>
+        current.map((course) =>
+          course.id === courseId ? { ...course, status: 'published' } : course
+        )
+      );
+    } catch {
+      setPublishError('Could not reach the server. Is it running?');
+    } finally {
+      setPublishingId(null);
+    }
+  }
+
+  // Split once per render instead of filtering inline twice below.
+  const publishedCourses = courses.filter((course) => course.status === 'published');
+  const draftCourses = courses.filter((course) => course.status !== 'published');
 
   if (!user) return null;
 
@@ -113,35 +162,101 @@ export default function ManageCourses() {
 
         {!loading && courses.length > 0 && (
           <>
-            <div className="managecourses-grid">
-              {courses.map((course) => (
-                <div key={course.id} className="managecourses-card">
-                  <div className="managecourses-card-badge">
-                    {course.title.charAt(0).toUpperCase()}
-                  </div>
+            {publishError && <p className="managecourses-publish-error">{publishError}</p>}
 
-                  <div className="managecourses-card-body">
-                    <div className="managecourses-card-topline">
-                      <span className="managecourses-card-label">CREATED</span>
+            <section className="managecourses-section">
+              <h2 className="managecourses-section-title">Draft Courses</h2>
+              <p className="managecourses-section-subtitle">
+                Still in progress — only you can see these until you publish them.
+              </p>
+
+              {draftCourses.length === 0 ? (
+                <p className="managecourses-section-empty">Nothing in draft right now.</p>
+              ) : (
+                <div className="managecourses-grid">
+                  {draftCourses.map((course) => (
+                    <div key={course.id} className="managecourses-card">
+                      <div className="managecourses-card-badge">
+                        {course.title.charAt(0).toUpperCase()}
+                      </div>
+
+                      <div className="managecourses-card-body">
+                        <div className="managecourses-card-topline">
+                          <span className="managecourses-card-label">DRAFT</span>
+                        </div>
+                        <h2 className="managecourses-card-title">{course.title}</h2>
+                        {course.description && (
+                          <p className="managecourses-card-desc">{course.description}</p>
+                        )}
+                        <div className="managecourses-card-footer">
+                          <p className="managecourses-card-price">₹{course.price}</p>
+                          <div className="managecourses-card-actions">
+                            <button
+                              type="button"
+                              className="managecourses-card-manage-btn"
+                              onClick={() => navigate(`/courses/${course.id}/modules`)}
+                            >
+                              Add Module
+                            </button>
+                            <button
+                              type="button"
+                              className="managecourses-card-publish-btn"
+                              disabled={publishingId === course.id}
+                              onClick={() => publishCourse(course.id)}
+                            >
+                              {publishingId === course.id ? 'Publishing...' : 'Publish'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <h2 className="managecourses-card-title">{course.title}</h2>
-                    {course.description && (
-                      <p className="managecourses-card-desc">{course.description}</p>
-                    )}
-                    <div className="managecourses-card-footer">
-                      <p className="managecourses-card-price">₹{course.price}</p>
-                      <button
-                        type="button"
-                        className="managecourses-card-manage-btn"
-                        onClick={() => navigate(`/courses/${course.id}/modules`)}
-                      >
-                        Add Module
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </section>
+
+            <section className="managecourses-section">
+              <h2 className="managecourses-section-title">Published Courses</h2>
+              <p className="managecourses-section-subtitle">
+                Live on LevelUp — students can find and enroll in these.
+              </p>
+
+              {publishedCourses.length === 0 ? (
+                <p className="managecourses-section-empty">
+                  Nothing published yet — publish a draft above when it's ready.
+                </p>
+              ) : (
+                <div className="managecourses-grid">
+                  {publishedCourses.map((course) => (
+                    <div key={course.id} className="managecourses-card">
+                      <div className="managecourses-card-badge">
+                        {course.title.charAt(0).toUpperCase()}
+                      </div>
+
+                      <div className="managecourses-card-body">
+                        <div className="managecourses-card-topline">
+                          <span className="managecourses-card-label">PUBLISHED</span>
+                        </div>
+                        <h2 className="managecourses-card-title">{course.title}</h2>
+                        {course.description && (
+                          <p className="managecourses-card-desc">{course.description}</p>
+                        )}
+                        <div className="managecourses-card-footer">
+                          <p className="managecourses-card-price">₹{course.price}</p>
+                          <button
+                            type="button"
+                            className="managecourses-card-manage-btn"
+                            onClick={() => navigate(`/courses/${course.id}/modules`)}
+                          >
+                            Add Module
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <p className="managecourses-note">
               Add modules now; lecture creation and full course editing will be added in
