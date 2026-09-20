@@ -1531,23 +1531,24 @@ works, same rule PROGRESS.md uses.
       instructor's course(s) [Session 3]
 
 ### Phase 5 — Frontend map UI
-- [ ] Add a Leaflet map section on Student Landing, below the
-      "Learn from the best in your neighborhood" hero
-- [ ] Marker for the student's own position
-- [ ] Markers for nearby instructors, from the Phase 4 route
-- [ ] Click a pin → popup with instructor name + link to their course(s)
-- [ ] Loading state, empty state ("no instructors near you yet"), and
-      the permission-denied state from Phase 3
+- [x] Add a Leaflet map section on the public Home landing page, below the
+      "Learn from the best in your neighborhood" hero [Session 4]
+- [x] Marker for the visitor's own position [Session 4]
+- [x] Markers for nearby instructors, from the Phase 4 route [Session 4]
+- [x] Click a pin → popup with instructor name + link to their course(s)
+      [Session 4]
+- [x] Loading state, empty state ("no instructors near you yet"), and
+      the permission-denied state from Phase 3 [Session 4]
 
 ### Phase 6 — Privacy
-- [ ] Implement whatever was decided in Phase 1 (exact vs. fuzzed
-      coordinates) — don't ship an exact home address pin publicly
-      without deciding this on purpose
+- [x] Implement the Phase 1 privacy decision: instructors explicitly allow
+      exact location sharing, so no coordinate masking or fuzzing is needed
+      [Session 5]
 
 ### Phase 7 — Demo data
-- [ ] Seed a handful of instructor profiles with real, spread-out
+- [x] Seed a handful of instructor profiles with real, spread-out
       coordinates (not all stacked in one spot) so the map actually
-      looks alive when demoed
+      looks alive when demoed [Session 6]
 
 ### Phase 8 — Testing & polish
 - [ ] Manual QA: allow / deny the location permission prompt, confirm
@@ -1710,6 +1711,112 @@ discovery routes at /api/instructors.)
   popups, loading, empty, and error states.
 - Backend route syntax and git diff --check passed. A live database request
   was not run in this environment.
+```
+
+### Session 4 (Branch 5 (NearbyInstructor)) — Public nearby-instructor map
+
+#### Files Created/Updated So Far
+
+```
+client/package.json (Branch 5 (NearbyInstructor) — added Leaflet as the
+frontend map dependency.)
+
+client/package-lock.json (Branch 5 (NearbyInstructor) — updated the lockfile
+after installing Leaflet.)
+
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — connected the public
+location prompt to GET /api/instructors/nearby, retained the visitor
+coordinates in page state, initialized a Leaflet map, added visitor and
+instructor markers, popup course links, and a nearby instructor list. It also
+handles API loading, empty, error, and permission-denied states.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — added responsive
+student-indigo map, nearby heading, status, instructor-list, and mobile
+layout styles.)
+```
+
+#### Decisions Log
+
+- Adapted the original Phase 5 wording from Student Landing to the public Home
+  landing page so logged-out visitors can use nearby discovery.
+- Used Leaflet with OpenStreetMap tiles and attribution; no copied markup or
+  styling from the reference archive was used.
+- The map is created only after the visitor grants location access. The
+  visitor marker remains visible even when the API returns no instructors.
+- Instructor popups escape API-provided text before inserting the course links
+  into Leaflet's popup HTML.
+- Nearby API results remain limited by the Phase 4 backend defaults; the
+  frontend does not invent demo instructors or substitute fake coordinates.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 6 remains: document/verify the exact-coordinate privacy decision
+- Phase 7 remains: seed spread-out instructor demo data so the map can be
+  demonstrated with real published courses.
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint passed with pre-existing warnings in other pages; no new
+  Home.jsx warning remains. npm run build and git diff --check passed.
+```
+
+### Session 5 (Branch 5 (NearbyInstructor)) — Privacy decision confirmed
+
+#### Files Created/Updated So Far
+
+```
+No application files changed. PROGRESS.md was updated to record that
+instructors explicitly consent to sharing their exact saved coordinates.
+```
+
+#### Decisions Log
+
+- Exact instructor coordinates remain public for nearby discovery because
+  instructors knowingly allow their location information to be shared.
+- No rounding, fuzzing, masking, or additional privacy layer is required for
+  this feature.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 7 remains: seed spread-out instructor demo data with published
+  courses so the map can be demonstrated with real results.
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+```
+
+### Session 6 (Branch 5 (NearbyInstructor)) — Nearby map demo data
+
+#### Files Created/Updated So Far
+
+```
+server/db/nearby-demo-seed.sql (Branch 5 (NearbyInstructor) — added a
+repeatable pgAdmin seed script for six instructor accounts, profiles with
+spread-out Indian city coordinates, and one published course per instructor.
+The script uses a shared documented demo password, upserts instructor profile
+data, and avoids duplicate courses when run again.)
+```
+
+#### Decisions Log
+
+- Added demo data as a separate SQL file instead of changing `schema.sql`;
+  schema remains the structure record and the seed can be run only when map
+  demo data is needed.
+- Used six distinct cities and published courses so the public nearby route
+  can return meaningful map markers when a visitor tests a matching region.
+- The seed is repeatable: demo users are upserted, profiles are updated by
+  `user_id`, and courses are inserted only when that instructor/title pair is
+  missing.
+- Every demo account uses `DemoPassword123!`; these accounts are local demo
+  data only and must not be used in production.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Run server/db/nearby-demo-seed.sql in pgAdmin after the Branch 5 schema
+  ALTER TABLE statements have been applied.
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
 ```
 
 

@@ -4,8 +4,10 @@
 // Styling lives in Home.css (colocated), following the same pattern
 // as Navbar.css / Footer.css.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { API_BASE } from '../api'
@@ -68,11 +70,27 @@ function JourneyTrack({ steps, variant }) {
   )
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
   const [courses, setCourses] = useState([])
   const [coursesLoading, setCoursesLoading] = useState(true)
   const [locationStatus, setLocationStatus] = useState('idle')
+  const [visitorLocation, setVisitorLocation] = useState(null)
+  const [nearbyInstructors, setNearbyInstructors] = useState([])
+  const [nearbyLoading, setNearbyLoading] = useState(false)
+  const [nearbyError, setNearbyError] = useState('')
+  const mapElementRef = useRef(null)
+  const mapInstanceRef = useRef(null)
+  const mapMarkersRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -109,7 +127,13 @@ export default function Home() {
     setLocationStatus('loading')
 
     navigator.geolocation.getCurrentPosition(
-      () => {
+      (position) => {
+        setNearbyLoading(true)
+        setNearbyError('')
+        setVisitorLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
         setLocationStatus('success')
       },
       (error) => {
@@ -126,6 +150,104 @@ export default function Home() {
       }
     )
   }
+
+  useEffect(() => {
+    if (!visitorLocation) return
+
+    const controller = new AbortController()
+
+    fetch(
+      `${API_BASE}/api/instructors/nearby?lat=${visitorLocation.latitude}&lng=${visitorLocation.longitude}`,
+      { signal: controller.signal }
+    )
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Nearby instructors could not be loaded.')
+        }
+        return response.json()
+      })
+      .then(data => {
+        setNearbyInstructors(Array.isArray(data.results) ? data.results : [])
+        setNearbyLoading(false)
+      })
+      .catch(error => {
+        if (error.name === 'AbortError') return
+        console.error('Failed to fetch nearby instructors:', error)
+        setNearbyError('Nearby instructors could not be loaded. Please try again.')
+        setNearbyLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [visitorLocation])
+
+  useEffect(() => {
+    if (!visitorLocation || !mapElementRef.current) return
+
+    const map = L.map(mapElementRef.current).setView(
+      [visitorLocation.latitude, visitorLocation.longitude],
+      12
+    )
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
+
+    mapInstanceRef.current = map
+    mapMarkersRef.current = L.layerGroup().addTo(map)
+
+    return () => {
+      map.remove()
+      mapInstanceRef.current = null
+      mapMarkersRef.current = null
+    }
+  }, [visitorLocation])
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapMarkersRef.current || !visitorLocation) return
+
+    mapMarkersRef.current.clearLayers()
+
+    L.circleMarker(
+      [visitorLocation.latitude, visitorLocation.longitude],
+      {
+        radius: 9,
+        color: '#4f46e5',
+        fillColor: '#6366f1',
+        fillOpacity: 1,
+        weight: 3,
+      }
+    )
+      .bindPopup('<strong>You are here</strong>')
+      .addTo(mapMarkersRef.current)
+
+    nearbyInstructors.forEach(instructor => {
+      const courseLinks = instructor.courses
+        .map(course => `<a href="/courses/${course.id}">${escapeHtml(course.title)}</a>`)
+        .join('<br />')
+
+      L.marker([instructor.latitude, instructor.longitude])
+        .bindPopup(
+          `<strong>${escapeHtml(instructor.instructor_name)}</strong>` +
+          `<br />${escapeHtml(instructor.city || 'LevelUp instructor')}` +
+          `<br /><span>${instructor.distance_km} km away</span>` +
+          `<br />${courseLinks}`
+        )
+        .addTo(mapMarkersRef.current)
+    })
+
+    if (nearbyInstructors.length > 0) {
+      const bounds = L.latLngBounds([
+        [visitorLocation.latitude, visitorLocation.longitude],
+        ...nearbyInstructors.map(instructor => [instructor.latitude, instructor.longitude]),
+      ])
+      mapInstanceRef.current.fitBounds(bounds, { padding: [28, 28] })
+    } else {
+      mapInstanceRef.current.setView(
+        [visitorLocation.latitude, visitorLocation.longitude],
+        12
+      )
+    }
+  }, [nearbyInstructors, visitorLocation])
 
   const locationMessages = {
     idle: 'Allow location access to prepare nearby instructor results.',
@@ -225,6 +347,57 @@ export default function Home() {
             </button>
           </div>
         </section>
+
+        {locationStatus === 'success' && (
+          <section className="home-nearby-section" aria-labelledby="home-nearby-title">
+            <div className="home-nearby-heading">
+              <div>
+                <p className="home-section-eyebrow">NEARBY LEARNING</p>
+                <h2 id="home-nearby-title">Instructors around you</h2>
+                <p>
+                  Explore published courses from instructors within 25 km of
+                  your selected location.
+                </p>
+              </div>
+              {!nearbyLoading && !nearbyError && (
+                <span className="home-nearby-count">
+                  {nearbyInstructors.length} {nearbyInstructors.length === 1 ? 'instructor' : 'instructors'}
+                </span>
+              )}
+            </div>
+
+            <div className="home-nearby-layout">
+              <div
+                ref={mapElementRef}
+                className="home-nearby-map"
+                aria-label="Map showing nearby LevelUp instructors"
+              />
+              {nearbyLoading ? (
+                <div className="home-nearby-status">Finding instructors near you...</div>
+              ) : nearbyError ? (
+                <div className="home-nearby-status home-nearby-status--error" role="alert">
+                  {nearbyError}
+                </div>
+              ) : nearbyInstructors.length === 0 ? (
+                <div className="home-nearby-status">
+                  No instructors near you yet. Try again later as more local courses are published.
+                </div>
+              ) : (
+                <div className="home-nearby-list">
+                  {nearbyInstructors.map(instructor => (
+                    <article key={instructor.instructor_id} className="home-nearby-instructor">
+                      <div>
+                        <h3>{instructor.instructor_name}</h3>
+                        <p>{instructor.city || 'LevelUp instructor'}</p>
+                      </div>
+                      <span>{instructor.distance_km} km</span>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Public course browse section */}
         <section id="explore-courses" className="home-explore-courses">
