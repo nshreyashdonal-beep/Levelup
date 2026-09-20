@@ -200,6 +200,83 @@
   font-size: 0.68rem;
 }
 
+/* Nearby location prompt */
+
+.home-location-section {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 12px 0 0;
+}
+
+.home-location-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  border: 1px solid #c7d2fe;
+  border-radius: var(--radius-large);
+  background: linear-gradient(120deg, var(--color-student-soft), var(--color-white));
+}
+
+.home-location-icon {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--color-student-primary);
+  color: var(--color-white);
+  font-size: 1.5rem;
+}
+
+.home-location-content h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.home-location-content > p:not(.home-section-eyebrow):not(.home-location-message) {
+  max-width: 640px;
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.home-location-message {
+  margin: 9px 0 0;
+  color: var(--color-student-primary-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.home-location-button {
+  min-width: 190px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-student-primary);
+  border-radius: var(--radius-medium);
+  background: var(--color-student-primary);
+  color: var(--color-white);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.home-location-button:hover:not(:disabled) {
+  border-color: var(--color-student-primary-dark);
+  background: var(--color-student-primary-dark);
+}
+
+.home-location-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 @media (max-width: 860px) {
   .home-hero-panel {
     grid-template-columns: 1fr;
@@ -229,6 +306,15 @@
 
   .home-hero-note--bottom {
     left: 0;
+  }
+
+  .home-location-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .home-location-button {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
 
@@ -273,6 +359,21 @@
   .home-hero-note--bottom {
     bottom: 0;
     padding-right: 12px;
+  }
+
+  .home-location-section {
+    width: min(100% - 32px, 520px);
+  }
+
+  .home-location-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 22px;
+  }
+
+  .home-location-button {
+    width: 100%;
+    grid-column: auto;
   }
 
   .home-explore-courses {

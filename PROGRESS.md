@@ -1512,21 +1512,23 @@ works, same rule PROGRESS.md uses.
       lat/lng into `instructor_profiles` [Session 1]
 
 ### Phase 3 — Student's own location
-- [ ] Get the student's location via the browser's Geolocation API on
-      Student Landing
-- [ ] Decide: ask automatically on page load, or behind a
-      "Find instructors near me" button (button is more honest about
-      why you're asking for permission)
-- [ ] Handle permission denied / unsupported browser — fallback to
-      either a manual pin-drop or just hiding the map section
+- [x] Get the visitor's location via the browser's Geolocation API on
+      the public Home landing page [Session 2]
+- [x] Ask behind a "Find instructors near me" button instead of requesting
+      location automatically on page load [Session 2]
+- [x] Handle permission denied / unsupported browser with an honest status
+      message and retryable fallback; map/results remain deferred to later
+      phases [Session 2]
 
 ### Phase 4 — Backend "nearby" query
-- [ ] New route: `GET /api/instructors/nearby?lat=<>&lng=<>`
-- [ ] Haversine distance formula in raw SQL (already the plan per
+- [x] New route: `GET /api/instructors/nearby?lat=<>&lng=<>` [Session 3]
+- [x] Haversine distance formula in raw SQL (already the plan per
       PROGRESS.md's Decisions Log — no PostGIS), `ORDER BY distance`
-- [ ] Decide a default radius (e.g. 25km) and/or result limit
-- [ ] Join in enough course info that a map pin can link straight to
-      that instructor's course(s)
+      [Session 3]
+- [x] Decide a default radius (25 km) and result limit (20 instructors);
+      callers may request up to 100 km and 50 instructors [Session 3]
+- [x] Join published course info so a map pin can link straight to an
+      instructor's course(s) [Session 3]
 
 ### Phase 5 — Frontend map UI
 - [ ] Add a Leaflet map section on Student Landing, below the
@@ -1629,6 +1631,85 @@ client/src/pages/BecomeInstructor.css (Branch 5 (NearbyInstructor) — added
   plan struck through rather than deleted, so the supersession stays on
   the record instead of silently disappearing.
 - npm run build / npm run lint not run this session.
+```
+
+### Session 2 (Branch 5 (NearbyInstructor)) — Public landing location prompt
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — added a public,
+user-triggered browser Geolocation API flow. The page tracks idle, loading,
+success, denied, unsupported, and error states without storing coordinates or
+requiring login.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — added a responsive
+student-indigo location prompt card with accessible status messaging, visible
+focus behavior from the shared styles, and mobile layout support.)
+```
+
+#### Decisions Log
+
+- Implemented Phase 3 on the public Home landing page rather than Student
+  Landing so logged-out visitors can discover the nearby-instructor feature.
+- Location permission is requested only after clicking "Find instructors near
+  me"; the page does not ask automatically on load.
+- Coordinates remain in the browser callback only for this phase. No backend
+  request, map, instructor list, or coordinate persistence was added; those
+  belong to later phases.
+- Denied permission and unsupported browsers show clear messages, while
+  transient location errors leave the action retryable.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 4 remains: add the public GET /api/instructors/nearby route with a
+  raw-SQL Haversine query, radius/result-limit decision, and course data.
+- Phase 5 remains: add the Leaflet map, visitor marker, instructor markers,
+  popups, and nearby result states to the public landing page.
+- npm run lint and npm run build could not be executed because this
+  environment denied permission to start the npm command from client/.
+```
+
+### Session 3 (Branch 5 (NearbyInstructor)) — Nearby instructors backend
+
+#### Files Created/Updated So Far
+
+```
+server/routes/instructors.js (Branch 5 (NearbyInstructor) — added the public
+GET /api/instructors/nearby route. It validates coordinates, applies a
+25-kilometre default radius and 20-result default limit, calculates distance
+with a raw PostgreSQL Haversine expression, orders nearest first, and returns
+instructor profile data plus their published courses grouped per instructor.)
+
+server/server.js (Branch 5 (NearbyInstructor) — mounted the public instructor
+discovery routes at /api/instructors.)
+```
+
+#### Decisions Log
+
+- Nearby search is public and does not require authentication, matching the
+  public Home landing-page experience.
+- Only instructors with non-null coordinates and at least one published course
+  are returned; draft-only instructors are excluded from public discovery.
+- The default search radius is 25 km and the default result limit is 20.
+  Optional `radius` and `limit` values are accepted but capped at 100 km and
+  50 results to keep the public query bounded.
+- The response shape is `{ center, radius_km, results }`. Each result includes
+  instructor coordinates, rounded distance, profile details, and a `courses`
+  array for later map popups and course links.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- The Phase 1 ALTER TABLE statements still need to be run in pgAdmin before
+  the route can work against a database that predates the latitude/longitude
+  and city columns.
+- Phase 5 remains: add Leaflet map UI to the public Home landing page, call
+  this route after location capture, and render visitor/instructor markers,
+  popups, loading, empty, and error states.
+- Backend route syntax and git diff --check passed. A live database request
+  was not run in this environment.
 ```
 
 

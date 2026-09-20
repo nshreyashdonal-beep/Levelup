@@ -72,6 +72,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
   const [courses, setCourses] = useState([])
   const [coursesLoading, setCoursesLoading] = useState(true)
+  const [locationStatus, setLocationStatus] = useState('idle')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -98,6 +99,50 @@ export default function Home() {
       })
     }
   }, [location.hash])
+
+  const handleLocationRequest = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unsupported')
+      return
+    }
+
+    setLocationStatus('loading')
+
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setLocationStatus('success')
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationStatus('denied')
+        } else {
+          setLocationStatus('error')
+        }
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    )
+  }
+
+  const locationMessages = {
+    idle: 'Allow location access to prepare nearby instructor results.',
+    loading: 'Finding your location...',
+    success: 'Location found. Nearby instructors will appear here once the map is connected.',
+    denied: 'Location access was not granted. You can try again whenever you are ready.',
+    unsupported: 'This browser does not support location access. Nearby search is unavailable here.',
+    error: 'We could not determine your location. Check your connection or try again.',
+  }
+
+  const locationButtonLabel = locationStatus === 'loading'
+    ? 'Finding you...'
+    : locationStatus === 'success'
+      ? 'Location found'
+      : 'Find instructors near me'
+
+  const locationButtonDisabled = locationStatus === 'loading' || locationStatus === 'success'
 
   return (
     <div className="home-page">
@@ -152,6 +197,32 @@ export default function Home() {
                 <small>By local communities</small>
               </span>
             </div>
+          </div>
+        </section>
+
+        {/* Location permission section — nearby results are added in later phases. */}
+        <section className="home-location-section" aria-labelledby="home-location-title">
+          <div className="home-location-card">
+            <div className="home-location-icon" aria-hidden="true">⌖</div>
+            <div className="home-location-content">
+              <p className="home-section-eyebrow">LEARN CLOSER TO HOME</p>
+              <h2 id="home-location-title">Find instructors near you</h2>
+              <p>
+                Share your location when you are ready. We will use it to show
+                nearby LevelUp instructors without requiring an account.
+              </p>
+              <p className="home-location-message" aria-live="polite">
+                {locationMessages[locationStatus]}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="home-location-button"
+              onClick={handleLocationRequest}
+              disabled={locationButtonDisabled}
+            >
+              {locationButtonLabel}
+            </button>
           </div>
         </section>
 

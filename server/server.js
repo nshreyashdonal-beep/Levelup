@@ -12,6 +12,7 @@ const lectureRoutes = require('./routes/lectures');
 const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
 const sessionRoutes = require('./routes/sessions');
+const instructorRoutes = require('./routes/instructors');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -43,6 +44,9 @@ app.use('/api/reviews', reviewRoutes);
 
 // All session routes live under /api/sessions
 app.use('/api/sessions', sessionRoutes);
+
+// Public instructor discovery routes, including nearby instructors.
+app.use('/api/instructors', instructorRoutes);
 
 // Temporary test route to prove the middleware works — remove once real
 // protected routes (courses, etc.) exist to test against instead.
