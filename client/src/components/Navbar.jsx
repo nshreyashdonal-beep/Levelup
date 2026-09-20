@@ -38,6 +38,9 @@ export default function Navbar() {
             <a href="#" className="navbar-link" onClick={closeMenu}>
               Subscribe
             </a>
+            <Link to="/#explore-courses" className="navbar-link" onClick={closeMenu}>
+              Explore
+            </Link>
             <Link to="/become-instructor" className="navbar-link" onClick={closeMenu}>
               Become Instructor
             </Link>

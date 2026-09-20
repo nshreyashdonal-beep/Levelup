@@ -4,10 +4,11 @@
 // Styling lives in Home.css (colocated), following the same pattern
 // as Navbar.css / Footer.css.
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { API_BASE } from '../api'
 import './Home.css'
 
 const studentSteps = [
@@ -69,7 +70,34 @@ function JourneyTrack({ steps, variant }) {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
+  const [courses, setCourses] = useState([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/courses`)
+      .then(response => response.json())
+      .then(data => {
+        setCourses(Array.isArray(data) ? data : [])
+        setCoursesLoading(false)
+      })
+      .catch(error => {
+        console.error('Failed to fetch public courses:', error)
+        setCoursesLoading(false)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (location.hash !== '#explore-courses') return
+
+    const coursesSection = document.getElementById('explore-courses')
+    if (coursesSection) {
+      window.requestAnimationFrame(() => {
+        coursesSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }
+  }, [location.hash])
 
   return (
     <div className="home-page">
@@ -125,6 +153,59 @@ export default function Home() {
               </span>
             </div>
           </div>
+        </section>
+
+        {/* Public course browse section */}
+        <section id="explore-courses" className="home-explore-courses">
+          <div className="home-explore-heading">
+            <div>
+              <p className="home-section-eyebrow">YOUR NEXT STEP</p>
+              <h2>Explore Courses</h2>
+              <p>
+                Browse available courses and find the right learning path
+                before creating an account.
+              </p>
+            </div>
+            {!coursesLoading && (
+              <span className="home-course-count">
+                {courses.length} {courses.length === 1 ? 'course' : 'courses'} available
+              </span>
+            )}
+          </div>
+
+          {coursesLoading ? (
+            <div className="home-course-status">Finding courses for you...</div>
+          ) : courses.length === 0 ? (
+            <div className="home-course-status">New courses will appear here soon.</div>
+          ) : (
+            <div className="home-course-grid">
+              {courses.map(course => (
+                <article
+                  key={course.id}
+                  className="home-course-card"
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate(`/courses/${course.id}`)
+                    }
+                  }}
+                  role="button"
+                  tabIndex="0"
+                >
+                  <div className="home-course-avatar">
+                    {course.title.charAt(0).toUpperCase()}
+                  </div>
+                  <h3>{course.title}</h3>
+                  <p>By {course.instructor_name || 'LevelUp instructor'}</p>
+                  <div className="home-course-meta">
+                    <strong>₹{course.price}</strong>
+                    <span>View course →</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Journey section */}
