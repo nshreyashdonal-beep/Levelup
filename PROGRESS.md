@@ -1466,6 +1466,173 @@ client/src/pages/ManageCourses.css (Branch 3 (InstructorFunctionalities) —
   not run (not part of this piece's change).
 ```
 
+
+
+### Branch 5 (NearbyInstructor)
+his file tracks just the geolocation / "nearby instructors" map feature —
+LevelUp's late-stage differentiator (see PROGRESS.md's checklist). Kept
+separate from PROGRESS.md because this feature has enough moving parts
+(schema, two map libraries worth of frontend work, a new backend query,
+privacy decisions) to need its own space instead of crowding the main
+tracker.
+
+**Decided:** the map shows nearby **instructors** (their base location),
+not individual sessions. Simpler data model, one geotag per instructor
+instead of one per session — sessions keep their existing free-text
+`location` field unchanged.
+
+**Status:** Planning only — nothing below is built yet. Work through
+each phase top to bottom; check a box only once that piece actually
+works, same rule PROGRESS.md uses.
+
+---
+
+## Sub-tasks
+
+### Phase 1 — Schema
+- [x] Add `latitude` and `longitude` (NUMERIC) columns to `instructor_profiles` [Session 1]
+- [x] Decide: store the instructor's exact pin, or round/fuzz it before
+      saving, for public-map privacy (see Notes) — **Decided: store exact**,
+      no fuzzing (instructor is fine sharing a precise pin) [Session 1]
+- [x] (Added along the way) Renamed `instructor_profiles.location` → `city`
+      for clarity now that real coordinates also live on this table [Session 1]
+
+### Phase 2 — Instructor sets their location
+- [ ] ~~Pick a map library~~ — superseded, see below [Session 1]
+- [ ] ~~Build a small "click the map to drop your pin" component~~ —
+      superseded, see below [Session 1]
+- [x] Add a "Locate Yourself" button (browser Geolocation API, no map
+      library needed) to Become Instructor signup — optional, doesn't
+      block registration if skipped/denied [Session 1]
+- [x] Decide: also editable later from Instructor Dashboard, or
+      signup-only for v1? — **Decided: signup-only for v1.** A future
+      "Edit Profile" feature (not built yet) is the intended place to add
+      editing later, not something to build now [Session 1]
+- [x] Backend: extend `POST /api/auth/register` to save the captured
+      lat/lng into `instructor_profiles` [Session 1]
+
+### Phase 3 — Student's own location
+- [ ] Get the student's location via the browser's Geolocation API on
+      Student Landing
+- [ ] Decide: ask automatically on page load, or behind a
+      "Find instructors near me" button (button is more honest about
+      why you're asking for permission)
+- [ ] Handle permission denied / unsupported browser — fallback to
+      either a manual pin-drop or just hiding the map section
+
+### Phase 4 — Backend "nearby" query
+- [ ] New route: `GET /api/instructors/nearby?lat=<>&lng=<>`
+- [ ] Haversine distance formula in raw SQL (already the plan per
+      PROGRESS.md's Decisions Log — no PostGIS), `ORDER BY distance`
+- [ ] Decide a default radius (e.g. 25km) and/or result limit
+- [ ] Join in enough course info that a map pin can link straight to
+      that instructor's course(s)
+
+### Phase 5 — Frontend map UI
+- [ ] Add a Leaflet map section on Student Landing, below the
+      "Learn from the best in your neighborhood" hero
+- [ ] Marker for the student's own position
+- [ ] Markers for nearby instructors, from the Phase 4 route
+- [ ] Click a pin → popup with instructor name + link to their course(s)
+- [ ] Loading state, empty state ("no instructors near you yet"), and
+      the permission-denied state from Phase 3
+
+### Phase 6 — Privacy
+- [ ] Implement whatever was decided in Phase 1 (exact vs. fuzzed
+      coordinates) — don't ship an exact home address pin publicly
+      without deciding this on purpose
+
+### Phase 7 — Demo data
+- [ ] Seed a handful of instructor profiles with real, spread-out
+      coordinates (not all stacked in one spot) so the map actually
+      looks alive when demoed
+
+### Phase 8 — Testing & polish
+- [ ] Manual QA: allow / deny the location permission prompt, confirm
+      both paths work
+- [ ] Check map rendering at mobile widths
+- [ ] Confirm `localhost` geolocation works in dev (browsers block it
+      on non-HTTPS in production — note for whenever this gets deployed)
+
+---
+
+### Session 1 (Branch 5 (NearbyInstructor))
+
+#### Files Created/Updated So Far
+
+```
+server/db/schema.sql (Branch 5 (NearbyInstructor) — added latitude/longitude
+  NUMERIC(9,6) columns to instructor_profiles, stored exact/unfuzzed per this
+  session's decision. Also renamed the existing `location` column to `city`
+  for clarity now that real coordinates live on the same table. Two ALTER
+  TABLE statements — NOT YET RUN in pgAdmin, see Known Issues.)
+
+server/routes/auth.js (Branch 5 (NearbyInstructor) — POST /api/auth/register
+  now also accepts latitude/longitude in the body and saves them into
+  instructor_profiles alongside bio/phone/city. Both default to null if the
+  instructor skipped or denied the location prompt. The INSERT's column list
+  targets the renamed `city` column; the request body key stays `location`
+  for now since the signup form field itself wasn't renamed.)
+
+client/src/pages/BecomeInstructor.jsx (Branch 5 (NearbyInstructor) — added a
+  "Locate Yourself" button below the existing City field. Calls
+  navigator.geolocation.getCurrentPosition and stores the returned lat/lng
+  into formData, included in the existing POST /api/auth/register call on
+  submit. City field is untouched and still required; the location button
+  is optional. Shows "Locating...", then "Location captured ✓ (tap to
+  redo)" once set, or an inline error on permission-denied/unsupported/
+  timeout.)
+
+client/src/pages/Signup.css (Branch 5 (NearbyInstructor) — added shared base
+  styles for .signup-help-text, .signup-locate-btn, and .signup-locate-error,
+  following the same pattern as the existing .signup-show-btn/
+  .signup-submit-btn styles in this file.)
+
+client/src/pages/BecomeInstructor.css (Branch 5 (NearbyInstructor) — added
+  the emerald-theme override for .signup-locate-btn, matching how this file
+  already overrides .signup-show-btn and .signup-submit-btn for the
+  instructor theme.)
+```
+
+#### Decisions Log
+
+- Instructor coordinates stored exact, not rounded/fuzzed — instructor is
+  fine sharing a precise pin. Closes Phase 1's privacy decision.
+- `instructor_profiles.location` renamed to `city` — same data, clearer
+  name once lat/lng columns exist on the same table.
+- `latitude`/`longitude` added as NUMERIC(9,6) — standard safe precision
+  for coordinates, no other reason for that specific size.
+- Location collected signup-only via a "Locate Yourself" button (browser
+  Geolocation API), not a click-to-drop-pin map — this superseded Phase 2's
+  original "pick a map library" / "click-to-drop-pin component" plan
+  entirely, since the browser's built-in permission prompt does the same
+  job with no library and no UI to build. Also closes the signup-only-vs.
+  editable-later decision: no edit flow for v1. A future "Edit Profile"
+  feature (not built yet) is the intended place to add editing later.
+- "Locate Yourself" is optional at signup, not required — an instructor who
+  denies/skips the browser permission prompt can still register (lat/lng
+  just stay null). Required-city-only, optional-coordinates, so a browser
+  permission dialog can never block signup.
+- Kept the City text field and the location button as two independent
+  things on the form — city stays a required human-readable label,
+  coordinates are a separate optional capture for the map.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- The two ALTER TABLE statements from this session (add lat/lng, rename
+  location → city) still need to be run in pgAdmin before this route works
+  against a real database.
+- Phase 3 (student's own location) and Phase 4 (backend "nearby" query) —
+  not started.
+- Phase 2's checklist wording above still shows the original map-library
+  plan struck through rather than deleted, so the supersession stays on
+  the record instead of silently disappearing.
+- npm run build / npm run lint not run this session.
+```
+
+
+
 ---
 
 ## 5. Session Prompt (copy-paste this each time)

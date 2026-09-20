@@ -12,10 +12,13 @@ const router = express.Router();
 
 // POST /api/auth/register
 // Body: { name, email, password, role }  (role is optional, defaults to 'student')
-// If role is 'instructor', also accepts { bio, phone, location } and
-// saves them into instructor_profiles — students never send/see these.
+// If role is 'instructor', also accepts { bio, phone, location, latitude,
+// longitude } and saves them into instructor_profiles — students never
+// send/see these. latitude/longitude come from the signup form's
+// "Locate Yourself" button (browser Geolocation API) and are optional —
+// an instructor can still register if they skip or deny that prompt.
 router.post('/register', async (req, res) => {
-  const { name, email, password, role, bio, phone, location } = req.body;
+  const { name, email, password, role, bio, phone, location, latitude, longitude } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'name, email and password are required' });
@@ -38,10 +41,15 @@ router.post('/register', async (req, res) => {
     // Only instructors get a profile row, and only if they actually
     // sent profile fields (BecomeInstructor.jsx always does).
     if (newUser.role === 'instructor') {
+      // Column is named `city` in the DB (renamed from `location` in
+      // Branch 5 — see schema.sql) but the request body / form field is
+      // still called `location` for now, so this stays a straight pass-through.
+      // latitude/longitude default to null if the instructor skipped or
+      // denied the location prompt — the column allows nulls on purpose.
       await db.query(
-        `INSERT INTO instructor_profiles (user_id, bio, phone, location)
-         VALUES ($1, $2, $3, $4)`,
-        [newUser.id, bio || null, phone || null, location || null]
+        `INSERT INTO instructor_profiles (user_id, bio, phone, city, latitude, longitude)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [newUser.id, bio || null, phone || null, location || null, latitude || null, longitude || null]
       );
     }
 

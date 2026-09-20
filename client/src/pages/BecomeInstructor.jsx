@@ -24,12 +24,50 @@ export default function BecomeInstructor() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', bio: '', phone: '', location: '',
+    latitude: '', longitude: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Separate from `error` (which is for the register API call) — this is
+  // just for the "Locate Yourself" button's own status message.
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState('');
+
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
+
+  // Asks the browser for the instructor's current GPS position and stores
+  // it straight into formData. Runs once at signup only (Branch 5,
+  // Session 1 decision) — no map, no click-to-drop-pin, just the browser's
+  // built-in prompt.
+  function handleLocateMe() {
+    setLocateError('');
+
+    if (!navigator.geolocation) {
+      setLocateError('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
+        setLocating(false);
+      },
+      (err) => {
+        // err.code 1 = permission denied, 2 = position unavailable, 3 = timeout.
+        // Same message either way — the instructor just needs to know it
+        // didn't work and can try again or skip it for now.
+        setLocateError('Could not get your location. You can try again, or skip this for now.');
+        setLocating(false);
+      },
+    );
   }
 
   async function handleSubmit(e) {
@@ -139,16 +177,31 @@ export default function BecomeInstructor() {
                 className="signup-input"
               />
 
-              <label className="signup-label">Location</label>
+              <label className="signup-label">City</label>
               <input
                 name="location"
                 type="text"
-                placeholder="Enter current location"
+                placeholder="Enter your city"
                 required
                 value={formData.location}
                 onChange={handleChange}
                 className="signup-input"
               />
+
+              <label className="signup-label">Map Location</label>
+              <p className="signup-help-text">
+                Lets nearby students find you on the map. Uses your device's
+                current location — separate from the city you typed above.
+              </p>
+              <button
+                type="button"
+                onClick={handleLocateMe}
+                disabled={locating}
+                className="signup-locate-btn"
+              >
+                {locating ? 'Locating...' : formData.latitude ? 'Location captured ✓ (tap to redo)' : 'Locate Yourself'}
+              </button>
+              {locateError && <p className="signup-locate-error">{locateError}</p>}
 
               <button type="submit" disabled={loading} className="signup-submit-btn">
                 {loading ? 'Creating account...' : 'Become Instructor'}

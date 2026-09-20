@@ -86,6 +86,27 @@ CREATE TABLE instructor_profiles (
 );
 
 -- ============================================================
+-- instructor_profiles — new columns (Branch 5 / NearbyInstructor)
+-- Real GPS coordinates for the "nearby instructors" map, separate
+-- from the existing `location` text field above (that one stays as
+-- a human-readable label like "Bangalore" — this pair is what the
+-- map actually plots).
+-- Stored EXACT, not rounded/fuzzed — decided on purpose for Branch 5,
+-- since the instructor is fine sharing a precise pin.
+-- NUMERIC(9,6) gives 6 decimal places (~11cm precision), which is
+-- overkill accuracy-wise but the standard safe size for lat/lng.
+-- ============================================================
+ALTER TABLE instructor_profiles
+  ADD COLUMN latitude NUMERIC(9, 6),
+  ADD COLUMN longitude NUMERIC(9, 6);
+
+-- Renamed for clarity now that this table also holds real coordinates —
+-- "location" was ambiguous once lat/lng exist too. Same data, new name,
+-- nothing to migrate.
+ALTER TABLE instructor_profiles
+  RENAME COLUMN location TO city;
+
+-- ============================================================
 -- sessions table
 -- One extra "event" tied to a course: a doubt session, an
 -- offline in-person meet, or a mock test. All three share the
