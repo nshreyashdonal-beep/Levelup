@@ -43,23 +43,29 @@ const quickActions = [
   { icon: '📍', title: 'Schedule Offline', desc: 'Set up a local meetup with students' },
 ];
 
+// Reads the logged-in instructor synchronously instead of in a useEffect,
+// so `user` is already correct on the very first render. Doing this check
+// in an effect leaves `user` null for the first render (return null below
+// fires, painting nothing) until the effect runs a moment later — visible
+// as a flash every time this page is navigated to. Same fix already
+// applied to ManageCourses.jsx and ManageCourseLayout.jsx.
+function getStoredInstructor() {
+  const stored = localStorage.getItem('user');
+  const parsed = stored ? JSON.parse(stored) : null;
+  return parsed && parsed.role === 'instructor' ? parsed : null;
+}
+
 export default function InstructorDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user] = useState(getStoredInstructor);
   const [activeCourseCount, setActiveCourseCount] = useState(0);
 
-  // Guard: only logged-in instructors get past this page. Anyone else
-  // (not logged in, or logged in as a student) gets sent to login.
+  // Redirect anyone who isn't a logged-in instructor. `user` is already
+  // resolved by the time this runs, so this only fires for the
+  // logged-out/wrong-role case, not on every normal visit.
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    const parsed = stored ? JSON.parse(stored) : null;
-
-    if (!parsed || parsed.role !== 'instructor') {
-      navigate('/login');
-      return;
-    }
-    setUser(parsed);
-  }, [navigate]);
+    if (!user) navigate('/login');
+  }, [user, navigate]);
 
   // Once we know who's logged in, fetch just this instructor's own
   // courses so the "Active Courses" stat card shows a real number
@@ -67,10 +73,22 @@ export default function InstructorDashboard() {
   useEffect(() => {
     if (!user) return;
 
+    // `ignore` stops a stale response from overwriting state if this
+    // effect runs twice (StrictMode in dev, or fast repeat navigation).
+    let ignore = false;
+
     fetch(`${API_BASE}/api/courses?instructor_id=${user.id}`)
       .then((res) => res.json())
-      .then((courses) => setActiveCourseCount(courses.length))
-      .catch(() => setActiveCourseCount(0)); // if the request fails, just show 0 rather than crash the page
+      .then((courses) => {
+        if (!ignore) setActiveCourseCount(courses.length);
+      })
+      .catch(() => {
+        if (!ignore) setActiveCourseCount(0); // if the request fails, just show 0 rather than crash the page
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [user]);
 
   // Nothing to show yet while the guard above is still deciding.

@@ -167,7 +167,11 @@ router.get('/', async (req, res) => {
 // so the frontend can render them in the right order without re-sorting.
 // Used by the Course Detail page instead of filtering the already-fetched list
 // client-side, so the page also works if someone opens the URL directly
-// without visiting Explore first.
+// without visiting Explore first. Also used by the instructor's Manage
+// Course workspace, which is why `instructor_id` (not just `instructor_name`)
+// is included below — it lets that page confirm the logged-in instructor
+// owns this course with the one request it already has to make, instead of
+// fetching the whole instructor_id course list separately just to check.
 // No status filter here (e.g. hiding 'draft' courses from students) — that's
 // left for a later piece since it isn't part of this checklist item.
 router.get('/:id', async (req, res) => {
@@ -176,7 +180,7 @@ router.get('/:id', async (req, res) => {
   try {
     const courseResult = await db.query(
       `SELECT courses.id, courses.title, courses.description, courses.price,
-              courses.created_at, users.name AS instructor_name,
+              courses.created_at, courses.instructor_id, users.name AS instructor_name,
               courses.category, courses.level, courses.delivery_mode,
               courses.language, courses.thumbnail_url, courses.duration_weeks,
               courses.capacity, courses.curriculum, courses.outcomes,

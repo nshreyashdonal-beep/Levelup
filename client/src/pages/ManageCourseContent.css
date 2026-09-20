@@ -1,0 +1,572 @@
+.manage-course-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.manage-course-content-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.manage-course-content-eyebrow {
+  margin: 0 0 7px;
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.manage-course-content-heading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.manage-course-content-heading p {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.manage-course-content-count {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  padding: 7px 11px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.manage-course-content-add-card,
+.manage-course-content-module,
+.manage-course-content-empty-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+}
+
+.manage-course-content-add-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+}
+
+.manage-course-content-add-card h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.98rem;
+}
+
+.manage-course-content-add-card p {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.manage-course-content-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.manage-course-content-add-form input {
+  min-width: 230px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-medium);
+  padding: 10px 12px;
+  background: var(--color-white);
+  color: var(--color-text);
+  font-size: 0.84rem;
+}
+
+.manage-course-content-add-form input:focus,
+.manage-course-content-add-lecture input:focus,
+.manage-course-content-add-lecture textarea:focus,
+.manage-course-content-edit-lecture input:focus,
+.manage-course-content-edit-lecture textarea:focus {
+  border-color: var(--color-instructor-primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
+  outline: none;
+}
+
+.manage-course-content-add-form button,
+.manage-course-content-add-lecture-actions button,
+.manage-course-content-edit-actions button {
+  border: 1px solid var(--color-instructor-primary);
+  border-radius: var(--radius-medium);
+  background: var(--color-instructor-primary);
+  color: var(--color-white);
+  padding: 10px 13px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.manage-course-content-add-form button:hover:not(:disabled),
+.manage-course-content-add-lecture-actions button:hover:not(:disabled),
+.manage-course-content-edit-actions button:hover:not(:disabled) {
+  border-color: var(--color-instructor-primary-dark);
+  background: var(--color-instructor-primary-dark);
+}
+
+.manage-course-content-add-form button:disabled,
+.manage-course-content-add-lecture-actions button:disabled,
+.manage-course-content-edit-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.manage-course-content-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manage-course-content-module {
+  overflow: hidden;
+}
+
+.manage-course-content-module-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: var(--color-white);
+  color: var(--color-text);
+  padding: 18px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.manage-course-content-module-header:hover {
+  background: var(--color-instructor-soft);
+}
+
+.manage-course-content-module-number,
+.manage-course-content-lecture-number {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.manage-course-content-module-number {
+  width: 34px;
+  height: 34px;
+}
+
+.manage-course-content-module-title-wrap {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.manage-course-content-module-title-wrap strong {
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+
+.manage-course-content-module-title-wrap small {
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+}
+
+.manage-course-content-status {
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.manage-course-content-status.is-available {
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+}
+
+.manage-course-content-status.is-planned {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.manage-course-content-chevron {
+  width: 24px;
+  color: var(--color-instructor-primary-dark);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.manage-course-content-module-body {
+  border-top: 1px solid var(--color-border);
+  background: #fbfdfc;
+  padding: 16px 18px 18px;
+}
+
+.manage-course-content-module-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-white);
+}
+
+.manage-course-content-module-toolbar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.manage-course-content-module-toolbar strong {
+  color: var(--color-text);
+  font-size: 0.8rem;
+}
+
+.manage-course-content-module-toolbar span {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.manage-course-content-switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.manage-course-content-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s ease;
+}
+
+.manage-course-content-switch.is-on {
+  background: var(--color-instructor-primary);
+}
+
+.manage-course-content-switch.is-on span {
+  transform: translateX(18px);
+}
+
+.manage-course-content-lectures {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-white);
+}
+
+.manage-course-content-lecture {
+  padding: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.manage-course-content-lecture:last-child {
+  border-bottom: none;
+}
+
+.manage-course-content-lecture:not(:has(form)) {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.manage-course-content-lecture-number {
+  width: 38px;
+  height: 30px;
+  background: #f3f4f6;
+  color: var(--color-text-muted);
+}
+
+.manage-course-content-lecture-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.manage-course-content-lecture-info strong {
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+
+.manage-course-content-lecture-info span {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.manage-course-content-lecture-info p {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.manage-course-content-video-url {
+  color: var(--color-instructor-primary-dark);
+  font-size: 0.68rem;
+}
+
+.manage-course-content-edit-button,
+.manage-course-content-secondary-button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-white);
+  color: var(--color-instructor-primary-dark);
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.manage-course-content-edit-button:hover,
+.manage-course-content-secondary-button:hover {
+  border-color: var(--color-instructor-primary);
+  background: var(--color-instructor-soft);
+}
+
+.manage-course-content-lecture-switch {
+  margin-left: 2px;
+}
+
+.manage-course-content-add-lecture {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-medium);
+  background: var(--color-white);
+}
+
+.manage-course-content-add-lecture h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+}
+
+.manage-course-content-add-lecture label,
+.manage-course-content-edit-lecture label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.manage-course-content-add-lecture input,
+.manage-course-content-add-lecture textarea,
+.manage-course-content-edit-lecture input,
+.manage-course-content-edit-lecture textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-medium);
+  padding: 10px 12px;
+  background: var(--color-white);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.manage-course-content-form-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 12px;
+}
+
+.manage-course-content-add-lecture-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-course-content-add-lecture-actions span {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.manage-course-content-add-lecture-actions strong {
+  color: var(--color-instructor-primary-dark);
+}
+
+.manage-course-content-edit-lecture {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manage-course-content-lecture-edit-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manage-course-content-lecture-edit-heading strong {
+  color: var(--color-text);
+  font-size: 0.84rem;
+}
+
+.manage-course-content-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.manage-course-content-empty {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.manage-course-content-empty-card {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.manage-course-content-empty-card > div {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 10px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+  font-size: 1.3rem;
+}
+
+.manage-course-content-empty-card h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+}
+
+.manage-course-content-empty-card p {
+  margin: 6px auto 0;
+  max-width: 420px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.manage-course-content-success,
+.manage-course-content-error {
+  padding: 12px 14px;
+  border-radius: var(--radius-medium);
+  font-size: 0.84rem;
+}
+
+.manage-course-content-success {
+  border: 1px solid #a7f3d0;
+  background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+}
+
+.manage-course-content-error {
+  border: 1px solid var(--color-error-border);
+  background: var(--color-error-background);
+  color: var(--color-error);
+}
+
+.manage-course-content-module-header:focus-visible,
+.manage-course-content-add-form input:focus-visible,
+.manage-course-content-add-form button:focus-visible,
+.manage-course-content-add-lecture input:focus-visible,
+.manage-course-content-add-lecture textarea:focus-visible,
+.manage-course-content-add-lecture button:focus-visible,
+.manage-course-content-edit-lecture input:focus-visible,
+.manage-course-content-edit-lecture textarea:focus-visible,
+.manage-course-content-edit-button:focus-visible,
+.manage-course-content-secondary-button:focus-visible,
+.manage-course-content-edit-actions button:focus-visible,
+.manage-course-content-switch:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.22);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .manage-course-content-heading,
+  .manage-course-content-add-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .manage-course-content-add-form {
+    width: 100%;
+  }
+
+  .manage-course-content-add-form input {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .manage-course-content-status {
+    display: none;
+  }
+
+  .manage-course-content-lecture:not(:has(form)) {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .manage-course-content-lecture-info {
+    flex-basis: calc(100% - 52px);
+  }
+
+  .manage-course-content-edit-button {
+    margin-left: 48px;
+  }
+
+  .manage-course-content-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-course-content-add-lecture-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -346,3 +346,96 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Skeleton loading state for the course grid — shown while the initial
+   fetch is in flight. Mirrors .managecourses-card's shell exactly (same
+   min-height, badge height, body padding) so swapping in the real cards
+   once data arrives doesn't change the page's height. See the comment on
+   SkeletonCourseCard in ManageCourses.jsx for why this exists. */
+.managecourses-skeleton-card {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface, var(--color-white));
+  box-shadow: var(--shadow-card);
+}
+
+.managecourses-skeleton-badge {
+  min-height: 110px;
+  background: var(--color-instructor-soft);
+  animation: managecourses-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.managecourses-skeleton-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.managecourses-skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--color-instructor-soft);
+  animation: managecourses-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.managecourses-skeleton-line--label {
+  width: 70px;
+  height: 9px;
+}
+
+.managecourses-skeleton-line--title {
+  width: 75%;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.managecourses-skeleton-line--desc {
+  width: 95%;
+}
+
+.managecourses-skeleton-line--desc-short {
+  width: 55%;
+}
+
+.managecourses-skeleton-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-instructor-soft);
+}
+
+.managecourses-skeleton-line--price {
+  width: 50px;
+  height: 14px;
+}
+
+.managecourses-skeleton-line--btn {
+  width: 110px;
+  height: 26px;
+  border-radius: var(--radius-medium);
+}
+
+@keyframes managecourses-skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .managecourses-skeleton-badge,
+  .managecourses-skeleton-line {
+    animation: none;
+  }
+}
