@@ -1819,6 +1819,240 @@ data, and avoids duplicate courses when run again.)
   geolocation verification.
 ```
 
+### Session 7 (Branch 5 (NearbyInstructor)) — Public map UI polish
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — improved the real
+Leaflet map experience with branded visitor/instructor pin markers, clickable
+instructor result buttons that pan and open the matching map popup, and a
+clear map legend. Existing nearby API, permission, loading, empty, and error
+behavior remains unchanged.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — redesigned the map
+and nearby results into a polished responsive card layout with a legend,
+student-indigo/instructor-emerald marker styling, instructor avatars,
+distance labels, keyboard focus states, and mobile sizing.)
+```
+
+#### Decisions Log
+
+- Kept the map on the public Home page and improved the existing real map
+  instead of introducing a second map implementation.
+- Used indigo for the visitor marker and emerald for instructor markers so
+  the map follows LevelUp's existing role color system.
+- Made the nearby instructor list keyboard-accessible buttons; selecting one
+  focuses the corresponding map marker and opens its popup.
+- Kept OpenStreetMap attribution visible and did not copy the reference
+  archive's visual layout.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint still reports pre-existing
+  warnings in other pages; Home.jsx has no new lint warning.
+```
+
+### Session 8 (Branch 5 (NearbyInstructor)) — Persistent Home map panel
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — changed the nearby
+map from a post-permission section into a persistent map inside the same
+"Find instructors near you" panel. The map now renders on initial Home page
+load with a neutral India view and no instructor markers, then recenters and
+adds the visitor/instructor markers only after location permission and nearby
+data are available.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — added the combined
+panel header/map layout, pre-permission map overlay, and responsive sizing so
+the map remains visible before and after location permission.)
+```
+
+#### Decisions Log
+
+- The Leaflet map is always visible on the public Home page, inside the same
+  panel that asks the visitor to find instructors nearby.
+- Before permission, the map shows a neutral India view and an explanatory
+  overlay; it does not show fake visitor or instructor markers.
+- After permission, the map recenters on the visitor and the existing nearby
+  API results add the real instructor markers and result list below the map.
+- Kept the existing permission flow and backend behavior unchanged.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; Home.jsx has no new warning.
+```
+
+### Session 9 (Branch 5 (NearbyInstructor)) — Leaflet tile rendering fix
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — added a
+ResizeObserver and animation-frame size invalidation so Leaflet recalculates
+its tile grid whenever the Home panel finishes sizing or changes width.
+Updated the success message so it accurately describes the visible map.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — gave the persistent
+map wrapper an explicit responsive height instead of relying on an indirect
+minimum height, preventing the gray/unrendered map area shown in Map.png.)
+```
+
+#### Decisions Log
+
+- Diagnosed the screenshot's gray right half as a Leaflet container-sizing
+  issue: the map needed `invalidateSize()` after the responsive panel settled.
+- Kept the real OpenStreetMap tiles and existing map behavior; no fake map
+  image or copied reference implementation was introduced.
+- Used the next branch session number, Session 9, because Sessions 7 and 8
+  were already recorded in this branch's progress history.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Recheck the Home map in the browser after refreshing and after changing
+  viewport width; the map should now fill the complete rounded container.
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; git diff --check passed.
+```
+
+### Session 10 (Branch 5 (NearbyInstructor)) — Recenter on visitor control
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — added a
+"Center on me" map control that uses the visitor's already-approved location
+to recenter and zoom the map, then opens the visitor marker popup. The control
+is disabled before location permission and explains why.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — added the floating
+student-themed recenter button styling with hover, disabled, and keyboard
+focus states.)
+```
+
+#### Decisions Log
+
+- The recenter control does not request location again; it uses the existing
+  visitor coordinates captured by the current Home-page session.
+- Before permission, the control remains visible but disabled with an
+  "Allow location first" label, making the map behavior clear without
+  triggering an unexpected browser prompt.
+- Recenter zooms to level 14 and opens the "You are here" popup so the
+  visitor can immediately identify their position.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; git diff --check passed.
+```
+
+### Session 11 (Branch 5 (NearbyInstructor)) — Location header redesign
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — changed the
+permission action label from "Find instructors near me" to "Use my location"
+and refreshed the supporting copy to make the public location feature clearer.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — redesigned the
+location header with a stronger indigo gradient surface, map-pin icon badge,
+improved headline hierarchy, status indicator, button elevation, hover motion,
+and clearer visual separation from the map.)
+```
+
+#### Decisions Log
+
+- "Use my location" is more direct and accurately describes the browser
+  permission action than "Find instructors near me".
+- Preserved the existing student indigo theme and instructor emerald marker
+  cue; no behavior, API, or map interaction changed.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; git diff --check passed.
+```
+
+### Session 12 (Branch 5 (NearbyInstructor)) — Relocatable location button
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — removed the
+"No account needed" header badge, removed green status dots, and kept the
+location button clickable after success so it can request a fresh position.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — removed the green
+header/message indicators and added a check-marked "Location found" success
+button that remains visually aligned with the location action.)
+```
+
+#### Decisions Log
+
+- The success button is disabled only while the browser location request is
+  loading; after success, clicking it starts a new location request.
+- The existing visitor marker and nearby instructor results remain in place
+  while a relocation request is running, then update when the new coordinates
+  arrive.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; git diff --check passed.
+```
+
+### Session 13 (Branch 5 (NearbyInstructor)) — Location found reference styling
+
+#### Files Created/Updated So Far
+
+```
+client/src/pages/Home.jsx (Branch 5 (NearbyInstructor) — changed the
+successful location action to show a compact inline check and "Location found"
+label, with "Click again to relocate" rendered in a separate paragraph below.)
+
+client/src/pages/Home.css (Branch 5 (NearbyInstructor) — matched the supplied
+Location.png concept using an outlined blue/indigo success button, subtle
+background, blue check badge, and responsive action-wrapper layout.)
+```
+
+#### Decisions Log
+
+- The success state uses the existing student indigo palette instead of the
+  reference image's teal color.
+- The relocation instruction is a paragraph outside the button so it reads as
+  supporting guidance and does not make the button visually crowded.
+
+#### Known Issues / TODO Carried Between Sessions
+
+```
+- Phase 8 remains: manual allow/deny QA, mobile map inspection, and localhost
+  geolocation verification.
+- npm run lint and npm run build passed. Lint reports only pre-existing
+  warnings in other pages; git diff --check passed.
+```
+
 
 
 ---

@@ -91,6 +91,8 @@ export default function Home() {
   const mapElementRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const mapMarkersRef = useRef(null)
+  const instructorMarkersRef = useRef(new Map())
+  const visitorMarkerRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -181,12 +183,9 @@ export default function Home() {
   }, [visitorLocation])
 
   useEffect(() => {
-    if (!visitorLocation || !mapElementRef.current) return
+    if (!mapElementRef.current) return
 
-    const map = L.map(mapElementRef.current).setView(
-      [visitorLocation.latitude, visitorLocation.longitude],
-      12
-    )
+    const map = L.map(mapElementRef.current).setView([22.9734, 78.6569], 5)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -194,28 +193,49 @@ export default function Home() {
 
     mapInstanceRef.current = map
     mapMarkersRef.current = L.layerGroup().addTo(map)
+    const instructorMarkers = instructorMarkersRef.current
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize()
+    })
+
+    resizeObserver.observe(mapElementRef.current)
+    window.requestAnimationFrame(() => map.invalidateSize())
 
     return () => {
+      resizeObserver.disconnect()
       map.remove()
       mapInstanceRef.current = null
       mapMarkersRef.current = null
+      instructorMarkers.clear()
+      visitorMarkerRef.current = null
     }
-  }, [visitorLocation])
+  }, [])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapMarkersRef.current || !visitorLocation) return
+    if (!mapInstanceRef.current || !mapMarkersRef.current) return
 
     mapMarkersRef.current.clearLayers()
+    instructorMarkersRef.current.clear()
 
-    L.circleMarker(
+    if (!visitorLocation) return
+
+    const visitorIcon = L.divIcon({
+      className: 'levelup-map-marker-wrap',
+      html: '<span class="levelup-map-marker levelup-map-marker--visitor"></span>',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+    })
+
+    const instructorIcon = L.divIcon({
+      className: 'levelup-map-marker-wrap',
+      html: '<span class="levelup-map-marker levelup-map-marker--instructor"></span>',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+    })
+
+    visitorMarkerRef.current = L.marker(
       [visitorLocation.latitude, visitorLocation.longitude],
-      {
-        radius: 9,
-        color: '#4f46e5',
-        fillColor: '#6366f1',
-        fillOpacity: 1,
-        weight: 3,
-      }
+      { icon: visitorIcon }
     )
       .bindPopup('<strong>You are here</strong>')
       .addTo(mapMarkersRef.current)
@@ -225,7 +245,10 @@ export default function Home() {
         .map(course => `<a href="/courses/${course.id}">${escapeHtml(course.title)}</a>`)
         .join('<br />')
 
-      L.marker([instructor.latitude, instructor.longitude])
+      const marker = L.marker(
+        [instructor.latitude, instructor.longitude],
+        { icon: instructorIcon }
+      )
         .bindPopup(
           `<strong>${escapeHtml(instructor.instructor_name)}</strong>` +
           `<br />${escapeHtml(instructor.city || 'LevelUp instructor')}` +
@@ -233,6 +256,8 @@ export default function Home() {
           `<br />${courseLinks}`
         )
         .addTo(mapMarkersRef.current)
+
+      instructorMarkersRef.current.set(instructor.instructor_id, marker)
     })
 
     if (nearbyInstructors.length > 0) {
@@ -249,10 +274,43 @@ export default function Home() {
     }
   }, [nearbyInstructors, visitorLocation])
 
+  useEffect(() => {
+    if (!mapInstanceRef.current || !visitorLocation) return
+
+    mapInstanceRef.current.setView(
+      [visitorLocation.latitude, visitorLocation.longitude],
+      12,
+      { animate: true }
+    )
+  }, [visitorLocation])
+
+  const focusInstructor = (instructor) => {
+    const marker = instructorMarkersRef.current.get(instructor.instructor_id)
+    if (!marker || !mapInstanceRef.current) return
+
+    mapInstanceRef.current.setView(
+      [instructor.latitude, instructor.longitude],
+      14,
+      { animate: true }
+    )
+    marker.openPopup()
+  }
+
+  const recenterOnVisitor = () => {
+    if (!visitorLocation || !mapInstanceRef.current) return
+
+    mapInstanceRef.current.setView(
+      [visitorLocation.latitude, visitorLocation.longitude],
+      14,
+      { animate: true }
+    )
+    visitorMarkerRef.current?.openPopup()
+  }
+
   const locationMessages = {
     idle: 'Allow location access to prepare nearby instructor results.',
     loading: 'Finding your location...',
-    success: 'Location found. Nearby instructors will appear here once the map is connected.',
+    success: 'Location found. Nearby instructors are shown on the map below.',
     denied: 'Location access was not granted. You can try again whenever you are ready.',
     unsupported: 'This browser does not support location access. Nearby search is unavailable here.',
     error: 'We could not determine your location. Check your connection or try again.',
@@ -260,11 +318,9 @@ export default function Home() {
 
   const locationButtonLabel = locationStatus === 'loading'
     ? 'Finding you...'
-    : locationStatus === 'success'
-      ? 'Location found'
-      : 'Find instructors near me'
+    : 'Use my location'
 
-  const locationButtonDisabled = locationStatus === 'loading' || locationStatus === 'success'
+  const locationButtonDisabled = locationStatus === 'loading'
 
   return (
     <div className="home-page">
@@ -322,82 +378,136 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Location permission section — nearby results are added in later phases. */}
+        {/* Nearby map panel — markers are added only after location permission. */}
         <section className="home-location-section" aria-labelledby="home-location-title">
           <div className="home-location-card">
-            <div className="home-location-icon" aria-hidden="true">⌖</div>
-            <div className="home-location-content">
-              <p className="home-section-eyebrow">LEARN CLOSER TO HOME</p>
-              <h2 id="home-location-title">Find instructors near you</h2>
-              <p>
-                Share your location when you are ready. We will use it to show
-                nearby LevelUp instructors without requiring an account.
-              </p>
-              <p className="home-location-message" aria-live="polite">
-                {locationMessages[locationStatus]}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="home-location-button"
-              onClick={handleLocationRequest}
-              disabled={locationButtonDisabled}
-            >
-              {locationButtonLabel}
-            </button>
-          </div>
-        </section>
-
-        {locationStatus === 'success' && (
-          <section className="home-nearby-section" aria-labelledby="home-nearby-title">
-            <div className="home-nearby-heading">
-              <div>
-                <p className="home-section-eyebrow">NEARBY LEARNING</p>
-                <h2 id="home-nearby-title">Instructors around you</h2>
+            <div className="home-location-header">
+              <div className="home-location-icon" aria-hidden="true">⌖</div>
+              <div className="home-location-content">
+                <div className="home-location-title-row">
+                  <p className="home-section-eyebrow">LEARN CLOSER TO HOME</p>
+                </div>
+                <h2 id="home-location-title">Find your next instructor nearby</h2>
                 <p>
-                  Explore published courses from instructors within 25 km of
-                  your selected location.
+                  Use your location to discover trusted LevelUp instructors
+                  and practical courses around you.
+                </p>
+                <p className="home-location-message" aria-live="polite">
+                  {locationMessages[locationStatus]}
                 </p>
               </div>
-              {!nearbyLoading && !nearbyError && (
-                <span className="home-nearby-count">
-                  {nearbyInstructors.length} {nearbyInstructors.length === 1 ? 'instructor' : 'instructors'}
-                </span>
-              )}
+              <div className="home-location-action">
+                <button
+                  type="button"
+                  className={`home-location-button ${locationStatus === 'success' ? 'home-location-button--success' : ''}`}
+                  onClick={handleLocationRequest}
+                  disabled={locationButtonDisabled}
+                >
+                  {locationStatus === 'success' ? (
+                    <span className="home-location-button-success">
+                      <span aria-hidden="true">✓</span>
+                      Location found
+                    </span>
+                  ) : (
+                    locationButtonLabel
+                  )}
+                </button>
+                {locationStatus === 'success' && (
+                  <p className="home-location-button-hint">
+                    Click again to relocate
+                  </p>
+                )}
+              </div>
             </div>
 
-            <div className="home-nearby-layout">
+            <div className="home-location-map-wrap">
               <div
                 ref={mapElementRef}
                 className="home-nearby-map"
                 aria-label="Map showing nearby LevelUp instructors"
               />
-              {nearbyLoading ? (
-                <div className="home-nearby-status">Finding instructors near you...</div>
-              ) : nearbyError ? (
-                <div className="home-nearby-status home-nearby-status--error" role="alert">
-                  {nearbyError}
-                </div>
-              ) : nearbyInstructors.length === 0 ? (
-                <div className="home-nearby-status">
-                  No instructors near you yet. Try again later as more local courses are published.
-                </div>
-              ) : (
-                <div className="home-nearby-list">
-                  {nearbyInstructors.map(instructor => (
-                    <article key={instructor.instructor_id} className="home-nearby-instructor">
-                      <div>
-                        <h3>{instructor.instructor_name}</h3>
-                        <p>{instructor.city || 'LevelUp instructor'}</p>
-                      </div>
-                      <span>{instructor.distance_km} km</span>
-                    </article>
-                  ))}
+              <div className="home-nearby-legend" aria-label="Map legend">
+                <span><i className="home-nearby-legend-dot home-nearby-legend-dot--visitor" />You</span>
+                <span><i className="home-nearby-legend-dot home-nearby-legend-dot--instructor" />Instructor</span>
+              </div>
+              <button
+                type="button"
+                className="home-map-recenter-button"
+                onClick={recenterOnVisitor}
+                disabled={!visitorLocation}
+                aria-label={visitorLocation ? 'Center map on your location' : 'Allow location to center the map on you'}
+              >
+                <span aria-hidden="true">⌖</span>
+                {visitorLocation ? 'Center on me' : 'Allow location first'}
+              </button>
+              {!visitorLocation && (
+                <div className="home-location-map-overlay">
+                  <span className="home-location-map-overlay-icon" aria-hidden="true">⌖</span>
+                  <strong>Ready to find instructors near you?</strong>
+                  <span>Allow location access to discover instructors nearby.</span>
                 </div>
               )}
             </div>
-          </section>
-        )}
+
+            {locationStatus === 'success' && (
+              <div className="home-nearby-content" aria-labelledby="home-nearby-title">
+                <div className="home-nearby-heading">
+                  <div>
+                    <p className="home-section-eyebrow">NEARBY LEARNING</p>
+                    <h2 id="home-nearby-title">Instructors around you</h2>
+                    <p>
+                      Explore published courses from instructors within 25 km of
+                      your selected location.
+                    </p>
+                  </div>
+                  {!nearbyLoading && !nearbyError && (
+                    <span className="home-nearby-count">
+                      {nearbyInstructors.length} {nearbyInstructors.length === 1 ? 'instructor' : 'instructors'}
+                    </span>
+                  )}
+                </div>
+
+                {nearbyLoading ? (
+                  <div className="home-nearby-status">Finding instructors near you...</div>
+                ) : nearbyError ? (
+                  <div className="home-nearby-status home-nearby-status--error" role="alert">
+                    {nearbyError}
+                  </div>
+                ) : nearbyInstructors.length === 0 ? (
+                  <div className="home-nearby-status">
+                    No instructors near you yet. Try again later as more local courses are published.
+                  </div>
+                ) : (
+                  <div className="home-nearby-list">
+                    {nearbyInstructors.map(instructor => (
+                      <button
+                        key={instructor.instructor_id}
+                        type="button"
+                        className="home-nearby-instructor"
+                        onClick={() => focusInstructor(instructor)}
+                      >
+                        <span className="home-nearby-instructor-avatar" aria-hidden="true">
+                          {instructor.instructor_name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="home-nearby-instructor-info">
+                          <strong>{instructor.instructor_name}</strong>
+                          <span>{instructor.city || 'LevelUp instructor'}</span>
+                          <small>
+                            {instructor.courses.length} {instructor.courses.length === 1 ? 'course' : 'courses'}
+                          </small>
+                        </span>
+                        <span className="home-nearby-instructor-distance">
+                          {instructor.distance_km} km
+                          <small>View map →</small>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Public course browse section */}
         <section id="explore-courses" className="home-explore-courses">
