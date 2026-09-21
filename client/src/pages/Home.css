@@ -203,21 +203,26 @@
 /* Nearby location prompt */
 
 .home-location-section {
-  width: min(1180px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 12px 0 0;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  max-width: 1280px;
+  width: min(1280px, calc(100% - 48px));
+  margin: 28px auto 32px;
+  padding: 0;
 }
 
 .home-location-card {
   position: relative;
+  z-index: 1;
+  isolation: isolate;
   overflow: hidden;
-  padding: 24px;
-  border: 1px solid #c7d2fe;
-  border-radius: var(--radius-large);
-  background:
-    radial-gradient(circle at 92% 0%, rgba(129, 140, 248, 0.22), transparent 34%),
-    linear-gradient(120deg, #f0f2ff 0%, var(--color-white) 58%);
-  box-shadow: 0 14px 34px rgba(79, 70, 229, 0.09);
+  min-height: 500px;
+  padding: 40px 48px;
+  border: 1px solid #e0e7ff;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #f7f8ff 0%, #ffffff 58%);
+  box-shadow: 0 4px 18px rgba(31, 41, 55, 0.04);
 }
 
 .home-location-header {
@@ -366,13 +371,15 @@
 
 .home-location-map-wrap {
   position: relative;
-  height: 390px;
-  margin-top: 24px;
+  z-index: 1;
+  isolation: isolate;
+  height: 480px;
+  margin-top: 28px;
   overflow: hidden;
-  border: 1px solid #c7d2fe;
-  border-radius: var(--radius-large);
+  border: 1px solid #e0e7ff;
+  border-radius: 18px;
   background: #eaf0f7;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 16px rgba(31, 41, 55, 0.05);
 }
 
 .home-location-map-overlay {
@@ -418,6 +425,9 @@
 }
 
 .home-nearby-section {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto;
   padding: 64px 0 20px;
@@ -467,6 +477,8 @@
 
 .home-nearby-map-card {
   position: relative;
+  z-index: 1;
+  isolation: isolate;
   min-height: 390px;
   overflow: hidden;
   border: 1px solid #c7d2fe;
@@ -790,7 +802,8 @@
   }
 
   .home-location-card {
-    padding: 22px;
+    padding: 28px 24px;
+    border-radius: 20px;
   }
 
   .home-location-header {
@@ -825,7 +838,7 @@
 
   .home-nearby-map-card,
   .home-location-map-wrap {
-    height: 360px;
+    height: 400px;
   }
 }
 
@@ -877,7 +890,8 @@
   }
 
   .home-location-card {
-    padding: 22px;
+    padding: 24px 20px;
+    border-radius: 18px;
   }
 
   .home-location-header {
@@ -900,7 +914,7 @@
   }
 
   .home-location-map-wrap {
-    height: 300px;
+    height: 320px;
     margin-top: 20px;
   }
 
