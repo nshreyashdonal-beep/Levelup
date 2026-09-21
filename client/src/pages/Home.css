@@ -369,18 +369,197 @@
   text-align: center;
 }
 
+/* Flex row that holds the map and the sliding instructor panel side by side */
+.home-map-list-wrap {
+  display: flex;
+  gap: 0;
+  margin-top: 28px;
+  /* gap animates open/close together with the panel flex-basis */
+  transition: gap .35s ease;
+}
+
+.home-map-list-wrap--open {
+  gap: 16px;
+}
+
+/* The map itself shrinks to 56 % when the panel is open */
+.home-map-list-wrap--open .home-location-map-wrap {
+  flex: 0 0 56%;
+}
+
 .home-location-map-wrap {
   position: relative;
   z-index: 1;
   isolation: isolate;
+  flex: 1 1 auto;      /* fills full width by default */
+  min-width: 0;        /* prevents flex children overflowing */
   height: 480px;
-  margin-top: 28px;
   overflow: hidden;
   border: 1px solid #e0e7ff;
   border-radius: 18px;
   background: #eaf0f7;
   box-shadow: 0 4px 16px rgba(31, 41, 55, 0.05);
+  transition: flex .35s ease;
 }
+
+/* ── Instructor list side panel ────────────────────── */
+.home-list-panel {
+  flex: 0 0 0;          /* hidden: zero width */
+  overflow: hidden;
+  opacity: 0;
+  transition: flex .35s ease, opacity .3s ease;
+}
+
+.home-map-list-wrap--open .home-list-panel {
+  flex: 0 0 calc(44% - 8px);   /* visible: takes remaining width */
+  opacity: 1;
+}
+
+/* Inner white card — same height as the map */
+.home-list-panel-inner {
+  width: 100%;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e7ff;
+  border-radius: 18px;
+  background: var(--color-white);
+  box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
+}
+
+/* Panel header row: title + close button */
+.home-list-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 16px 18px 13px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.home-list-panel-header h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.home-list-panel-header > div > span {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+/* ✕ close button */
+.home-list-panel-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: #f9fafb;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.home-list-panel-close:hover {
+  background: #f1f5f9;
+  color: var(--color-text);
+}
+
+.home-list-panel-close:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.35);
+  outline-offset: 2px;
+}
+
+/* Scrollable body */
+.home-list-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 12px;
+}
+
+/* Thin custom scrollbar */
+.home-list-panel-scroll::-webkit-scrollbar { width: 4px; }
+.home-list-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.home-list-panel-scroll::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+/* Override the 342px min-height set for the old below-map layout */
+.home-list-panel-scroll .home-nearby-status,
+.home-list-panel-scroll .home-nearby-list {
+  min-height: auto;
+}
+
+/* ── Toggle bar below the map wrap ───────────────── */
+.home-list-toggle-bar {
+  display: flex;
+  align-items: center;
+  padding: 14px 0 0;
+}
+
+.home-list-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: var(--color-student-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.home-list-toggle-btn:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+  transform: translateY(-1px);
+}
+
+.home-list-toggle-btn--active {
+  background: var(--color-student-primary-dark);
+  color: var(--color-white);
+  border-color: var(--color-student-primary-dark);
+}
+
+.home-list-toggle-btn--active:hover {
+  background: #3730a3;
+  border-color: #3730a3;
+}
+
+.home-list-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #c7d2fe;
+  color: #3730a3;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.home-list-toggle-btn--active .home-list-count-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--color-white);
+}
+
+
 
 .home-location-map-overlay {
   position: absolute;
@@ -840,6 +1019,34 @@
   .home-location-map-wrap {
     height: 400px;
   }
+
+  /* Panel inner height must match the map height at this breakpoint */
+  .home-list-panel-inner {
+    height: 400px;
+  }
+}
+
+/* ── Below 660px: stack panel below map instead of side by side ───────── */
+@media (max-width: 660px) {
+  .home-map-list-wrap {
+    flex-direction: column;
+  }
+
+  /* When open, both map and panel take full width (stacked) */
+  .home-map-list-wrap--open .home-location-map-wrap {
+    flex: unset;
+    width: 100%;
+  }
+
+  .home-map-list-wrap--open .home-list-panel {
+    flex: unset;
+    width: 100%;
+    opacity: 1;
+  }
+
+  .home-list-panel-inner {
+    height: 280px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -915,7 +1122,11 @@
 
   .home-location-map-wrap {
     height: 320px;
-    margin-top: 20px;
+  }
+
+  /* Panel inner matches map height on small screens */
+  .home-list-panel-inner {
+    height: 260px;
   }
 
   .home-nearby-section {

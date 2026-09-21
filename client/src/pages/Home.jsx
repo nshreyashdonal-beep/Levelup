@@ -88,6 +88,8 @@ export default function Home() {
   const [nearbyInstructors, setNearbyInstructors] = useState([])
   const [nearbyLoading, setNearbyLoading] = useState(false)
   const [nearbyError, setNearbyError] = useState('')
+  // Controls whether the instructor list side panel is visible beside the map
+  const [listPanelOpen, setListPanelOpen] = useState(false)
   const mapElementRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const mapMarkersRef = useRef(null)
@@ -307,10 +309,27 @@ export default function Home() {
     visitorMarkerRef.current?.openPopup()
   }
 
+  // When the side panel opens or closes, wait for the CSS transition to
+  // finish (~350 ms) then tell Leaflet to recalculate the map container
+  // size so tiles fill the narrower or wider space correctly.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize()
+      }
+    }, 380)
+    return () => clearTimeout(timer)
+  }, [listPanelOpen])
+
+  // Close the side panel automatically if location is no longer 'success'
+  // (e.g. user taps the button again and triggers a new request).
+  // We derive visibility: the panel is only actually "open" when location is also 'success'.
+  const listPanelVisible = listPanelOpen && locationStatus === 'success'
+
   const locationMessages = {
     idle: 'Allow location access to prepare nearby instructor results.',
     loading: 'Finding your location...',
-    success: 'Location found. Nearby instructors are shown on the map below.',
+    success: 'Location found. Nearby instructors are shown on the map.',
     denied: 'Location access was not granted. You can try again whenever you are ready.',
     unsupported: 'This browser does not support location access. Nearby search is unavailable here.',
     error: 'We could not determine your location. Check your connection or try again.',
@@ -321,6 +340,7 @@ export default function Home() {
     : 'Use my location'
 
   const locationButtonDisabled = locationStatus === 'loading'
+
 
   return (
     <div className="home-page">
@@ -420,90 +440,123 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="home-location-map-wrap">
-              <div
-                ref={mapElementRef}
-                className="home-nearby-map"
-                aria-label="Map showing nearby LevelUp instructors"
-              />
-              <div className="home-nearby-legend" aria-label="Map legend">
-                <span><i className="home-nearby-legend-dot home-nearby-legend-dot--visitor" />You</span>
-                <span><i className="home-nearby-legend-dot home-nearby-legend-dot--instructor" />Instructor</span>
+            {/* Map + instructor list side by side */}
+            <div className={`home-map-list-wrap${listPanelVisible ? ' home-map-list-wrap--open' : ''}`}>
+
+              {/* The Leaflet map — shrinks to 56 % when the panel is open */}
+              <div className="home-location-map-wrap">
+                <div
+                  ref={mapElementRef}
+                  className="home-nearby-map"
+                  aria-label="Map showing nearby LevelUp instructors"
+                />
+                <div className="home-nearby-legend" aria-label="Map legend">
+                  <span><i className="home-nearby-legend-dot home-nearby-legend-dot--visitor" />You</span>
+                  <span><i className="home-nearby-legend-dot home-nearby-legend-dot--instructor" />Instructor</span>
+                </div>
+                <button
+                  type="button"
+                  className="home-map-recenter-button"
+                  onClick={recenterOnVisitor}
+                  disabled={!visitorLocation}
+                  aria-label={visitorLocation ? 'Center map on your location' : 'Allow location to center the map on you'}
+                >
+                  <span aria-hidden="true">⌖</span>
+                  {visitorLocation ? 'Center on me' : 'Allow location first'}
+                </button>
+                {!visitorLocation && (
+                  <div className="home-location-map-overlay">
+                    <span className="home-location-map-overlay-icon" aria-hidden="true">⌖</span>
+                    <strong>Ready to find instructors near you?</strong>
+                    <span>Allow location access to discover instructors nearby.</span>
+                  </div>
+                )}
               </div>
-              <button
-                type="button"
-                className="home-map-recenter-button"
-                onClick={recenterOnVisitor}
-                disabled={!visitorLocation}
-                aria-label={visitorLocation ? 'Center map on your location' : 'Allow location to center the map on you'}
-              >
-                <span aria-hidden="true">⌖</span>
-                {visitorLocation ? 'Center on me' : 'Allow location first'}
-              </button>
-              {!visitorLocation && (
-                <div className="home-location-map-overlay">
-                  <span className="home-location-map-overlay-icon" aria-hidden="true">⌖</span>
-                  <strong>Ready to find instructors near you?</strong>
-                  <span>Allow location access to discover instructors nearby.</span>
+
+              {/* Instructor list panel — slides in from the right */}
+              {locationStatus === 'success' && (
+                <div className="home-list-panel" aria-hidden={!listPanelVisible}>
+                  <div className="home-list-panel-inner">
+
+                    {/* Panel header */}
+                    <div className="home-list-panel-header">
+                      <div>
+                        <h3>Instructors near you</h3>
+                        {!nearbyLoading && !nearbyError && (
+                          <span>
+                            {nearbyInstructors.length} {nearbyInstructors.length === 1 ? 'instructor' : 'instructors'} within 25 km
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="home-list-panel-close"
+                        onClick={() => setListPanelOpen(false)}
+                        aria-label="Close instructor list"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Scrollable instructor list */}
+                    <div className="home-list-panel-scroll">
+                      {nearbyLoading ? (
+                        <div className="home-nearby-status">Finding instructors near you...</div>
+                      ) : nearbyError ? (
+                        <div className="home-nearby-status home-nearby-status--error" role="alert">
+                          {nearbyError}
+                        </div>
+                      ) : nearbyInstructors.length === 0 ? (
+                        <div className="home-nearby-status">
+                          No instructors near you yet. Try again later as more local courses are published.
+                        </div>
+                      ) : (
+                        <div className="home-nearby-list">
+                          {nearbyInstructors.map(instructor => (
+                            <button
+                              key={instructor.instructor_id}
+                              type="button"
+                              className="home-nearby-instructor"
+                              onClick={() => focusInstructor(instructor)}
+                            >
+                              <span className="home-nearby-instructor-avatar" aria-hidden="true">
+                                {instructor.instructor_name.charAt(0).toUpperCase()}
+                              </span>
+                              <span className="home-nearby-instructor-info">
+                                <strong>{instructor.instructor_name}</strong>
+                                <span>{instructor.city || 'LevelUp instructor'}</span>
+                                <small>
+                                  {instructor.courses.length} {instructor.courses.length === 1 ? 'course' : 'courses'}
+                                </small>
+                              </span>
+                              <span className="home-nearby-instructor-distance">
+                                {instructor.distance_km} km
+                                <small>View map →</small>
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
+            {/* Toggle button — visible once location is found */}
             {locationStatus === 'success' && (
-              <div className="home-nearby-content" aria-labelledby="home-nearby-title">
-                <div className="home-nearby-heading">
-                  <div>
-                    <p className="home-section-eyebrow">NEARBY LEARNING</p>
-                    <h2 id="home-nearby-title">Instructors around you</h2>
-                    <p>
-                      Explore published courses from instructors within 25 km of
-                      your selected location.
-                    </p>
-                  </div>
+              <div className="home-list-toggle-bar">
+                <button
+                  type="button"
+                  className={`home-list-toggle-btn${listPanelVisible ? ' home-list-toggle-btn--active' : ''}`}
+                  onClick={() => setListPanelOpen(prev => !prev)}
+                >
+                  <span aria-hidden="true">📋</span>
+                  <span>{listPanelVisible ? 'Hide instructor list' : 'See all instructors'}</span>
                   {!nearbyLoading && !nearbyError && (
-                    <span className="home-nearby-count">
-                      {nearbyInstructors.length} {nearbyInstructors.length === 1 ? 'instructor' : 'instructors'}
-                    </span>
+                    <span className="home-list-count-badge">{nearbyInstructors.length}</span>
                   )}
-                </div>
-
-                {nearbyLoading ? (
-                  <div className="home-nearby-status">Finding instructors near you...</div>
-                ) : nearbyError ? (
-                  <div className="home-nearby-status home-nearby-status--error" role="alert">
-                    {nearbyError}
-                  </div>
-                ) : nearbyInstructors.length === 0 ? (
-                  <div className="home-nearby-status">
-                    No instructors near you yet. Try again later as more local courses are published.
-                  </div>
-                ) : (
-                  <div className="home-nearby-list">
-                    {nearbyInstructors.map(instructor => (
-                      <button
-                        key={instructor.instructor_id}
-                        type="button"
-                        className="home-nearby-instructor"
-                        onClick={() => focusInstructor(instructor)}
-                      >
-                        <span className="home-nearby-instructor-avatar" aria-hidden="true">
-                          {instructor.instructor_name.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="home-nearby-instructor-info">
-                          <strong>{instructor.instructor_name}</strong>
-                          <span>{instructor.city || 'LevelUp instructor'}</span>
-                          <small>
-                            {instructor.courses.length} {instructor.courses.length === 1 ? 'course' : 'courses'}
-                          </small>
-                        </span>
-                        <span className="home-nearby-instructor-distance">
-                          {instructor.distance_km} km
-                          <small>View map →</small>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                </button>
               </div>
             )}
           </div>
