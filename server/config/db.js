@@ -7,8 +7,11 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Pool reads DATABASE_URL from your .env file automatically.
+const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
 // Simple helper so other files can just do:

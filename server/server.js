@@ -16,7 +16,7 @@ const instructorRoutes = require('./routes/instructors');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Lets a separate frontend (running on a different port later) call this API.
 app.use(cors());
