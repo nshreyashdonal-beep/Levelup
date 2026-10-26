@@ -748,20 +748,20 @@ works, same rule PROGRESS.md uses.
 - [x] Test instructor profile update, avatar upload, and geolocation coordinates update.
 
 #### Phase 5 - Account Email Change & Duplicate Protection
-- [ ] Backend Email Modification & Duplicate Prevention (`server/routes/profile.js`):
+- [x] Backend Email Modification & Duplicate Prevention (`server/routes/profile.js`):
       1. Accept `email` in `PATCH /api/profile`.
       2. If modified, validate email syntax and check for collisions (`SELECT id FROM users WHERE LOWER(email) = LOWER($1) AND id != $2`).
       3. Return 409 Conflict if duplicate; update `users.email` if valid and unique.
-      4. Return updated email in `user` and `profile` payload.
-- [ ] Frontend Email Management (`client/src/pages/EditProfile.jsx` & `client/src/pages/EditProfile.css`):
+      4. Return updated email in `user` and `profile` payload. [Session 2]
+- [x] Frontend Email Management (`client/src/pages/EditProfile.jsx` & `client/src/pages/EditProfile.css`):
       1. Unlock email input (remove disabled attribute and styling).
       2. Add client-side format validation and clear explanatory guidance.
       3. Send `email` in `PATCH /api/profile` payload.
-      4. Sync updated email to `localStorage` and dispatch `'auth-change'` so `ProfileMenu` and navbars reflect the change immediately.
-- [ ] Automated Testing & Verification:
+      4. Sync updated email to `localStorage` and dispatch `'auth-change'` so `ProfileMenu` and navbars reflect the change immediately. [Session 2]
+- [x] Automated Testing & Verification:
       1. Test valid email update and verify login with new email.
       2. Test duplicate email rejection (HTTP 409).
-      3. Verify production build (`npm run build` with 0 errors).
+      3. Verify production build (`npm run build` with 0 errors). [Session 2]
 
 ---
 
@@ -3307,6 +3307,31 @@ client/src/App.jsx (registered `/profile` route and added it to protected sessio
 
 - Backend routes verified via automated script (`scratch/test_full_profile_workflow.js`) covering student profile update, instructor coordinates update, password changes, and login validation.
 - Vite production build (`npm --prefix client run build`) succeeded with 0 errors in 475ms.
+
+### Session 2 (Branch 11 (ProfileManagement)) - Account Email Change & Duplicate Protection
+
+#### Files Created/Updated So Far
+
+server/routes/profile.js (updated `PATCH /api/profile` to accept `email`, trim/lowercase, validate email syntax with regex, prevent duplicate email assignment across users via 409 Conflict, and update `users.email`.)
+
+client/src/pages/EditProfile.jsx (unlocked the Email input field with required validation and real-time guidance; wired new email into submission payload and updated session storage.)
+
+client/src/components/ProfileMenu.jsx and client/src/components/ProfileMenu.css (removed pencil emoji from Edit Profile link for visual consistency.)
+
+#### Decisions Log
+
+- Unique Identity Safety: Preserved `UNIQUE` email integrity with case-insensitive check (`LOWER(email) = LOWER($1) AND id != $2`), preventing collision conflicts before hitting database constraints.
+- Foreign Key Safety: Confirmed that LevelUp's relational architecture joins exclusively on primary key `users.id`, ensuring email updates propagate safely with zero cascading foreign key breaking changes.
+- Responsive Session Feedback: On successful email change, immediately writes back to `localStorage.setItem('user')` and triggers `auth-change` so header profile info reflects the new email instantaneously.
+
+#### Verification
+
+- Automated test suite (`scratch/test_email_update.js`) verified:
+  1. Invalid email syntax rejected with HTTP 400.
+  2. Duplicate email attempts rejected with HTTP 409 Conflict.
+  3. Valid email change updated PostgreSQL record and returned refreshed user object.
+  4. Database verified and email safely reverted to original.
+- Vite production build (`npm --prefix client run build`) succeeded with 0 errors in 1.29s.
 
 
 

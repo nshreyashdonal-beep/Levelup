@@ -1,6 +1,6 @@
 // src/pages/EditProfile.jsx
 // Profile management page for both students and instructors.
-// Allows editing personal details, uploading profile pictures via Cloudinary,
+// Allows editing personal details (name, email), uploading profile pictures via Cloudinary,
 // updating instructor geolocation and bio, and securely changing passwords.
 
 import { useState, useEffect, useRef } from 'react';
@@ -189,6 +189,17 @@ export default function EditProfile() {
       return;
     }
 
+    if (!email.trim()) {
+      setError('Email address cannot be empty.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     // Password validation if updating password
     if (newPassword) {
       if (!currentPassword) {
@@ -210,6 +221,7 @@ export default function EditProfile() {
 
       const payload = {
         name: name.trim(),
+        email: email.trim(),
         avatar_url: avatarUrl || null,
       };
 
@@ -406,18 +418,19 @@ export default function EditProfile() {
 
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">
-                    Email Address
+                    Email Address <span className="required-star">*</span>
                   </label>
                   <input
                     id="email"
                     type="email"
-                    className="form-input form-input--disabled"
+                    className="form-input"
                     value={email}
-                    disabled
-                    title="Account email address cannot be changed."
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. name@example.com"
+                    required
                   />
                   <span className="form-help-text">
-                    🔒 Primary account identifier used for authentication.
+                    Primary email used to sign in and receive notifications.
                   </span>
                 </div>
               </div>

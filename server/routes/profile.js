@@ -1,7 +1,7 @@
 // routes/profile.js
 // Profile management routes for both students and instructors.
-// Enables reading full profile details, updating personal info, uploading avatar,
-// updating instructor geolocation and credentials, and changing passwords.
+// Enables reading full profile details, updating personal info (including email with duplicate check),
+// uploading avatar, updating instructor geolocation and credentials, and changing passwords.
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
@@ -64,10 +64,11 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PATCH /api/profile
-// Updates user information (name, avatar_url), password change, and instructor fields.
+// Updates user information (name, email, avatar_url), password change, and instructor fields.
 router.patch('/', requireAuth, async (req, res) => {
   const {
     name,
+    email,
     avatar_url,
     bio,
     phone,
@@ -114,25 +115,48 @@ router.patch('/', requireAuth, async (req, res) => {
       updatedPasswordHash = await bcrypt.hash(newPassword.trim(), 10);
     }
 
-    // 3. Prepare updated user fields
+    // 3. Prepare updated name
     const updatedName = typeof name === 'string' && name.trim().length > 0
       ? name.trim()
       : currentUser.name;
 
-    // avatar_url can be updated or explicitly preserved
+    // 4. Handle Email Modification & Duplicate Prevention
+    let updatedEmail = currentUser.email;
+    if (typeof email === 'string' && email.trim().length > 0) {
+      const trimmedEmail = email.trim().toLowerCase();
+      if (trimmedEmail !== currentUser.email.toLowerCase()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedEmail)) {
+          return res.status(400).json({ error: 'Please enter a valid email address' });
+        }
+
+        const duplicateCheck = await db.query(
+          'SELECT id FROM users WHERE LOWER(email) = $1 AND id != $2',
+          [trimmedEmail, currentUser.id]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+          return res.status(409).json({ error: 'An account with that email already exists' });
+        }
+
+        updatedEmail = trimmedEmail;
+      }
+    }
+
+    // 5. Avatar URL can be updated or explicitly preserved
     const updatedAvatar = avatar_url !== undefined
       ? avatar_url
       : currentUser.avatar_url;
 
-    // 4. Update users table
+    // 6. Update users table with name, email, avatar, password
     await db.query(
       `UPDATE users 
-       SET name = $1, avatar_url = $2, password_hash = $3 
-       WHERE id = $4`,
-      [updatedName, updatedAvatar, updatedPasswordHash, currentUser.id]
+       SET name = $1, email = $2, avatar_url = $3, password_hash = $4 
+       WHERE id = $5`,
+      [updatedName, updatedEmail, updatedAvatar, updatedPasswordHash, currentUser.id]
     );
 
-    // 5. If instructor, upsert instructor_profiles
+    // 7. If instructor, upsert instructor_profiles
     if (currentUser.role === 'instructor') {
       const parsedLat = latitude !== undefined && latitude !== '' && latitude !== null
         ? parseFloat(latitude)
@@ -163,7 +187,7 @@ router.patch('/', requireAuth, async (req, res) => {
       );
     }
 
-    // 6. Fetch full updated profile to return
+    // 8. Fetch full updated profile to return
     const refreshedUserRes = await db.query(
       `SELECT id, name, email, role, avatar_url, created_at FROM users WHERE id = $1`,
       [currentUser.id]
