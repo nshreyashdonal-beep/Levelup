@@ -747,6 +747,22 @@ works, same rule PROGRESS.md uses.
 - [x] Test student profile update and avatar upload.
 - [x] Test instructor profile update, avatar upload, and geolocation coordinates update.
 
+#### Phase 5 - Account Email Change & Duplicate Protection
+- [ ] Backend Email Modification & Duplicate Prevention (`server/routes/profile.js`):
+      1. Accept `email` in `PATCH /api/profile`.
+      2. If modified, validate email syntax and check for collisions (`SELECT id FROM users WHERE LOWER(email) = LOWER($1) AND id != $2`).
+      3. Return 409 Conflict if duplicate; update `users.email` if valid and unique.
+      4. Return updated email in `user` and `profile` payload.
+- [ ] Frontend Email Management (`client/src/pages/EditProfile.jsx` & `client/src/pages/EditProfile.css`):
+      1. Unlock email input (remove disabled attribute and styling).
+      2. Add client-side format validation and clear explanatory guidance.
+      3. Send `email` in `PATCH /api/profile` payload.
+      4. Sync updated email to `localStorage` and dispatch `'auth-change'` so `ProfileMenu` and navbars reflect the change immediately.
+- [ ] Automated Testing & Verification:
+      1. Test valid email update and verify login with new email.
+      2. Test duplicate email rejection (HTTP 409).
+      3. Verify production build (`npm run build` with 0 errors).
+
 ---
 
 ## 3. Sessions Log (Files Created So Far)
