@@ -66,7 +66,8 @@ export default function ManageCourses() {
   }, [user]);
 
   const publishedCourses = courses.filter((course) => course.status === 'published');
-  const draftCourses = courses.filter((course) => course.status !== 'published');
+  const draftCourses = courses.filter((course) => course.status === 'draft');
+  const archivedCourses = courses.filter((course) => course.status === 'archived');
 
   if (!user) return null;
 
@@ -170,6 +171,25 @@ export default function ManageCourses() {
                 </div>
               )}
             </section>
+
+            {archivedCourses.length > 0 && (
+              <section className="managecourses-section">
+                <h2 className="managecourses-section-title">Archived Courses</h2>
+                <p className="managecourses-section-subtitle">
+                  Closed to new enrollments — hidden from Explore, while enrolled students continue to learn.
+                </p>
+
+                <div className="managecourses-grid">
+                  {archivedCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onManage={() => navigate(`/manage-courses/${course.id}`)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>
@@ -193,9 +213,14 @@ function CourseCard({ course, onManage }) {
 
       <div className="managecourses-card-body">
         <div className="managecourses-card-topline">
-          <span className="managecourses-card-label">
-            {isPublished ? 'PUBLISHED' : 'DRAFT'}
+          <span className={`managecourses-card-label managecourses-card-label--${course.status || 'draft'}`}>
+            {course.status === 'published' ? 'PUBLISHED' : course.status === 'archived' ? 'ARCHIVED' : 'DRAFT'}
           </span>
+          {Number(course.enrolled_count || 0) > 0 && (
+            <span className="managecourses-card-enrolled-pill">
+              {course.enrolled_count} {course.enrolled_count === 1 ? 'student' : 'students'}
+            </span>
+          )}
         </div>
 
         <h2 className="managecourses-card-title">{course.title}</h2>

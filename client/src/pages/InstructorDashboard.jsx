@@ -228,6 +228,8 @@ export default function InstructorDashboard() {
             <div className="instructor-dash-stat-sub">
               {loading
                 ? 'Loading courses...'
+                : stats.archived_courses > 0
+                ? `${stats.draft_courses} draft, ${stats.archived_courses} archived`
                 : stats.draft_courses > 0
                 ? `${stats.draft_courses} draft${stats.draft_courses === 1 ? '' : 's'} in progress`
                 : `${stats.total_courses} total course${stats.total_courses === 1 ? '' : 's'} created`}
@@ -389,8 +391,8 @@ export default function InstructorDashboard() {
                         </div>
                       </td>
                       <td>
-                        <span className={`status-pill ${c.status === 'published' ? 'status-published' : 'status-draft'}`}>
-                          {c.status === 'published' ? 'Published' : 'Draft'}
+                        <span className={`status-pill ${c.status === 'published' ? 'status-published' : c.status === 'archived' ? 'status-archived' : 'status-draft'}`}>
+                          {c.status === 'published' ? 'Published' : c.status === 'archived' ? 'Archived' : 'Draft'}
                         </span>
                       </td>
                       <td className="cell-price">₹{Number(c.price).toLocaleString('en-IN')}</td>

@@ -177,3 +177,90 @@
     width: 100%;
   }
 }
+
+
+/* Enrollment Notice & Locked Field Styling */
+.manage-course-details-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-medium);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+.manage-course-details-notice-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  stroke: #16a34a;
+}
+
+.manage-course-details-notice div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.manage-course-details-notice strong {
+  font-weight: 700;
+  color: #14532d;
+}
+
+.manage-course-details-notice span {
+  color: #15803d;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.manage-course-details-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.manage-course-details-lock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.manage-course-details-min-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.manage-course-details-locked-hint {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.manage-course-details-field input:disabled,
+.manage-course-details-field select:disabled {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}

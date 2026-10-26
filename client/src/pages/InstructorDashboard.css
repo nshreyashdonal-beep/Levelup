@@ -453,8 +453,14 @@
 }
 
 .status-draft {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.status-archived {
   background: #f1f5f9;
-  color: #64748b;
+  color: #475569;
   border: 1px solid #cbd5e1;
 }
 

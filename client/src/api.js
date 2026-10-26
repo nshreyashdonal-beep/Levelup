@@ -1,5 +1,11 @@
 // src/api.js
-// One shared constant for where the backend lives. Every page that needs
-// to call the API imports this instead of typing the URL out each time.
+// Shared constant for the backend API base URL.
+// Includes a protocol safeguard for cloud deployments (e.g. Render)
+// so that a raw hostname automatically resolves to valid HTTPS.
 
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+const rawApiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
+export const API_BASE =
+  rawApiBase.startsWith('http://') || rawApiBase.startsWith('https://')
+    ? rawApiBase
+    : `https://${rawApiBase}`;

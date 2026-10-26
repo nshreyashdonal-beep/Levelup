@@ -795,22 +795,22 @@ works, same rule PROGRESS.md uses.
 - [x] Verify production build (`npm run build` with 0 errors) [Session 11]
 
 #### Phase 9 - Live Course Constraints & Lifecycle (Option B)
-- [ ] Database Schema: Update `courses_status_check` constraint on `courses` table to allow `('draft', 'published', 'archived')` and update `server/db/schema.sql` [Session 12]
-- [ ] Backend API (`server/routes/courses.js`):
+- [x] Database Schema: Update `courses_status_check` constraint on `courses` table to allow `('draft', 'published', 'archived')` and update `server/db/schema.sql` [Session 12]
+- [x] Backend API (`server/routes/courses.js`):
       1. Include `enrolled_count` subquery in `GET /api/courses/:id` and `GET /api/courses` [Session 12]
       2. In `PATCH /api/courses/:id`, enforce mutability guardrails when `enrolled_count > 0`: reject `status = 'draft'`, lock `delivery_mode`, `level`, and `category_id`, and ensure `capacity >= enrolled_count` [Session 12]
       3. Support `status` filtering in `GET /api/courses` [Session 12]
-- [ ] Frontend Course Details (`ManageCourseDetails.jsx` & `ManageCourseDetails.css`):
+- [x] Frontend Course Details (`ManageCourseDetails.jsx` & `ManageCourseDetails.css`):
       1. Disable `delivery_mode`, `level`, and `CategorySelector` when `course.enrolled_count > 0` [Session 12]
       2. Display visual lock badges and informative hints explaining why fields are immutable [Session 12]
       3. Set `min={course.enrolled_count}` on the capacity input with real-time floor warning [Session 12]
-- [ ] Frontend Course Publishing (`PublishCourse.jsx` & `PublishCourse.css`):
+- [x] Frontend Course Publishing (`PublishCourse.jsx` & `PublishCourse.css`):
       1. Display active enrolled students badge (`{enrolled_count} Enrolled Students`) [Session 12]
       2. Replace "Move to Draft" with "Close Enrollments (Archive)" when `enrolled_count > 0` and provide "Re-open Enrollments (Publish)" when archived [Session 12]
       3. Add `.publish-course-status-badge.is-archived` styling and reassurance copy [Session 12]
-- [ ] Frontend Course Management (`ManageCourses.jsx` & `InstructorDashboard.jsx`):
+- [x] Frontend Course Management (`ManageCourses.jsx` & `InstructorDashboard.jsx`):
       1. Display Archived courses section and status badges [Session 12]
-- [ ] Verify production build (`npm run build` with 0 errors) [Session 12]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 12]
 
 ### Branch 11 (ProfileManagement)
 
@@ -863,12 +863,12 @@ works, same rule PROGRESS.md uses.
 **Feature Goal:** Deploy LevelUp as a unified cloud prototype on Render: Render Managed PostgreSQL (free 30-day tier) for database hosting, Render Web Service for Express.js backend API hosting, and Render Static Site for Vite/React frontend hosting, utilizing Render's high-speed private internal network, automated database seeding, client SPA rewrites, and Cloudinary CDN for persistent media.
 
 #### Phase 1 - Codebase Deployment Hardening & Preparation Safeguards (Local)
-- [ ] Add `client/public/_redirects` (`/*  /index.html  200`) to prevent 404 errors on browser reloads of client-side routes on Render
-- [ ] Add protocol prefix fallback safeguard in `client/src/api.js` to ensure any host format resolves to valid HTTPS
-- [ ] Create consolidated single-pass SQL script `server/db/render-init.sql` (schema, `pgcrypto`, categories tree, and curated 5-instructor & 6-course dataset)
-- [ ] Build automated Node.js database initializer `server/db/init.js` and add `"db:init"` script in `server/package.json`
-- [ ] Verify local client production build (`npm --prefix client run build`) with 0 errors
-- [ ] Test database seeder script (`node server/db/init.js`) locally
+- [x] Add `client/public/_redirects` (`/*  /index.html  200`) to prevent 404 errors on browser reloads of client-side routes on Render
+- [x] Add protocol prefix fallback safeguard in `client/src/api.js` to ensure any host format resolves to valid HTTPS
+- [x] Create consolidated single-pass SQL script `server/db/render-init.sql` (schema, `pgcrypto`, categories tree, and curated 5-instructor & 6-course dataset)
+- [x] Build automated Node.js database initializer `server/db/init.js` and add `"db:init"` script in `server/package.json`
+- [x] Verify local client production build (`npm --prefix client run build`) with 0 errors
+- [x] Test database seeder script (`node server/db/init.js`) locally
 
 #### Phase 2 - Render PostgreSQL Provisioning & Cloud Seeding
 - [ ] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region)
@@ -3701,6 +3701,38 @@ client/src/pages/InstructorDashboard.jsx (updated "View Public Profile" button a
 - Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
 
 
+### Session 12 (Branch 10 (Branch10_UI_Improvements)) - Live Course Constraints & Lifecycle (Option B)
+
+#### Files Created/Updated So Far
+
+server/db/schema.sql (updated `courses_status_check` constraint definition to allow `'draft'`, `'published'`, and `'archived'`.)
+
+server/routes/courses.js (added `enrolled_count` subquery to `GET /api/courses` and `GET /api/courses/:id`; added `status` query param filter support; in `PATCH /api/courses/:id`, enforced strict validation when `enrolled_count > 0`: blocks moving back to `draft`, locks `delivery_mode`, `level`, and `category_id`, and rejects capacity reductions below current enrollment count with explanatory 400 responses.)
+
+server/routes/instructors.js (updated dashboard stats query to accurately break down `published_courses`, `draft_courses`, and `archived_courses`.)
+
+client/src/pages/ManageCourseDetails.jsx & client/src/pages/ManageCourseDetails.css (added top enrollment notification alert; disabled `delivery_mode`, `level`, and `CategorySelector` when `enrolled_count > 0`; added lock pill badges with lock SVGs; added helper hints explaining that academic parameters are locked to protect student agreements; enforced `min={enrolled_count}` on the capacity input with minimum seat floor guidance.)
+
+client/src/pages/PublishCourse.jsx & client/src/pages/PublishCourse.css (overhauled lifecycle management to support `published`, `archived`, and `draft` states; displayed active student enrollment badge; for published courses with active learners, replaced the hazardous "Move to Draft" action with an enterprise "Close Enrollments (Archive)" workflow that delists from Explore while guaranteeing continued access for enrolled learners; added "Re-open Enrollments (Publish)" action for archived courses.)
+
+client/src/pages/ManageCourses.jsx & client/src/pages/ManageCourses.css (split course list into Draft, Published, and Archived sections; rendered `ARCHIVED` and `{enrolled_count} students` badges on course cards.)
+
+client/src/pages/InstructorDashboard.jsx & client/src/pages/InstructorDashboard.css (updated course performance breakdown table to properly render distinct `Archived` status pills and updated active courses stat card subtitle.)
+
+#### Decisions Log
+
+- Split Lifecycle (Option B): Courses with active enrollments represent a binding service agreement and must never be reverted to an unformed "draft" state. Instead, instructors can "Archive / Close Enrollments" which delists from catalog/search while preserving 100% learning and session access for existing students.
+- Immutability of Core Course Parameters: `delivery_mode`, `level`, and `category_id` are strictly locked at the API and UI level once students enroll to eliminate bait-and-switch risks. Capacity can only be increased or kept at or above current enrollments.
+- Comprehensive UI Guidance: Lock badges and inline explanations make it immediately clear to instructors why fields are read-only, avoiding confusion and support requests.
+
+#### Verification
+
+- Database migration executed on PostgreSQL successfully updating `courses_status_check` constraint.
+- Backend automated guardrail suite passed with 100% pass rate: blocked draft reversion (400), blocked mode change (400), blocked level change (400), blocked below-capacity reductions (400), permitted archive (200), permitted re-publish (200).
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 563ms.
+- Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
+
+
 ### Branch 13 (Schedule Doubt Session)
 
 ### Session 1 (Branch 13 (Schedule Doubt Session)) - Adaptive Sessions Tab, Institute Venue Meetups & Student Countdown Badges
@@ -3751,3 +3783,30 @@ client/src/pages/StudentDashboard.jsx & client/src/pages/StudentDashboard.css (u
 
 - Production build (\`npm --prefix client run build\`) succeeded with 0 errors in 604ms.
 - Active backend server running on port 3000 (connected to PostgreSQL) and frontend on port 5173.
+
+
+### Branch 12 (Deployment on Render)
+
+### Session 1 (Branch 12 (Deployment on Render)) - Codebase Deployment Hardening, SPA Rewrites & Automated Seeder
+
+#### Files Created/Updated So Far
+
+client/public/_redirects (created SPA route rewrite rule `/*  /index.html  200` to prevent 404 Not Found errors when visitors reload or directly visit nested client-side routes on Render Static Site.)
+
+client/src/api.js (added protocol prefix safeguard ensuring any raw hostname supplied in `VITE_API_BASE` e.g. `levelup-api.onrender.com` automatically prepends `https://`.)
+
+server/db/render-init.sql (created consolidated idempotent single-pass SQL script defining all 10 tables, pgcrypto extension, indexes, 3-level categories tree, 5 verified instructors, 1 student, 6 curated courses across Online, Offline, and Hybrid formats, modules, lectures, trial videos, initial sessions, and reviews.)
+
+server/db/init.js (built automated database runner connecting to local or remote cloud PostgreSQL with SSL handling, executing `render-init.sql`, and reporting verified table row counts.)
+
+server/package.json (added `"db:init": "node db/init.js"` script for one-command remote seeding.)
+
+#### Decisions Log
+
+- Idempotent Seeding: `render-init.sql` and `init.js` can be safely executed against any fresh or existing PostgreSQL instance, utilizing `ON CONFLICT DO UPDATE / DO NOTHING` without duplicate key crashes.
+- Direct Cloud Seeding: Evaluators or developers can seed the Render cloud database in a single CLI command (`DATABASE_URL="<render-external-url>" npm --prefix server run db:init`) without needing manual pgAdmin tools.
+
+#### Verification
+
+- Local database seeder test (`npm --prefix server run db:init`) executed in 0.10s and verified all 8 core tables populated.
+- Production client build (`npm --prefix client run build`) succeeded with 0 errors in 486ms and confirmed `dist/_redirects` is copied to publish directory.

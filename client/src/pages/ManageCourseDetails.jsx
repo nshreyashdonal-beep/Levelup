@@ -9,6 +9,9 @@ import './ManageCourseDetails.css';
 
 export default function ManageCourseDetails() {
   const { course, updateCourse } = useOutletContext();
+  const enrolledCount = Number(course?.enrolled_count || 0);
+  const hasEnrolled = enrolledCount > 0;
+
   const [formData, setFormData] = useState({
     title: course.title || '',
     description: course.description || '',
@@ -75,6 +78,20 @@ export default function ManageCourseDetails() {
         </div>
       </div>
 
+      {hasEnrolled && (
+        <div className="manage-course-details-notice" role="status">
+          <svg className="manage-course-details-notice-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div>
+            <strong>{enrolledCount} {enrolledCount === 1 ? 'student is' : 'students are'} currently enrolled.</strong>
+            <span>Academic fields (Category, Level, and Mode) are locked to protect student learning agreements.</span>
+          </div>
+        </div>
+      )}
+
       {message && <div className="manage-course-details-success" role="status">{message}</div>}
       {error && <div className="manage-course-details-error" role="alert">{error}</div>}
 
@@ -97,8 +114,18 @@ export default function ManageCourseDetails() {
             </label>
 
             <div className="manage-course-details-field--wide">
+              <div className="manage-course-details-label-row">
+                <span>Category</span>
+                {hasEnrolled && (
+                  <span className="manage-course-details-lock-pill" title="Locked because students are enrolled">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Locked ({enrolledCount} enrolled)
+                  </span>
+                )}
+              </div>
               <CategorySelector
                 value={formData.category_id}
+                disabled={hasEnrolled}
                 onChange={({ categoryId }) => {
                   setFormData((current) => ({
                     ...current,
@@ -106,6 +133,11 @@ export default function ManageCourseDetails() {
                   }));
                 }}
               />
+              {hasEnrolled && (
+                <span className="manage-course-details-locked-hint">
+                  Course category cannot be altered once students have enrolled.
+                </span>
+              )}
             </div>
 
             <label className="manage-course-details-field">
@@ -114,23 +146,49 @@ export default function ManageCourseDetails() {
             </label>
 
             <label className="manage-course-details-field">
-              Level
-              <select name="level" value={formData.level} onChange={handleChange}>
+              <div className="manage-course-details-label-row">
+                <span>Level</span>
+                {hasEnrolled && (
+                  <span className="manage-course-details-lock-pill" title="Locked because students are enrolled">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Locked
+                  </span>
+                )}
+              </div>
+              <select name="level" value={formData.level} onChange={handleChange} disabled={hasEnrolled}>
                 <option value="">Select level</option>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>
               </select>
+              {hasEnrolled && (
+                <span className="manage-course-details-locked-hint">
+                  Difficulty level is locked to preserve curriculum expectations.
+                </span>
+              )}
             </label>
 
             <label className="manage-course-details-field">
-              Delivery mode
-              <select name="delivery_mode" value={formData.delivery_mode} onChange={handleChange}>
+              <div className="manage-course-details-label-row">
+                <span>Delivery mode</span>
+                {hasEnrolled && (
+                  <span className="manage-course-details-lock-pill" title="Locked because students are enrolled">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Locked
+                  </span>
+                )}
+              </div>
+              <select name="delivery_mode" value={formData.delivery_mode} onChange={handleChange} disabled={hasEnrolled}>
                 <option value="">Select mode</option>
                 <option value="online">Online</option>
                 <option value="offline">Offline</option>
                 <option value="hybrid">Hybrid</option>
               </select>
+              {hasEnrolled && (
+                <span className="manage-course-details-locked-hint">
+                  Delivery mode cannot be changed while students are actively attending.
+                </span>
+              )}
             </label>
 
             <label className="manage-course-details-field">
@@ -144,8 +202,27 @@ export default function ManageCourseDetails() {
             </label>
 
             <label className="manage-course-details-field">
-              Capacity
-              <input name="capacity" type="number" min="0" step="1" value={formData.capacity} onChange={handleChange} />
+              <div className="manage-course-details-label-row">
+                <span>Capacity</span>
+                {hasEnrolled && (
+                  <span className="manage-course-details-min-pill">
+                    Min {enrolledCount}
+                  </span>
+                )}
+              </div>
+              <input
+                name="capacity"
+                type="number"
+                min={hasEnrolled ? enrolledCount : 0}
+                step="1"
+                value={formData.capacity}
+                onChange={handleChange}
+              />
+              {hasEnrolled && (
+                <span className="manage-course-details-locked-hint">
+                  Cannot be lower than current enrollment ({enrolledCount}).
+                </span>
+              )}
             </label>
 
             <label className="manage-course-details-field manage-course-details-field--wide">
