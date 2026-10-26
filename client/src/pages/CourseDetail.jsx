@@ -450,7 +450,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'about' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('about')}
               >
-                <span className="nav-tab-icon">📖</span> About Course
+                About Course
               </button>
 
               <button
@@ -460,7 +460,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'instructor' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('instructor')}
               >
-                <span className="nav-tab-icon">👨‍🏫</span> About Instructor
+                About Instructor
               </button>
 
               <button
@@ -470,7 +470,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'classroom' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('classroom')}
               >
-                <span className="nav-tab-icon">🎓</span> Classroom (Trial)
+                Classroom (Trial)
                 {allLectures.length > 0 && <span className="tab-pill-badge">Free Preview</span>}
               </button>
             </nav>
