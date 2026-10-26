@@ -137,7 +137,7 @@ export default function ManageCourseSessions() {
       defaultTitle = 'In-Person Lab & Practice Meetup';
       defaultLocation = defaultInstituteAddress;
     } else {
-      defaultTitle = 'In-Person Doubt Clearing Clinic';
+      defaultTitle = 'In-Person Doubt Clearing Session';
       defaultLocation = defaultInstituteAddress;
     }
 
@@ -331,7 +331,7 @@ export default function ManageCourseSessions() {
                 className="btn-secondary"
                 onClick={() => handleOpenCreate('doubt', 'in_person')}
               >
-                + Schedule Offline Doubt Clinic
+                + Schedule In-Person Doubt Session
               </button>
             </>
           ) : isOffline ? (
@@ -384,9 +384,9 @@ export default function ManageCourseSessions() {
             <h4>No sessions scheduled yet</h4>
             <p>
               {isHybrid
-                ? 'Create in-person lab meetups or live Google Meet doubt clinics so students know how and where to attend.'
+                ? 'Create in-person lab meetups or live Google Meet doubt sessions so students know how and where to attend.'
                 : isOffline
-                ? 'Add offline doubt clearing clinics for your classroom batches.'
+                ? 'Add in-person doubt clearing sessions for your classroom batches.'
                 : 'Schedule a live virtual doubt session with Google Meet.'}
             </p>
             <button
@@ -609,7 +609,7 @@ export default function ManageCourseSessions() {
                     deliveryFormat === 'in_person' ? (
                       <>
                         <option value="offline">In-Person Lab & Workshop (At Institute)</option>
-                        <option value="doubt">In-Person Doubt Clearing Clinic</option>
+                        <option value="doubt">In-Person Doubt Clearing Session</option>
                         <option value="mock_test">In-Person Mock Test & Evaluation</option>
                       </>
                     ) : (
@@ -642,7 +642,7 @@ export default function ManageCourseSessions() {
                   placeholder={
                     isCurrentOnline
                       ? 'e.g. Weekly Live Q&A and Architecture Debugging'
-                      : 'e.g. Redux Toolkit Hands-on Lab & Doubt Clinic'
+                      : 'e.g. Redux Toolkit Hands-on Lab & Doubt Session'
                   }
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}

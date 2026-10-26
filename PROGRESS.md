@@ -794,6 +794,24 @@ works, same rule PROGRESS.md uses.
 - [x] Public Storefront Preview Banner: Added dark preview bar when an instructor views their own profile with `Public Storefront Preview` indicator and direct shortcuts `Edit Profile & Bio` and `← Back to Dashboard` [Session 11]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 11]
 
+#### Phase 9 - Live Course Constraints & Lifecycle (Option B)
+- [ ] Database Schema: Update `courses_status_check` constraint on `courses` table to allow `('draft', 'published', 'archived')` and update `server/db/schema.sql` [Session 12]
+- [ ] Backend API (`server/routes/courses.js`):
+      1. Include `enrolled_count` subquery in `GET /api/courses/:id` and `GET /api/courses` [Session 12]
+      2. In `PATCH /api/courses/:id`, enforce mutability guardrails when `enrolled_count > 0`: reject `status = 'draft'`, lock `delivery_mode`, `level`, and `category_id`, and ensure `capacity >= enrolled_count` [Session 12]
+      3. Support `status` filtering in `GET /api/courses` [Session 12]
+- [ ] Frontend Course Details (`ManageCourseDetails.jsx` & `ManageCourseDetails.css`):
+      1. Disable `delivery_mode`, `level`, and `CategorySelector` when `course.enrolled_count > 0` [Session 12]
+      2. Display visual lock badges and informative hints explaining why fields are immutable [Session 12]
+      3. Set `min={course.enrolled_count}` on the capacity input with real-time floor warning [Session 12]
+- [ ] Frontend Course Publishing (`PublishCourse.jsx` & `PublishCourse.css`):
+      1. Display active enrolled students badge (`{enrolled_count} Enrolled Students`) [Session 12]
+      2. Replace "Move to Draft" with "Close Enrollments (Archive)" when `enrolled_count > 0` and provide "Re-open Enrollments (Publish)" when archived [Session 12]
+      3. Add `.publish-course-status-badge.is-archived` styling and reassurance copy [Session 12]
+- [ ] Frontend Course Management (`ManageCourses.jsx` & `InstructorDashboard.jsx`):
+      1. Display Archived courses section and status badges [Session 12]
+- [ ] Verify production build (`npm run build` with 0 errors) [Session 12]
+
 ### Branch 11 (ProfileManagement)
 
 **Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
@@ -3715,7 +3733,7 @@ client/src/pages/StudentDashboard.jsx & client/src/pages/StudentDashboard.css (i
 
 #### Files Created/Updated So Far
 
-client/src/pages/ManageCourseSessions.jsx & client/src/pages/ManageCourseSessions.css (enhanced Hybrid course studio with dual format selector: \`In-Person at Center\` and \`Live Online (Google Meet)\`; updated quick action buttons: \`+ Schedule In-Person Meetup\`, \`+ Schedule Online Doubt Session\`, and \`+ Schedule Offline Doubt Clinic\`; added format toggle buttons, prefill logic, and \`type-online\` badges.)
+client/src/pages/ManageCourseSessions.jsx & client/src/pages/ManageCourseSessions.css (enhanced Hybrid course studio with dual format selector: \`In-Person at Center\` and \`Live Online (Google Meet)\`; updated quick action buttons: \`+ Schedule In-Person Meetup\`, \`+ Schedule Online Doubt Session\`, and \`+ Schedule In-Person Doubt Session\`; added format toggle buttons, prefill logic, and \`type-online\` badges.)
 
 client/src/pages/CourseDetail.jsx & client/src/pages/CourseDetail.css (updated top countdown banner and session cards to detect whether a session is online or in-person: displays \`UPCOMING LIVE ONLINE DOUBT\` with \`Join Google Meet ↗\` button for online sessions, and \`UPCOMING IN-PERSON SESSION\` with center/room venue address for offline sessions; added \`.banner-online\` and \`.course-detail-session-type.type-online\` styles.)
 

@@ -231,7 +231,7 @@ ALTER TABLE courses
   ADD COLUMN capacity INTEGER,
   ADD COLUMN curriculum TEXT,
   ADD COLUMN outcomes TEXT,
-  ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+  ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived'));
 
 -- Backfill existing legacy course categories into the new tree.
 -- Courses already assigned a category are left unchanged. Unknown legacy

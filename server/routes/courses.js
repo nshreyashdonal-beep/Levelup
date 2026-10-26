@@ -172,18 +172,24 @@ router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, 
 // Supports ?q=<keyword> for case-insensitive keyword search on title and description.
 // Only published courses are returned unless specifically filtering by instructor.
 router.get('/', async (req, res) => {
-  const { instructor_id, category_id, q, lat, lng } = req.query;
+  const { instructor_id, category_id, q, lat, lng, status } = req.query;
 
   try {
     const params = [];
     const conditions = [];
 
+    // Filter by status if explicitly requested
+    if (status) {
+      params.push(status);
+      conditions.push(`courses.status = $${params.length}`);
+    }
+
     // Filter by instructor if requested (e.g. MyCourses page)
     if (instructor_id) {
       params.push(instructor_id);
       conditions.push(`courses.instructor_id = $${params.length}`);
-    } else {
-      // Public browse only sees published courses
+    } else if (!status) {
+      // Public browse only sees published courses by default
       conditions.push(`courses.status = 'published'`);
     }
 
@@ -253,6 +259,7 @@ router.get('/', async (req, res) => {
              courses.created_at, courses.status, courses.category_id,
              (courses.created_at >= NOW() - INTERVAL '30 days') AS is_new,
              courses.instructor_id, courses.parent_course_id,
+             (SELECT COUNT(*)::int FROM enrollments WHERE enrollments.course_id = courses.id) AS enrolled_count,
              COALESCE(courses.delivery_mode, 'online') AS delivery_mode,
              courses.level, courses.thumbnail_url,
              users.name AS instructor_name,
@@ -327,6 +334,7 @@ router.get('/:id', async (req, res) => {
               courses.language, courses.thumbnail_url, courses.duration_weeks,
               courses.capacity, courses.curriculum, courses.outcomes,
               courses.status,
+              (SELECT COUNT(*)::int FROM enrollments WHERE enrollments.course_id = courses.id) AS enrolled_count,
               instructor_profiles.avatar_url AS instructor_avatar_url,
               instructor_profiles.city AS instructor_city,
               instructor_profiles.latitude AS instructor_latitude,
@@ -421,9 +429,13 @@ router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) =>
   } = req.body;
 
   try {
-    // Check ownership: does this instructor own this course?
+    // Check ownership and current enrollment state
     const courseCheck = await db.query(
-      `SELECT instructor_id FROM courses WHERE id = $1`,
+      `SELECT courses.id, courses.instructor_id, courses.status, courses.delivery_mode,
+              courses.level, courses.category_id, courses.capacity,
+              (SELECT COUNT(*)::int FROM enrollments WHERE enrollments.course_id = courses.id) AS enrolled_count
+       FROM courses
+       WHERE courses.id = $1`,
       [id]
     );
 
@@ -431,8 +443,58 @@ router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) =>
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    if (courseCheck.rows[0].instructor_id !== req.user.id) {
+    const currentCourse = courseCheck.rows[0];
+
+    if (currentCourse.instructor_id !== req.user.id) {
       return res.status(403).json({ error: 'You can only edit your own courses' });
+    }
+
+    if (status !== undefined && !['draft', 'published', 'archived'].includes(status)) {
+      return res.status(400).json({ error: "status must be 'draft', 'published', or 'archived'" });
+    }
+
+    const enrolledCount = currentCourse.enrolled_count || 0;
+
+    // Mutability guardrails when students are enrolled
+    if (enrolledCount > 0) {
+      if (status === 'draft' && currentCourse.status !== 'draft') {
+        return res.status(400).json({
+          error: 'Cannot move course back to draft while students are enrolled. You can archive the course to close enrollments instead.',
+        });
+      }
+
+      if (delivery_mode !== undefined && delivery_mode !== currentCourse.delivery_mode) {
+        return res.status(400).json({
+          error: 'Delivery mode cannot be changed once students have enrolled.',
+        });
+      }
+
+      if (level !== undefined && level !== currentCourse.level) {
+        return res.status(400).json({
+          error: 'Course difficulty level cannot be changed once students have enrolled.',
+        });
+      }
+
+      if (
+        category_id !== undefined &&
+        category_id !== null &&
+        category_id !== currentCourse.category_id
+      ) {
+        return res.status(400).json({
+          error: 'Course category cannot be changed once students have enrolled.',
+        });
+      }
+
+      if (
+        capacity !== undefined &&
+        capacity !== null &&
+        capacity !== '' &&
+        Number(capacity) < enrolledCount
+      ) {
+        return res.status(400).json({
+          error: `Capacity cannot be lower than the current enrollment count (${enrolledCount}).`,
+        });
+      }
     }
 
     if (category_id !== undefined && category_id !== null) {
@@ -460,7 +522,8 @@ router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) =>
        WHERE id = $1
        RETURNING id, title, description, price, instructor_id, created_at,
                  category_id, level, delivery_mode, language, thumbnail_url,
-                 duration_weeks, capacity, curriculum, outcomes, status`,
+                 duration_weeks, capacity, curriculum, outcomes, status,
+                 (SELECT COUNT(*)::int FROM enrollments WHERE enrollments.course_id = courses.id) AS enrolled_count`,
       [
         id,
         title,

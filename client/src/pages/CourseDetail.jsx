@@ -673,7 +673,7 @@ export default function CourseDetail() {
                         ? 'UPCOMING IN-PERSON SESSION'
                         : nextSession.session_type === 'mock_test'
                         ? 'UPCOMING MOCK TEST'
-                        : 'UPCOMING IN-PERSON DOUBT CLINIC'}
+                        : 'UPCOMING IN-PERSON DOUBT SESSION'}
                     </span>
                     <span className="upcoming-countdown-badge">
                       {getSessionCountdownInfo(nextSession.scheduled_at).countdownText}

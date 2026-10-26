@@ -203,7 +203,8 @@ router.get('/dashboard', requireAuth, requireRole('instructor'), async (req, res
       `SELECT
          COUNT(DISTINCT c.id)::int AS total_courses,
          COUNT(DISTINCT CASE WHEN c.status = 'published' THEN c.id END)::int AS published_courses,
-         COUNT(DISTINCT CASE WHEN c.status != 'published' THEN c.id END)::int AS draft_courses,
+         COUNT(DISTINCT CASE WHEN c.status = 'draft' THEN c.id END)::int AS draft_courses,
+         COUNT(DISTINCT CASE WHEN c.status = 'archived' THEN c.id END)::int AS archived_courses,
          COUNT(DISTINCT e.student_id)::int AS total_students,
          COUNT(e.id)::int AS total_enrollments,
          COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN c.price ELSE 0 END), 0)::numeric(12, 2) AS total_earnings
@@ -227,6 +228,7 @@ router.get('/dashboard', requireAuth, requireRole('instructor'), async (req, res
       total_courses: statsQuery.rows[0]?.total_courses || 0,
       published_courses: statsQuery.rows[0]?.published_courses || 0,
       draft_courses: statsQuery.rows[0]?.draft_courses || 0,
+      archived_courses: statsQuery.rows[0]?.archived_courses || 0,
       total_students: statsQuery.rows[0]?.total_students || 0,
       total_enrollments: statsQuery.rows[0]?.total_enrollments || 0,
       total_earnings: Number(statsQuery.rows[0]?.total_earnings || 0),
