@@ -105,6 +105,7 @@ router.get('/nearby', async (req, res) => {
            users.name AS instructor_name,
            instructor_profiles.bio,
            instructor_profiles.city,
+           instructor_profiles.avatar_url,
            instructor_profiles.latitude,
            instructor_profiles.longitude,
            6371 * acos(
@@ -127,6 +128,7 @@ router.get('/nearby', async (req, res) => {
          instructor_distances.instructor_name,
          instructor_distances.bio,
          instructor_distances.city,
+         instructor_distances.avatar_url,
          instructor_distances.latitude,
          instructor_distances.longitude,
          ROUND(instructor_distances.distance_km::numeric, 2) AS distance_km,
@@ -137,7 +139,17 @@ router.get('/nearby', async (req, res) => {
                'title', courses.title,
                'description', courses.description,
                'price', courses.price,
-               'category_id', courses.category_id
+               'category_id', courses.category_id,
+               'avg_rating', (
+                 SELECT COALESCE(AVG(course_reviews.rating), 0)::numeric(2,1)
+                 FROM reviews course_reviews
+                 WHERE course_reviews.course_id = courses.id
+               ),
+               'review_count', (
+                 SELECT COUNT(*)::int
+                 FROM reviews course_reviews
+                 WHERE course_reviews.course_id = courses.id
+               )
              )
              ORDER BY courses.created_at DESC
            ) FILTER (WHERE courses.id IS NOT NULL),
@@ -155,6 +167,7 @@ router.get('/nearby', async (req, res) => {
          instructor_distances.instructor_name,
          instructor_distances.bio,
          instructor_distances.city,
+         instructor_distances.avatar_url,
          instructor_distances.latitude,
          instructor_distances.longitude,
          instructor_distances.distance_km

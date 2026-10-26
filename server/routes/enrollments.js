@@ -50,11 +50,28 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const result = await db.query(
       `SELECT enrollments.id, enrollments.enrolled_at,
-              courses.id AS course_id, courses.title, courses.price,
-              users.name AS instructor_name
+              courses.id AS course_id, courses.title, courses.description,
+              courses.price, courses.created_at, courses.status,
+              courses.category_id, courses.delivery_mode, courses.level,
+              courses.thumbnail_url, courses.instructor_id,
+              users.name AS instructor_name,
+              instructor_profiles.avatar_url AS instructor_avatar_url,
+              instructor_profiles.city AS instructor_city,
+              (SELECT COUNT(*)::int
+                 FROM course_lectures
+                 JOIN course_modules ON course_modules.id = course_lectures.module_id
+                WHERE course_modules.course_id = courses.id) AS total_lectures,
+              (SELECT COUNT(*)::int
+                 FROM lecture_progress
+                 JOIN course_lectures ON course_lectures.id = lecture_progress.lecture_id
+                 JOIN course_modules ON course_modules.id = course_lectures.module_id
+                WHERE lecture_progress.student_id = enrollments.student_id
+                  AND course_modules.course_id = courses.id
+                  AND lecture_progress.completed_at IS NOT NULL) AS completed_lectures
        FROM enrollments
        JOIN courses ON courses.id = enrollments.course_id
        JOIN users ON users.id = courses.instructor_id
+       LEFT JOIN instructor_profiles ON instructor_profiles.user_id = courses.instructor_id
        WHERE enrollments.student_id = $1
        ORDER BY enrollments.enrolled_at DESC`,
       [req.user.id]

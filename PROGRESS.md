@@ -149,6 +149,7 @@ A **branch** is a stream of work (the main line, or a side quest that jumps the 
 | 9 | Improving Website and Solving Bugs | Polish website UI/UX, fix visual/functional bugs, layout responsiveness, and refine student & instructor user flows | Completed |
 | 10 | Branch10_UI_Improvements | Visual overhaul, design system polish, layout responsiveness, and UI modernizations across Branch 9 features | Completed |
 | 11 | ProfileManagement | User & Instructor Profile Management: edit name, email, avatar upload via Cloudinary, instructor bio/phone/city/coords, and password reset | Planning / In progress |
+| 12 | Deployment on Render | Cloud deployment: Render managed PostgreSQL (30-day free tier), Render Web Service backend, Render Static Site frontend with SPA rewrites, and Cloudinary asset persistence | In progress / Planned |
 
 ---
 
@@ -617,6 +618,7 @@ works, same rule PROGRESS.md uses.
 - [x] Update `MyCourses.jsx`: clicking "Continue →" opens classroom directly [Session 3]
 - [x] Update `CourseDetail.jsx`: clicking "Enrolled ✓" opens "Go to Course Classroom →" [Session 3]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 3]
+
 - [x] Document the live demo presentation script and free deployment checklist for Render + Neon + Vercel [Session 3]
 
 #### Phase 4 Demo Script
@@ -667,6 +669,7 @@ works, same rule PROGRESS.md uses.
 - [x] Add styling for cancel upload button in `ManageCourseContent.css` [Session 3]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 3]
 
+
 #### Phase 4 - Resolve White Screen Crash on Modules & Lectures Page
 - [x] Fix missing `useRef` import in `client/src/pages/ManageCourseContent.jsx` [Session 4]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 4]
@@ -714,6 +717,8 @@ works, same rule PROGRESS.md uses.
 - [x] Student Classroom Sync (`CourseDetail.jsx`): [Session 8]
       1. Unlock all lectures where `lec.is_trial` is true (with fallback to first lecture if none marked)
       2. Allow prospective students to click and watch any instructor-designated trial preview lecture
+- [x] Non-Intrusive Geolocation Guard: Eliminated automatic geolocation prompt popups on mount in `CourseDetail.jsx` by returning immediately when saved location exists and guarding with `navigator.permissions.query` [Session 8]
+- [x] Classroom Player Breadcrumb Navigation: Integrated breadcrumb trail `My Courses › [Course Title] › Classroom` and a quick `← Back to Course Details` action in `CoursePlayer.jsx` for seamless back-navigation to the mediator page [Session 8]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 8]
 
 ### Branch 10 (Branch10_UI_Improvements)
@@ -741,6 +746,37 @@ works, same rule PROGRESS.md uses.
 - [x] Accurate Breadcrumb Navigation: `CourseDetail.jsx`, `InstructorProfile.jsx`, and `ScrollToTop.jsx` anchor navigation to `#explore-courses` and `#nearby-map-section` [Session 2]
 - [x] Phantom User Session Guard: `ProfileMenu.jsx` and `StudentNav.jsx` conditional guest actions (Login/Signup buttons for visitors) [Session 2]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 2]
+
+#### Phase 3 - Modern Rectangular Course Card Overhaul (`card.jpeg` & `card 2 .png`)
+- [x] Unified Reusable Component (`CourseCard.jsx` & `CourseCard.css`):
+      1. 16:9 Thumbnail banner with smooth zoom on hover, lazy loading, and branded gradient fallback with category badge on image error [Session 3]
+      2. Completely visible multi-line course title with zero ellipsis truncation [Session 3]
+      3. Clickable circular avatar instructor row routing to `/instructors/:id` [Session 3]
+      4. Dynamic Badge Pill Row unifying Delivery Mode (`🏢 Offline`, `🔄 Hybrid`, `🌐 Online`), Level, and Star Rating / Fresh Launch pill [Session 3]
+      5. Pinned bottom footer with formatted price and high-visibility `[ Enroll ]` CTA button [Session 3]
+- [x] Integrate across all course catalogue views: `Home.jsx`, `StudentLanding.jsx`, and `InstructorProfile.jsx` (`hideInstructor={true}`) [Session 3]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 3]
+
+#### Phase 4 - Nearby Instructor List Direct Navigation & Dynamic Geolocation Distance
+- [x] Geolocation Distance Badging: Courses dynamically calculate and display distance (`From you 2.4 km`) when location is provided [Session 5]
+- [x] Nearby Instructor List Routing (`Home.jsx` & `StudentLanding.jsx`): Clicking an instructor item in "See all instructors" navigates directly to `/instructors/:id` (`InstructorProfile.jsx`) [Session 6]
+- [x] Map Pin Focus Preservation: Integrated dedicated `[ 📍 Map ]` button calling `focusInstructor` with `e.stopPropagation()` [Session 6]
+- [x] Avatar Imagery in Discovery: Updated `GET /api/instructors/nearby` to return `avatar_url` for photo display in list sidebars [Session 6]
+- [x] Visitor Geolocation Persistence: Stored user coordinates across navigations (`levelup_visitor_location` in `sessionStorage` & `localStorage`), restoring map position, distance badges, and nearby instructors automatically on return [Session 7]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 7]
+
+#### Phase 5 - Mediator Course Details & Enrolled Curriculum Experience
+- [x] Mediator Routing from My Courses: Clicking a course card in `MyCourses.jsx` routes to `/courses/:id?from=mycourses&tab=classroom` instead of bypassing to player [Session 8]
+- [x] Adaptive Breadcrumbs & Navigation: Shows `My Courses › [Course Title]` when enrolled or arriving from MyCourses, and highlights active navbar link [Session 8]
+- [x] Enrolled Progress Sticky CTA: Renders `Enrolled ✓` status badge, percentage progress bar (`X of Y lectures completed`), and `[ Continue Learning in Classroom → ]` action targeting the next unwatched lecture [Session 8]
+- [x] Unlocked Curriculum with Completion Checkmarks & Resume Badges: Unlocks all modules and lectures for enrolled students in Tab 3, marks completed lectures with green checkmarks (`✓ Completed`), tags next unwatched lecture with `▶ Up Next`, and enables 1-click deep-linking to player with `?lectureId=...` [Session 8]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 8]
+
+#### Phase 6 - Mediator Classroom Minimize & Module Accordion Controls
+- [x] Active Classroom Banner Minimizer: Added collapsible toggle (`[− Minimize] / [+ Expand]`) on `.classroom-enrolled-panel` with compact summary view (`X% Completed • Y of Z lectures finished • [Resume Player]`) [Session 9]
+- [x] Module Accordion & Minimize Button: Clickable `[−]` / `[+]` toggle buttons and interactive module headers to expand/collapse individual curriculum module lectures [Session 9]
+- [x] Global Curriculum Controls: Added `[− Collapse all modules] / [+ Expand all modules]` toggle in the curriculum header row [Session 9]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 9]
 
 ### Branch 11 (ProfileManagement)
 
@@ -787,6 +823,41 @@ works, same rule PROGRESS.md uses.
       1. Test valid email update and verify login with new email.
       2. Test duplicate email rejection (HTTP 409).
       3. Verify production build (`npm run build` with 0 errors). [Session 2]
+
+### Branch 12 (Deployment on Render)
+
+**Feature Goal:** Deploy LevelUp as a unified cloud prototype on Render: Render Managed PostgreSQL (free 30-day tier) for database hosting, Render Web Service for Express.js backend API hosting, and Render Static Site for Vite/React frontend hosting, utilizing Render's high-speed private internal network, automated database seeding, client SPA rewrites, and Cloudinary CDN for persistent media.
+
+#### Phase 1 - Render PostgreSQL Provisioning & Automated Database Seeding
+- [ ] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region)
+- [ ] Create consolidated single-pass SQL script `server/db/render-init.sql` (schema, `pgcrypto`, categories tree, and curated 5-instructor & 6-course dataset)
+- [ ] Build automated Node.js database initializer `server/db/init.js` and add `"db:init"` script in `server/package.json`
+- [ ] Populate Render cloud database via `DATABASE_URL="<external-url>" npm --prefix server run db:init`
+- [ ] Verify remote database connectivity, tables, and relationships via query check
+
+#### Phase 2 - Render Web Service (Backend API) Deployment
+- [ ] Ensure dynamic `PORT` binding (`process.env.PORT || 3000`) and test connection endpoint `/api/health` in `server/server.js`
+- [ ] Verify `ssl: isLocal ? false : { rejectUnauthorized: false }` handles Render internal and external database URLs in `server/config/db.js`
+- [ ] Create Render Web Service (`levelup-api`, Node environment, Root Directory: `server`, Build: `npm install`, Start: `node server.js`)
+- [ ] Link database via Render's private internal network using `DATABASE_URL` (Internal Database URL) and configure `JWT_SECRET` and `NODE_ENV=production`
+- [ ] Deploy backend and verify live health check endpoint `https://<levelup-api>.onrender.com/api/health` returning `{ status: 'ok', db: 'connected' }`
+
+#### Phase 3 - Render Static Site (Frontend Client) Deployment & SPA Rewrites
+- [ ] Add `client/public/_redirects` (`/*  /index.html  200`) to prevent 404 errors on browser reloads of client-side routes
+- [ ] Add protocol prefix fallback safeguard in `client/src/api.js` to ensure any host format resolves to valid HTTPS
+- [ ] Verify local client production build (`npm --prefix client run build`) with 0 errors
+- [ ] Create Render Static Site (`levelup-web`, Root Directory: `client`, Build: `npm run build`, Publish Directory: `dist`)
+- [ ] Configure frontend environment variables on Render (`VITE_API_BASE`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_API_KEY`, `VITE_CLOUDINARY_UPLOAD_PRESET`)
+- [ ] Deploy frontend and confirm successful build and CDN distribution
+
+#### Phase 4 - End-to-End Production Verification & Viva Demo Readiness
+- [ ] Verify SSL/HTTPS across live frontend and backend endpoints
+- [ ] Test student user flow on live site: Registration, Login, Nearby Leaflet map discovery, Course Card exploration with distance badges
+- [ ] Test mediator flow on live site: Course Card $\rightarrow$ `CourseDetail.jsx` overview and tabs $\rightarrow$ `CoursePlayer.jsx` classroom video playback
+- [ ] Test instructor user flow on live site: Login, Course creation/edit, Lecture Studio video streaming, Cloudinary image upload
+- [ ] Test profile management on live site: Avatar photo upload, password change, location update
+- [ ] Document the live demo presentation script and cold-start pre-warming procedure for university evaluators
+
 
 ---
 
@@ -3358,6 +3429,153 @@ client/src/components/ProfileMenu.jsx and client/src/components/ProfileMenu.css 
   4. Database verified and email safely reverted to original.
 - Vite production build (`npm --prefix client run build`) succeeded with 0 errors in 1.29s.
 
+### Session 3 (Branch 10 (Branch10_UI_Improvements)) - Modern Rectangular Course Card Overhaul
+
+#### Files Created/Updated So Far
+
+client/src/components/CourseCard.jsx (new reusable component implementing the modern rectangular layout matching `card.jpeg` and `card 2 .png`: 16:9 thumbnail banner with lazy loading and gradient fallback, completely visible multi-line title with zero ellipsis truncation, clickable circular avatar instructor row, badge pill row with Delivery Mode, Level, and Star Rating, and pinned bottom footer with formatted price and Enroll CTA.)
+
+client/src/components/CourseCard.css (new stylesheet providing responsive card framing, smooth hover lift, thumbnail zoom, status badge pills, and clean outlined Enroll button.)
+
+client/src/pages/Home.jsx (replaced duplicated inline card markup with reusable `<CourseCard />`.)
+
+client/src/pages/StudentLanding.jsx (replaced duplicated inline card markup with reusable `<CourseCard />`.)
+
+client/src/pages/InstructorProfile.jsx (updated catalogue grid to use `<CourseCard hideInstructor={true} />`.)
+
+#### Decisions Log
+
+- Rectangular Portrait Geometry: Structured card as a vertical portrait rectangle with `aspect-ratio: 16 / 9` thumbnail and `margin-top: auto` pinned footer so cards across a grid row align with equal height.
+- Fully Visible Titles: Eliminated line-clamp and ellipsis truncation on course titles, ensuring prospective students can read the complete course title naturally.
+- Unified Badges Row: Placed Delivery Mode, Level, and Star Rating / Fresh Launch status together in a single horizontal badge pill row.
+- Graceful Thumbnail Fallback: Added React `onError` state displaying a branded gradient banner with the course category when an image URL is missing or broken.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 491ms.
+
+### Session 4 (Branch 10 (Branch10_UI_Improvements)) - Professional Metadata & Badge Overhaul (Option A)
+
+#### Files Created/Updated So Far
+
+client/src/components/CourseCard.jsx (overhauled badge tray to Option A Udemy/Coursera reference style: added top-left thumbnail overlay badge `NEW` / `NEW RELEASE`, replaced candy-colored bubble pills with clean typographic metadata line `Level • Mode • Language`, implemented sharp star rating typography `4.8 ★ (14)` / `4.8 ★ (from previous course)`, and removed all cartoon emojis `🌐`, `🔄`, `🏢`, `✨`, `⭐`.)
+
+client/src/components/CourseCard.css (styled `.course-card-thumb-badge` with deep indigo overlay, `.course-card-meta-line` with middle-dot separators, and `.course-card-rating-row` with high-contrast numerical ratings and amber star `★`.)
+
+#### Decisions Log
+
+- Zero Cartoon Emojis: Purged all emojis from the card metadata, using authentic typographic elements and vector stars (`★`) to deliver a high-trust, mature EdTech experience.
+- Date-Based "New Course" Logic: Switched "New Course" identification to the industry-standard date-based rule (`created_at >= NOW() - INTERVAL '30 days'`), returning `is_new` from PostgreSQL via `server/routes/courses.js` and checking it in `CourseCard.jsx`. Courses published within 30 days wear the `[ NEW ]` overlay badge regardless of enrollment, and auto-expire after 30 days.
+- Clean Typographic Hierarchy: Grouped secondary attributes (`Beginner • Hybrid • English`) into a subtle bulleted line, leaving the title, instructor, and price as clear focal points. Delivery mode uses `Offline`, `Hybrid`, and `Online`.
+- Thumbnail Badge Overlay: Anchored the `NEW` tag over the top-left of the thumbnail banner (matching `card 2 .png`), eliminating body badge clutter.
+- Preserved Phrasing: Strictly maintained `(from previous course)` phrasing for cloned course review metrics.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 427ms.
+
+### Session 5 (Branch 10 (Branch10_UI_Improvements)) - Geolocation Distance Badge on Course Cards
+
+#### Files Created/Updated So Far
+
+server/routes/courses.js (added `lat` and `lng` query params to `GET /api/courses` with SQL Haversine calculation selecting `distance_km`, `instructor_latitude`, and `instructor_longitude`.)
+
+client/src/pages/Home.jsx and client/src/pages/StudentLanding.jsx (passed `lat` and `lng` query params on location update, calculated `nearbyCourseDistances`, and forwarded `userLocation` and `distanceKm` props to `<CourseCard />`.)
+
+client/src/components/CourseCard.jsx (fixed root-cause DOM clipping bug where the distance pill was trapped inside `.course-card-instructor-avatar` with `overflow: hidden; border-radius: 50%`; extracted `.course-card-distance-pill` to render cleanly below the instructor row when `userLocation` is activated; resolved fallback distance calculation.)
+
+server/db/seed.sql (restored Shreyash Donal's Indore coordinates `22.721500, 75.885000` in `instructor_profiles` so all 6 courses compute distance.)
+
+#### Decisions Log
+
+- Conditional Geolocation Badge: The distance pill (`From you 2.4 km`) is completely hidden until the visitor clicks "Use my location". Once location is provided, every course taught by an instructor with coordinates displays their exact distance.
+- Clipping Bug Fix: Extracted the distance pill from `.course-card-instructor-avatar` into `.course-card-body` to prevent the 28px circular avatar clipping mask from hiding it.
+
+#### Verification
+
+- API test: `GET /api/courses?lat=22.7196&lng=75.8577` confirmed all 6 courses return accurate `distance_km` (e.g. `2.41 km`, `4.66 km`, `10.04 km`).
+- Client build (`npm --prefix client run build`) succeeded with 0 errors in 844ms.
+
+### Session 6 (Branch 10 (Branch10_UI_Improvements)) - Nearby Instructor List Navigation & Avatar Enhancement
+
+#### Files Created/Updated So Far
+
+server/routes/instructors.js (updated `GET /api/instructors/nearby` to select `instructor_profiles.avatar_url` in both CTE and outer query so list items display authentic circular instructor photos.)
+
+client/src/pages/Home.jsx and client/src/pages/StudentLanding.jsx (updated nearby instructor list items so clicking the card/avatar/name directs to `/instructors/:id` (`InstructorProfile.jsx`), added circular avatar photos with initials fallback, added `View Profile →` action text, and preserved Leaflet map centering via a dedicated `[ 📍 Map ]` button using `e.stopPropagation()`.)
+
+client/src/pages/Home.css (styled `.home-nearby-instructor-img`, `.home-nearby-instructor-actions`, `.home-nearby-view-link`, and `.home-nearby-map-btn`.)
+
+#### Decisions Log
+
+- Clear Interaction Division: Prioritized profile discovery by routing instructor card clicks directly to `InstructorProfile.jsx`, while giving users a dedicated `[ 📍 Map ]` button to pinpoint coordinates on the Leaflet map without navigating away.
+- Visual Polish: Upgraded text-only initials into circular avatar photos pulled directly from Cloudinary / Unsplash URLs in `instructor_profiles.avatar_url`.
+
+#### Verification
+
+- API test: `GET /api/instructors/nearby?lat=22.7196&lng=75.8577` returned 5 instructors with authentic `avatar_url` fields.
+- Client build (`npm --prefix client run build`) succeeded with 0 errors in 1.95s.
+
+### Session 7 (Branch 10 (Branch10_UI_Improvements)) - Visitor Geolocation Persistence & Leaflet SPA Navigation
+
+#### Files Created/Updated So Far
+
+client/src/utils/locationStorage.js (created reusable browser storage helper to save, retrieve, and clear visitor geolocation coordinates `{ latitude, longitude }` across `sessionStorage` and `localStorage` with numeric coordinate validation.)
+
+client/src/pages/Home.jsx and client/src/pages/StudentLanding.jsx (initialized `visitorLocation` and `locationStatus` from `locationStorage` on component mount; saved coordinates upon geolocation retrieval; set initial Leaflet map center to persisted coordinates when available; added delegated click listener on map element to intercept `<a href="/instructors/...">` and `<a href="/courses/...">` links inside Leaflet popups and perform instant SPA transitions via `useNavigate()`, preserving active session state without full-page refreshes.)
+
+client/src/pages/CourseDetail.jsx (utilized `getSavedVisitorLocation` to instantly compute and render distance for offline and hybrid courses upon mounting, eliminating delay and duplicate browser geolocation prompts.)
+
+#### Decisions Log
+
+- Session & Storage Layer Continuity: Saved visitor coordinates to both `sessionStorage` and `localStorage` under key `levelup_visitor_location`. When returning from an instructor profile, course details, or refreshing the page, coordinates and `locationStatus: 'success'` are immediately restored.
+- Zero Re-Asking on Return: Returning to the homepage or student landing immediately centers the Leaflet map on the visitor's location, fetches nearby instructors, displays the `From you X.X km` distance badge on course cards, and shows `✓ Location found (Click again to relocate)` with zero re-prompt.
+- Leaflet Popup SPA Interceptor: Attached an event delegation handler to the Leaflet map container to intercept anchor clicks to internal paths, routing through React Router's `navigate()` instead of doing a full browser document navigation.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 702ms.
+- Verified API endpoints (`GET /api/courses?lat=22.7196&lng=75.8577` and `GET /api/instructors/nearby?lat=22.7196&lng=75.8577`) returning accurate distances and instructor profiles.
+
+### Session 8 (Branch 10 (Branch10_UI_Improvements)) - Mediator Course Detail & Enrolled Curriculum Experience
+
+#### Files Created/Updated So Far
+
+client/src/components/CourseCard.jsx (updated enrolled card click handler to route to the mediator page `/courses/:id?from=mycourses&tab=classroom` instead of directly launching the video classroom player.)
+
+client/src/pages/CoursePlayer.jsx (added support for URL search parameter `?lectureId=...` to automatically select and open the requested lecture and its parent module in the accordion.)
+
+client/src/pages/CourseDetail.jsx and client/src/pages/CourseDetail.css (implemented adaptive breadcrumb navigation `My Courses › [Course Title]` and active nav highlighting; fetched `/api/learning/courses/:id` to compute live student progress metrics and identify the next unwatched resume lecture; upgraded sticky enrollment card to display `Enrolled ✓` status, progress bar, and `[ Continue Learning in Classroom → ]` CTA; overhauled Tab 3 Classroom for enrolled students to display active classroom launch banner, unlocked curriculum syllabus, green `✓ Completed` checkmarks, `▶ Up Next` resume indicators, and direct 1-click lecture deep-linking into the classroom player.)
+
+#### Decisions Log
+
+- Mediator Experience Continuity: Instead of throwing students immediately into a video player, students first land on their course dashboard overview where they see their syllabus modules, review instructor notes, and track lecture completion.
+- Smart Tab Pre-Selection: When students navigate from My Courses or are already enrolled, Tab 3 (Classroom) is pre-selected so their unlocked curriculum, completion checkmarks, and resume button are immediately front-and-center.
+- Direct Lecture Deep-Linking: Every lecture row in the curriculum is clickable and routes to `/courses/:id/learn?lectureId=${lecture.id}`, letting students rewatch any lesson or resume studying with zero friction.
+- Non-Intrusive Geolocation Guard: Resolved browser popup bug when returning from the classroom player to `CourseDetail.jsx`. `getSavedVisitorLocation()` computes distance and exits immediately, and only calls `getCurrentPosition` if permissions are already explicitly granted by the user, ensuring zero unprompted browser permission popups.
+- Classroom Breadcrumb Trail: Embedded a dedicated breadcrumb path in `CoursePlayer.jsx` (`My Courses › [Course Title] › Classroom`) paired with a `← Back to Course Details` shortcut, allowing students to navigate back to the mediator overview or their enrolled catalog without having to rely on browser history alone.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 1.45s.
+- Tested `/api/learning/courses/:id` for enrolled student confirming accurate lecture completion flags (`completed: true/false`).
 
 
+### Session 9 (Branch 10 (Branch10_UI_Improvements)) - Mediator Classroom Minimize & Module Accordion Controls
 
+#### Files Created/Updated So Far
+
+client/src/pages/CourseDetail.jsx (added `isHeroMinimized` state for the Active Classroom top banner, `collapsedModules` state and `toggleModule` / `toggleAllModules` handlers; added top banner minimize button and compact progress bar; added curriculum header global expand/collapse toggle; added interactive module header with `classroom-module-toggle` button `[−]` / `[+]`.)
+
+client/src/pages/CourseDetail.css (styled `.classroom-enrolled-top-bar`, `.classroom-panel-minimize-btn`, `.classroom-enrolled-panel.is-minimized`, `.classroom-enrolled-compact-bar`, and compact resume button; added `.classroom-curriculum-header-bar` and `.classroom-toggle-all-btn`; styled `.classroom-module-header` with pointer cursor, hover transitions, and focus outlines; styled `.classroom-module-toggle` square button; added `.classroom-module-block.is-collapsed` rules hiding lectures cleanly and removing redundant bottom borders.)
+
+#### Decisions Log
+
+- Top Classroom Banner Minimization: On smaller screens or when students want to focus entirely on the syllabus, the large dark active classroom banner can now be collapsed into a slim, space-saving progress bar with a quick `Resume Player` button.
+- Comprehensive Module Accordions: Individual module headers can now be collapsed or expanded independently using the `[−]` / `[+]` button or by clicking anywhere on the header row.
+- Global Toggle Control: Added a one-click `[− Collapse all modules]` / `[+ Expand all modules]` button in the curriculum header, enabling students to scan multi-module courses easily.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 596ms.
+- Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).

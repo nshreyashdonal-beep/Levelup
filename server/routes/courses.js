@@ -172,7 +172,7 @@ router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, 
 // Supports ?q=<keyword> for case-insensitive keyword search on title and description.
 // Only published courses are returned unless specifically filtering by instructor.
 router.get('/', async (req, res) => {
-  const { instructor_id, category_id, q } = req.query;
+  const { instructor_id, category_id, q, lat, lng } = req.query;
 
   try {
     const params = [];
@@ -213,18 +213,54 @@ router.get('/', async (req, res) => {
       conditions.push(`(courses.title ILIKE $${params.length} OR courses.description ILIKE $${params.length})`);
     }
 
+    const hasCoordinates = lat !== undefined || lng !== undefined;
+    if (hasCoordinates) {
+      const latitude = Number(lat);
+      const longitude = Number(lng);
+      if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        return res.status(400).json({ error: 'Invalid latitude or longitude' });
+      }
+      params.push(latitude, longitude);
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const distanceSelect = hasCoordinates
+      ? `
+             CASE
+               WHEN instructor_profiles.latitude IS NULL OR instructor_profiles.longitude IS NULL
+                 THEN NULL
+               ELSE ROUND((
+                 6371 * 2 * ASIN(SQRT(
+                   POWER(SIN(RADIANS(instructor_profiles.latitude - $${params.length - 1}) / 2), 2) +
+                   COS(RADIANS($${params.length - 1})) *
+                   COS(RADIANS(instructor_profiles.latitude)) *
+                   POWER(SIN(RADIANS(instructor_profiles.longitude - $${params.length}) / 2), 2)
+                 ))
+               )::numeric, 2)
+             END AS distance_km`
+      : 'NULL AS distance_km';
 
     const query = `
       ${cte}
       SELECT courses.id, courses.title, courses.description, courses.price,
              courses.created_at, courses.status, courses.category_id,
+             (courses.created_at >= NOW() - INTERVAL '30 days') AS is_new,
              courses.instructor_id, courses.parent_course_id,
              COALESCE(courses.delivery_mode, 'online') AS delivery_mode,
              courses.level, courses.thumbnail_url,
              users.name AS instructor_name,
              instructor_profiles.avatar_url AS instructor_avatar_url,
              instructor_profiles.city AS instructor_city,
+             instructor_profiles.latitude AS instructor_latitude,
+             instructor_profiles.longitude AS instructor_longitude,
+             ${distanceSelect},
              (SELECT COUNT(*)::int FROM reviews WHERE reviews.course_id = courses.id) AS direct_review_count,
              (SELECT COALESCE(AVG(rating), 0)::numeric(2,1) FROM reviews WHERE reviews.course_id = courses.id) AS direct_avg_rating,
              (CASE
@@ -279,7 +315,9 @@ router.get('/:id', async (req, res) => {
   try {
     const courseResult = await db.query(
       `SELECT courses.id, courses.title, courses.description, courses.price,
-              courses.created_at, courses.instructor_id, users.name AS instructor_name,
+              courses.created_at,
+              (courses.created_at >= NOW() - INTERVAL '30 days') AS is_new,
+              courses.instructor_id, users.name AS instructor_name,
               courses.category_id, courses.parent_course_id,
               (SELECT p.title FROM courses p WHERE p.id = courses.parent_course_id) AS parent_course_title,
               topic.name AS topic_name,
@@ -291,6 +329,8 @@ router.get('/:id', async (req, res) => {
               courses.status,
               instructor_profiles.avatar_url AS instructor_avatar_url,
               instructor_profiles.city AS instructor_city,
+              instructor_profiles.latitude AS instructor_latitude,
+              instructor_profiles.longitude AS instructor_longitude,
               instructor_profiles.bio AS instructor_bio,
               (SELECT COUNT(*)::int FROM courses c_inst WHERE c_inst.instructor_id = courses.instructor_id AND c_inst.status = 'published') AS instructor_total_courses,
               (SELECT COALESCE(AVG(r_inst.rating), 0)::numeric(2,1) FROM reviews r_inst JOIN courses c_r ON c_r.id = r_inst.course_id WHERE c_r.instructor_id = courses.instructor_id) AS instructor_avg_rating,

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import { API_BASE } from '../api';
 import './CoursePlayer.css';
@@ -78,6 +78,7 @@ function formatDuration(lecture) {
 
 export default function CoursePlayer() {
   const { courseId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [course, setCourse] = useState(null);
@@ -125,18 +126,38 @@ export default function CoursePlayer() {
         setCourse(data.course);
         setModules(data.modules || []);
 
-        const firstLecture = data.modules
-          ?.flatMap((module) => module.lectures || [])
-          .find(Boolean);
+        const allLecs = (data.modules || []).flatMap((mod) =>
+          (mod.lectures || []).map((lec) => ({ ...lec, moduleId: mod.id }))
+        );
+        const urlLectureId = searchParams.get('lectureId');
+        const matchedLecture = urlLectureId
+          ? allLecs.find((l) => l.id === urlLectureId)
+          : null;
+        const initialLecture = matchedLecture || allLecs[0];
 
-        if (firstLecture) {
-          setActiveLectureId(firstLecture.id);
-          setOpenModules({ [data.modules[0].id]: true });
+        if (initialLecture) {
+          setActiveLectureId(initialLecture.id);
+          setOpenModules({ [initialLecture.moduleId]: true });
         }
       })
       .catch((requestError) => setError(requestError.message))
       .finally(() => setLoading(false));
   }, [courseId, user]);
+
+  // Sync active lecture with lectureId query param if present
+  useEffect(() => {
+    const urlLectureId = searchParams.get('lectureId');
+    if (urlLectureId && modules.length > 0) {
+      const allLecs = modules.flatMap((mod) =>
+        (mod.lectures || []).map((lec) => ({ ...lec, moduleId: mod.id }))
+      );
+      const found = allLecs.find((l) => l.id === urlLectureId);
+      if (found) {
+        setActiveLectureId(found.id);
+        setOpenModules((prev) => ({ ...prev, [found.moduleId]: true }));
+      }
+    }
+  }, [searchParams, modules]);
 
   // Load YouTube IFrame API script once
   useEffect(() => {
@@ -392,9 +413,29 @@ export default function CoursePlayer() {
 
       <main className="course-player-main">
         <div className="course-player-heading">
-          <button type="button" className="course-player-back" onClick={() => navigate('/mycourse')}>
-            ← My Courses
-          </button>
+          <div className="course-player-top-nav">
+            <nav className="course-player-breadcrumb" aria-label="Breadcrumb">
+              <Link to="/mycourse" className="breadcrumb-link">My Courses</Link>
+              <span className="breadcrumb-separator" aria-hidden="true">›</span>
+              <Link
+                to={`/courses/${courseId}?from=mycourses&tab=classroom`}
+                className="breadcrumb-link"
+                title="Return to course overview"
+              >
+                {course.title}
+              </Link>
+              <span className="breadcrumb-separator" aria-hidden="true">›</span>
+              <span className="breadcrumb-active" aria-current="page">Classroom</span>
+            </nav>
+
+            <Link
+              to={`/courses/${courseId}?from=mycourses&tab=classroom`}
+              className="course-player-back-to-course"
+            >
+              ← Back to Course Details
+            </Link>
+          </div>
+
           <p className="course-player-eyebrow">CLASSROOM</p>
           <h1>{course.title}</h1>
           <p>Continue learning at your own pace.</p>

@@ -63,6 +63,10 @@
   gap: 20px;
 }
 
+.mycourses-grid .course-card {
+  min-width: 0;
+}
+
 .mycourses-card {
   display: flex;
   min-height: 290px;

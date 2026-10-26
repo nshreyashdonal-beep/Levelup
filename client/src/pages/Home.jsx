@@ -10,7 +10,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import CourseCard from '../components/CourseCard'
 import { API_BASE } from '../api'
+import { getSavedVisitorLocation, saveVisitorLocation, clearSavedVisitorLocation } from '../utils/locationStorage'
 import './Home.css'
 
 const studentSteps = [
@@ -79,6 +81,56 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;')
 }
 
+function getInstructorInitials(name) {
+  return String(name || 'Instructor')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('')
+}
+
+function buildInstructorPopup(instructor, hasActiveFilter) {
+  const courses = [...(instructor.courses || [])]
+    .sort((a, b) => {
+      if (hasActiveFilter) return 0
+      return (
+        Number(b.avg_rating || 0) - Number(a.avg_rating || 0) ||
+        Number(b.review_count || 0) - Number(a.review_count || 0)
+      )
+    })
+    .slice(0, hasActiveFilter ? courses.length : 3)
+
+  const avatar = instructor.avatar_url
+    ? `<img class="levelup-map-popup-avatar-image" src="${escapeHtml(instructor.avatar_url)}" alt="" />`
+    : `<span class="levelup-map-popup-avatar-fallback">${escapeHtml(getInstructorInitials(instructor.instructor_name))}</span>`
+
+  const courseMarkup = courses.length > 0
+    ? `<div class="levelup-map-popup-courses">
+        <span class="levelup-map-popup-label">${hasActiveFilter ? 'Matching courses' : 'Top-rated courses'}</span>
+        ${courses.map(course => (
+          `<a class="levelup-map-popup-course" href="/courses/${escapeHtml(course.id)}">
+            <span>${escapeHtml(course.title)}</span>
+            <small>${Number(course.avg_rating || 0).toFixed(1)} rating · ${Number(course.review_count || 0)} reviews</small>
+          </a>`
+        )).join('')}
+      </div>`
+    : ''
+
+  return `<div class="levelup-map-popup">
+    <div class="levelup-map-popup-header">
+      <span class="levelup-map-popup-avatar">${avatar}</span>
+      <div class="levelup-map-popup-heading">
+        <strong>${escapeHtml(instructor.instructor_name)}</strong>
+        <span>Based in ${escapeHtml(instructor.city || 'your area')}</span>
+      </div>
+    </div>
+    <span class="levelup-map-popup-distance">${escapeHtml(instructor.distance_km)} km from you</span>
+    ${courseMarkup}
+    <a class="levelup-map-popup-profile" href="/instructors/${escapeHtml(instructor.instructor_id)}">View profile and courses</a>
+  </div>`
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
   const [courses, setCourses] = useState([])
@@ -90,8 +142,8 @@ export default function Home() {
   // debouncedQuery updates 300ms after typing stops to prevent rapid API calls & map redraws
   const [debouncedQuery, setDebouncedQuery] = useState('')
 
-  const [locationStatus, setLocationStatus] = useState('idle')
-  const [visitorLocation, setVisitorLocation] = useState(null)
+  const [locationStatus, setLocationStatus] = useState(() => (getSavedVisitorLocation() ? 'success' : 'idle'))
+  const [visitorLocation, setVisitorLocation] = useState(getSavedVisitorLocation)
   const [nearbyInstructors, setNearbyInstructors] = useState([])
   const [nearbyLoading, setNearbyLoading] = useState(false)
   const [nearbyError, setNearbyError] = useState('')
@@ -145,6 +197,10 @@ export default function Home() {
     const params = new URLSearchParams()
     if (selectedCategoryId) params.append('category_id', selectedCategoryId)
     if (debouncedQuery) params.append('q', debouncedQuery)
+    if (visitorLocation) {
+      params.append('lat', visitorLocation.latitude)
+      params.append('lng', visitorLocation.longitude)
+    }
     const query = params.toString() ? `?${params.toString()}` : ''
 
     fetch(`${API_BASE}/api/courses${query}`)
@@ -157,7 +213,7 @@ export default function Home() {
         console.error('Failed to fetch public courses:', error)
         setCoursesLoading(false)
       })
-  }, [selectedCategoryId, debouncedQuery])
+  }, [selectedCategoryId, debouncedQuery, visitorLocation])
 
   useEffect(() => {
     if (location.hash !== '#explore-courses') return
@@ -182,14 +238,18 @@ export default function Home() {
       (position) => {
         setNearbyLoading(true)
         setNearbyError('')
-        setVisitorLocation({
+        const coords = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-        })
+        }
+        saveVisitorLocation(coords)
+        setVisitorLocation(coords)
         setLocationStatus('success')
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
+          clearSavedVisitorLocation()
+          setVisitorLocation(null)
           setLocationStatus('denied')
         } else {
           setLocationStatus('error')
@@ -244,7 +304,11 @@ export default function Home() {
   useEffect(() => {
     if (!mapElementRef.current) return
 
-    const map = L.map(mapElementRef.current).setView([22.9734, 78.6569], 5)
+    const initialCenter = visitorLocation
+      ? [visitorLocation.latitude, visitorLocation.longitude]
+      : [22.9734, 78.6569]
+    const initialZoom = visitorLocation ? 12 : 5
+    const map = L.map(mapElementRef.current).setView(initialCenter, initialZoom)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -269,6 +333,25 @@ export default function Home() {
       visitorMarkerRef.current = null
     }
   }, [])
+
+  // Intercept clicks on links inside Leaflet popups to perform fast client-side navigation
+  useEffect(() => {
+    const mapEl = mapElementRef.current
+    if (!mapEl) return
+
+    const handlePopupClick = (e) => {
+      const link = e.target.closest('a')
+      if (!link) return
+      const href = link.getAttribute('href')
+      if (href && href.startsWith('/')) {
+        e.preventDefault()
+        navigate(href)
+      }
+    }
+
+    mapEl.addEventListener('click', handlePopupClick)
+    return () => mapEl.removeEventListener('click', handlePopupClick)
+  }, [navigate])
 
   useEffect(() => {
     if (!mapInstanceRef.current || !mapMarkersRef.current) return
@@ -300,21 +383,14 @@ export default function Home() {
       .addTo(mapMarkersRef.current)
 
     nearbyInstructors.forEach(instructor => {
-      const courseLinks = instructor.courses
-        .map(course => `<a href="/courses/${course.id}">${escapeHtml(course.title)}</a>`)
-        .join('<br />')
-
       const marker = L.marker(
         [instructor.latitude, instructor.longitude],
         { icon: instructorIcon }
       )
-        .bindPopup(
-          `<strong>${escapeHtml(instructor.instructor_name)}</strong>` +
-          `<br />${escapeHtml(instructor.city || 'LevelUp instructor')}` +
-          `<br /><span>${instructor.distance_km} km away</span>` +
-          `<br /><div style="margin: 6px 0;"><a href="/instructors/${instructor.instructor_id}" style="font-weight: 700; color: #4f46e5; text-decoration: none;">View Full Profile & Courses →</a></div>` +
-          (courseLinks ? `<small style="color: #64748b;">Courses:</small><br />${courseLinks}` : '')
-        )
+        .bindPopup(buildInstructorPopup(instructor, Boolean(selectedCategoryId || debouncedQuery)), {
+          className: 'levelup-map-popup-container',
+          maxWidth: 300,
+        })
         .addTo(mapMarkersRef.current)
 
       instructorMarkersRef.current.set(instructor.instructor_id, marker)
@@ -332,7 +408,7 @@ export default function Home() {
         12
       )
     }
-  }, [nearbyInstructors, visitorLocation])
+  }, [nearbyInstructors, visitorLocation, selectedCategoryId, debouncedQuery])
 
   useEffect(() => {
     if (!mapInstanceRef.current || !visitorLocation) return
@@ -396,6 +472,14 @@ export default function Home() {
   const locationButtonLabel = locationStatus === 'loading'
     ? 'Finding you...'
     : 'Use my location'
+  const nearbyCourseDistances = new Map(
+    nearbyInstructors.flatMap((instructor) =>
+      (instructor.courses || []).map((nearbyCourse) => [
+        nearbyCourse.id,
+        instructor.distance_km,
+      ])
+    )
+  )
 
   const locationButtonDisabled = locationStatus === 'loading'
 
@@ -618,14 +702,30 @@ export default function Home() {
                       ) : (
                         <div className="home-nearby-list">
                           {nearbyInstructors.map(instructor => (
-                            <button
+                            <div
                               key={instructor.instructor_id}
-                              type="button"
                               className="home-nearby-instructor"
-                              onClick={() => focusInstructor(instructor)}
+                              onClick={() => navigate(`/instructors/${instructor.instructor_id}`)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  navigate(`/instructors/${instructor.instructor_id}`);
+                                }
+                              }}
+                              title={`View ${instructor.instructor_name}'s full profile & courses`}
                             >
                               <span className="home-nearby-instructor-avatar" aria-hidden="true">
-                                {instructor.instructor_name.charAt(0).toUpperCase()}
+                                {instructor.avatar_url ? (
+                                  <img
+                                    src={instructor.avatar_url}
+                                    alt={instructor.instructor_name}
+                                    className="home-nearby-instructor-img"
+                                  />
+                                ) : (
+                                  instructor.instructor_name.charAt(0).toUpperCase()
+                                )}
                               </span>
                               <span className="home-nearby-instructor-info">
                                 <strong>{instructor.instructor_name}</strong>
@@ -634,11 +734,27 @@ export default function Home() {
                                   {instructor.courses.length} {instructor.courses.length === 1 ? 'course' : 'courses'}
                                 </small>
                               </span>
-                              <span className="home-nearby-instructor-distance">
-                                {instructor.distance_km} km
-                                <small>View map →</small>
-                              </span>
-                            </button>
+                              <div className="home-nearby-instructor-actions">
+                                <span className="home-nearby-instructor-distance">
+                                  {instructor.distance_km} km
+                                </span>
+                                <span className="home-nearby-view-link">
+                                  View Profile →
+                                </span>
+                                <button
+                                  type="button"
+                                  className="home-nearby-map-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    focusInstructor(instructor);
+                                  }}
+                                  title="Locate on map"
+                                  aria-label={`Locate ${instructor.instructor_name} on map`}
+                                >
+                                  Show on map
+                                </button>
+                              </div>
+                            </div>
                           ))}
                         </div>
                       )}
@@ -756,96 +872,17 @@ export default function Home() {
           ) : (
             <div className="home-course-grid">
               {courses.map(course => (
-                <article
+                <CourseCard
                   key={course.id}
-                  className="home-course-card"
-                  onClick={() => navigate(`/courses/${course.id}`)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      navigate(`/courses/${course.id}`)
-                    }
-                  }}
-                  role="button"
-                  tabIndex="0"
-                >
-                  <div className="home-course-card-top">
-                    <div className="home-course-badges">
-                      <span className={`home-course-mode-pill is-${course.delivery_mode || 'online'}`}>
-                        {course.delivery_mode === 'offline' ? '🏢 Offline' : course.delivery_mode === 'hybrid' ? '🔄 Hybrid' : '🌐 Online'}
-                      </span>
-                      {course.level && (
-                        <span className="home-course-level-pill">
-                          {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
-                        </span>
-                      )}
-                      {course.rating_source === 'fresh' && (
-                        Number(course.instructor_total_reviews) > 0 ? (
-                          <span className="home-course-new-pill is-release">✨ New Release</span>
-                        ) : (
-                          <span className="home-course-new-pill">✨ New Course</span>
-                        )
-                      )}
-                    </div>
-                    <span className="home-course-card-arrow" aria-hidden="true">↗</span>
-                  </div>
-
-                  <h3>{course.title}</h3>
-
-                  <div
-                    className="home-course-instructor-row"
-                    onClick={(e) => {
-                      if (course.instructor_id) {
-                        e.stopPropagation();
-                        navigate(`/instructors/${course.instructor_id}`);
-                      }
-                    }}
-                    title={`View ${course.instructor_name || 'instructor'}'s full profile`}
-                  >
-                    <div className="home-course-instructor-avatar">
-                      {course.instructor_avatar_url ? (
-                        <img
-                          src={course.instructor_avatar_url}
-                          alt={course.instructor_name}
-                          className="home-course-instructor-img"
-                        />
-                      ) : (
-                        <div className="home-course-instructor-initials">
-                          {(course.instructor_name || 'I').charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="home-course-instructor-info">
-                      <span className="home-course-instructor-name">
-                        {course.instructor_name || 'LevelUp Instructor'}
-                      </span>
-                      {course.instructor_city && (
-                        <span className="home-course-instructor-city">
-                          📍 {course.instructor_city}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="home-course-meta">
-                    <strong>₹{course.price}</strong>
-                    {course.rating_source === 'previous_course' ? (
-                      <span className="home-course-rating-val is-previous" title="Rating from previous course edition">
-                        ⭐ {Number(course.avg_rating).toFixed(1)} <small className="from-prev-tag">({course.review_count} • from previous course)</small>
-                      </span>
-                    ) : course.rating_source === 'direct' && Number(course.avg_rating) > 0 ? (
-                      <span className="home-course-rating-val">
-                        ⭐ {Number(course.avg_rating).toFixed(1)} {course.review_count ? `(${course.review_count})` : ''}
-                      </span>
-                    ) : Number(course.instructor_total_reviews) > 0 ? (
-                      <span className="home-course-rating-val is-instructor" title={`Instructor has ${course.instructor_total_reviews} reviews across all courses`}>
-                        ★ {Number(course.instructor_avg_rating).toFixed(1)} <small className="from-prev-tag">(Instructor)</small>
-                      </span>
-                    ) : (
-                      <span className="home-course-fresh-pill">✨ Fresh Launch</span>
-                    )}
-                  </div>
-                </article>
+                  course={course}
+                  userLocation={visitorLocation}
+                  distanceKm={
+                    nearbyCourseDistances.get(course.id) ??
+                    nearbyInstructors.find(
+                      (instructor) => instructor.instructor_id === course.instructor_id
+                    )?.distance_km
+                  }
+                />
               ))}
             </div>
           )}

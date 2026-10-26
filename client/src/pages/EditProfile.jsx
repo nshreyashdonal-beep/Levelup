@@ -307,11 +307,13 @@ export default function EditProfile() {
           <div>
             <h1 className="edit-profile-title">Account Settings</h1>
             <p className="edit-profile-subtitle">
-              Manage your profile details, avatar, security, and teaching credentials.
+              {isInstructor
+                ? 'Manage your profile details, location, teaching credentials, and security.'
+                : 'Manage your profile details, profile photo, and account security.'}
             </p>
           </div>
           <div className="edit-profile-badge">
-            {isInstructor ? '👨‍🏫 Verified Instructor' : '🎓 Student Account'}
+            {isInstructor ? 'Verified instructor' : 'Student account'}
           </div>
         </div>
 
@@ -375,7 +377,7 @@ export default function EditProfile() {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingImage || saving}
                     >
-                      {uploadingImage ? 'Uploading to Cloudinary...' : '📷 Change Photo'}
+                      {uploadingImage ? 'Uploading to Cloudinary...' : 'Change photo'}
                     </button>
 
                     {avatarUrl && (
@@ -519,7 +521,7 @@ export default function EditProfile() {
                       onClick={handleLocateMe}
                       disabled={locating}
                     >
-                      {locating ? '📍 Pinpointing GPS...' : '📍 Auto-Locate Me'}
+                      {locating ? 'Pinpointing location...' : 'Use my location'}
                     </button>
                   </div>
 
@@ -565,7 +567,7 @@ export default function EditProfile() {
                 Leave these fields empty if you do not want to change your password.
               </p>
 
-              <div className="form-group">
+              <div className="form-group current-password-group">
                 <label htmlFor="currentPassword" className="form-label">
                   Current Password
                 </label>
@@ -584,7 +586,7 @@ export default function EditProfile() {
                     className="btn-toggle-pw"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
-                    {showCurrentPassword ? '🙈' : '👁️'}
+                    {showCurrentPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
@@ -609,7 +611,7 @@ export default function EditProfile() {
                       className="btn-toggle-pw"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                     >
-                      {showNewPassword ? '🙈' : '👁️'}
+                      {showNewPassword ? 'Hide' : 'Show'}
                     </button>
                   </div>
                 </div>

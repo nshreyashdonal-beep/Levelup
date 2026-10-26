@@ -5,16 +5,15 @@
 //   - Direct navigation to individual course detail pages
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
+import CourseCard from '../components/CourseCard';
 import { API_BASE } from '../api';
 import './InstructorProfile.css';
 
 export default function InstructorProfile() {
   const { id } = useParams();
-  const navigate = useNavigate();
-
   const [user, setUser] = useState(null);
   const [instructor, setInstructor] = useState(null);
   const [courses, setCourses] = useState([]);
@@ -147,7 +146,7 @@ export default function InstructorProfile() {
 
               {instructor.city && (
                 <p className="instructor-hero-location">
-                  📍 {instructor.city}, India
+                  Based in {instructor.city}, India
                 </p>
               )}
             </div>
@@ -157,7 +156,7 @@ export default function InstructorProfile() {
           <div className="instructor-hero-stats-ribbon">
             <div className="stats-ribbon-item">
               <span className="stats-ribbon-val">
-                {Number(instructor.avg_rating) > 0 ? `⭐ ${Number(instructor.avg_rating).toFixed(1)}` : '⭐ 5.0'}
+              {Number(instructor.avg_rating) > 0 ? Number(instructor.avg_rating).toFixed(1) : '5.0'}
               </span>
               <span className="stats-ribbon-lbl">
                 {instructor.review_count || 0} Review{instructor.review_count === 1 ? '' : 's'}
@@ -212,7 +211,7 @@ export default function InstructorProfile() {
                 className={`catalogue-filter-pill ${modeFilter === 'online' ? 'is-active' : ''}`}
                 onClick={() => setModeFilter('online')}
               >
-                🌐 Online ({onlineCount})
+                Online ({onlineCount})
               </button>
 
               <button
@@ -220,7 +219,7 @@ export default function InstructorProfile() {
                 className={`catalogue-filter-pill ${modeFilter === 'hybrid' ? 'is-active' : ''}`}
                 onClick={() => setModeFilter('hybrid')}
               >
-                🔄 Hybrid ({hybridCount})
+                Hybrid ({hybridCount})
               </button>
 
               <button
@@ -228,7 +227,7 @@ export default function InstructorProfile() {
                 className={`catalogue-filter-pill ${modeFilter === 'offline' ? 'is-active' : ''}`}
                 onClick={() => setModeFilter('offline')}
               >
-                🏢 Offline ({offlineCount})
+                Offline ({offlineCount})
               </button>
             </div>
           </div>
@@ -236,7 +235,7 @@ export default function InstructorProfile() {
           {/* Courses Grid */}
           {filteredCourses.length === 0 ? (
             <div className="instructor-catalogue-empty">
-              <span className="empty-icon">📚</span>
+              <span className="empty-icon" aria-hidden="true">NO COURSES</span>
               <p>No courses found in this category.</p>
               {modeFilter !== 'all' && (
                 <button
@@ -250,59 +249,13 @@ export default function InstructorProfile() {
             </div>
           ) : (
             <div className="instructor-catalogue-grid">
-              {filteredCourses.map((course) => {
-                const mode = course.delivery_mode || 'online';
-                const modeLabel =
-                  mode === 'offline' ? '🏢 Offline' : mode === 'hybrid' ? '🔄 Hybrid' : '🌐 Online';
-
-                return (
-                  <article
-                    key={course.id}
-                    className="instructor-course-card"
-                    onClick={() => navigate(`/courses/${course.id}`)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        navigate(`/courses/${course.id}`);
-                      }
-                    }}
-                    role="button"
-                    tabIndex="0"
-                  >
-                    <div className="instructor-course-card-top">
-                      <div className="instructor-course-card-badges">
-                        <span className={`instructor-card-mode-pill is-${mode}`}>
-                          {modeLabel}
-                        </span>
-                        {course.level && (
-                          <span className="instructor-card-level-pill">
-                            {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
-                          </span>
-                        )}
-                      </div>
-                      <span className="instructor-card-arrow" aria-hidden="true">↗</span>
-                    </div>
-
-                    <h3 className="instructor-course-card-title">{course.title}</h3>
-                    <p className="instructor-course-card-desc">
-                      {course.description || 'Master practical skills through guided project-based instruction.'}
-                    </p>
-
-                    <div className="instructor-course-card-meta">
-                      <span className="instructor-course-card-price">₹{course.price}</span>
-                      <span className="instructor-course-card-rating">
-                        ⭐ {Number(course.avg_rating) > 0 ? Number(course.avg_rating).toFixed(1) : 'New'}
-                        {course.review_count ? ` (${course.review_count})` : ''}
-                      </span>
-                    </div>
-
-                    <div className="instructor-course-card-cta">
-                      <span>View Course Details</span>
-                      <span aria-hidden="true">→</span>
-                    </div>
-                  </article>
-                );
-              })}
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  hideInstructor={true}
+                />
+              ))}
             </div>
           )}
         </section>

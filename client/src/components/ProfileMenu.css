@@ -16,7 +16,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity 0.15s ease;
   user-select: none;
   box-sizing: border-box;
 }
@@ -59,14 +59,21 @@
 }
 
 .profile-menu-avatar--has-img:hover {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-  transform: scale(1.04);
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  opacity: 1;
 }
 
 .profile-menu-avatar--instructor.profile-menu-avatar--has-img:hover {
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.profile-menu:hover .profile-menu-avatar--has-img,
+.profile-menu:focus-within .profile-menu-avatar--has-img {
+  border-color: transparent;
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px #f4f4f5;
 }
 
 .profile-menu-avatar-img {

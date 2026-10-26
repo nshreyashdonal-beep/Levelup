@@ -1,15 +1,16 @@
 // src/pages/CourseDetail.jsx
 // Redesigned course details view with a 3-tab layout:
-//   Tab 1: About Course (Description, outcomes, specifications, reviews)
-//   Tab 2: About Instructor (Profile photo, verified badge, bio, city, sessions, and catalog link)
-//   Tab 3: Classroom (Free Trial) (Embedded trial player, curriculum with free preview vs locked lectures)
+//   Tab 1: About (Description, outcomes, specifications, reviews)
+//   Tab 2: Instructor (Profile photo, verified badge, bio, city, sessions, and catalog link)
+//   Tab 3: Classroom (Embedded sample player, curriculum with preview vs locked lectures)
 // Anchored by a persistent sticky enrollment card on the right column.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
 import { API_BASE } from '../api';
+import { getSavedVisitorLocation, saveVisitorLocation } from '../utils/locationStorage';
 import './CourseDetail.css';
 
 async function readJsonResponse(response) {
@@ -94,6 +95,7 @@ export default function CourseDetail() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [distanceKm, setDistanceKm] = useState(null);
 
   // Tab state: 'about' | 'instructor' | 'classroom'
   const [activeTab, setActiveTab] = useState(() => {
@@ -108,6 +110,10 @@ export default function CourseDetail() {
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+  const [learningModules, setLearningModules] = useState([]);
+  const [learningLoading, setLearningLoading] = useState(false);
+  const [collapsedModules, setCollapsedModules] = useState({});
+  const [isHeroMinimized, setIsHeroMinimized] = useState(false);
 
   // Leave-a-review form state
   const [reviewRating, setReviewRating] = useState(0);
@@ -175,6 +181,27 @@ export default function CourseDetail() {
       .catch(() => {});
   }, [user, id]);
 
+  // Fetch learning curriculum & lecture completions for enrolled students
+  useEffect(() => {
+    if (!alreadyEnrolled || !user || user.role !== 'student') return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setLearningLoading(true);
+    fetch(`${API_BASE}/api/learning/courses/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.modules) {
+          setLearningModules(data.modules);
+        }
+      })
+      .catch((err) => console.error('Failed to load learning progress:', err))
+      .finally(() => setLearningLoading(false));
+  }, [alreadyEnrolled, user, id]);
+
   const avgRating =
     reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -200,6 +227,61 @@ export default function CourseDetail() {
     null;
   const currentTrialLecture = selectedTrialLecture || firstTrialLecture;
   const trialVideoPreview = currentTrialLecture ? getVideoPreview(currentTrialLecture.video_url) : null;
+
+  const searchParams = new URLSearchParams(location.search);
+  const isFromMyCourses =
+    searchParams.get('from') === 'mycourses' ||
+    Boolean(alreadyEnrolled && user?.role === 'student');
+
+  const enrolledLectures = useMemo(() => {
+    return (learningModules.length > 0 ? learningModules : course?.modules || []).flatMap(
+      (m) => (m.lectures || []).map((l) => ({ ...l, moduleId: m.id }))
+    );
+  }, [learningModules, course?.modules]);
+
+  const totalEnrolledLectures = enrolledLectures.length || allLectures.length || 0;
+  const completedLecturesCount = enrolledLectures.filter((l) =>
+    Boolean(l.completed || l.completed_at)
+  ).length;
+  const enrolledProgressPercent =
+    totalEnrolledLectures > 0
+      ? Math.round((completedLecturesCount / totalEnrolledLectures) * 100)
+      : 0;
+
+  const resumeLecture = useMemo(() => {
+    if (!enrolledLectures.length) return null;
+    return (
+      enrolledLectures.find((l) => !l.completed && !l.completed_at) ||
+      enrolledLectures[0]
+    );
+  }, [enrolledLectures]);
+
+  const toggleModule = (moduleKey) => {
+    setCollapsedModules((current) => ({
+      ...current,
+      [moduleKey]: !current[moduleKey],
+    }));
+  };
+
+  const currentModulesList = useMemo(() => {
+    return learningModules.length > 0 ? learningModules : course?.modules || [];
+  }, [learningModules, course?.modules]);
+
+  const allCollapsed = useMemo(() => {
+    if (!currentModulesList.length) return false;
+    return currentModulesList.every((mod, idx) =>
+      Boolean(collapsedModules[mod.id || `module-${idx}`])
+    );
+  }, [currentModulesList, collapsedModules]);
+
+  const toggleAllModules = () => {
+    const nextState = !allCollapsed;
+    const updated = {};
+    currentModulesList.forEach((mod, idx) => {
+      updated[mod.id || `module-${idx}`] = nextState;
+    });
+    setCollapsedModules(updated);
+  };
 
   function handleEnroll() {
     const token = localStorage.getItem('token');
@@ -301,6 +383,73 @@ export default function CourseDetail() {
   const deliveryMode = course?.delivery_mode || 'online';
   const deliveryLabel =
     deliveryMode === 'offline' ? 'Offline' : deliveryMode === 'hybrid' ? 'Hybrid' : 'Online';
+  const isLocationBasedCourse = deliveryMode === 'offline' || deliveryMode === 'hybrid';
+
+  useEffect(() => {
+    if (!isLocationBasedCourse) return undefined;
+
+    const computeDistance = (lat, lng) => {
+      const instructorLatitude = Number(course?.instructor_latitude);
+      const instructorLongitude = Number(course?.instructor_longitude);
+
+      if (
+        !Number.isFinite(instructorLatitude) ||
+        !Number.isFinite(instructorLongitude)
+      ) {
+        return;
+      }
+
+      const earthRadiusKm = 6371;
+      const toRadians = (value) => (value * Math.PI) / 180;
+      const latitudeDelta = toRadians(instructorLatitude - lat);
+      const longitudeDelta = toRadians(instructorLongitude - lng);
+      const latitudeOne = toRadians(lat);
+      const latitudeTwo = toRadians(instructorLatitude);
+      const haversine =
+        Math.sin(latitudeDelta / 2) ** 2 +
+        Math.cos(latitudeOne) *
+          Math.cos(latitudeTwo) *
+          Math.sin(longitudeDelta / 2) ** 2;
+      const distance = 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine));
+
+      setDistanceKm(distance);
+    };
+
+    const saved = getSavedVisitorLocation();
+    if (saved) {
+      computeDistance(saved.latitude, saved.longitude);
+      return undefined;
+    }
+
+    // Only query browser geolocation if permission was ALREADY granted (never prompt unprompted)
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((permissionStatus) => {
+          if (permissionStatus.state === 'granted' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              ({ coords }) => {
+                saveVisitorLocation({ latitude: coords.latitude, longitude: coords.longitude });
+                computeDistance(coords.latitude, coords.longitude);
+              },
+              () => {},
+              {
+                enableHighAccuracy: false,
+                timeout: 5000,
+                maximumAge: 300000,
+              }
+            );
+          }
+        })
+        .catch(() => {});
+    }
+
+    return undefined;
+  }, [
+    course?.instructor_latitude,
+    course?.instructor_longitude,
+    isLocationBasedCourse,
+  ]);
 
   // Parse learning outcomes from course.outcomes or provide a structured checklist fallback
   let outcomesList = [];
@@ -322,7 +471,7 @@ export default function CourseDetail() {
   if (loading) {
     return (
       <div className="course-detail-page">
-        <StudentNav user={user} activeLink="explore" />
+        <StudentNav user={user} activeLink={isFromMyCourses ? 'mycourses' : 'explore'} />
         <main className="course-detail-main">
           <p className="course-detail-status">Loading course details...</p>
         </main>
@@ -334,7 +483,7 @@ export default function CourseDetail() {
   if (notFound || !course) {
     return (
       <div className="course-detail-page">
-        <StudentNav user={user} activeLink="explore" />
+        <StudentNav user={user} activeLink={isFromMyCourses ? 'mycourses' : 'explore'} />
         <main className="course-detail-main">
           <p className="course-detail-status">Course not found.</p>
         </main>
@@ -345,38 +494,48 @@ export default function CourseDetail() {
 
   return (
     <div className="course-detail-page">
-      <StudentNav user={user} activeLink="explore" />
+      <StudentNav user={user} activeLink={isFromMyCourses ? 'mycourses' : 'explore'} />
 
       <main className="course-detail-main">
         {/* Breadcrumb Path */}
         <nav className="course-detail-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
-          <span className="breadcrumb-separator">›</span>
-          <Link to="/student-landing#explore-courses">Explore</Link>
-          {course.category_path && (
+          {isFromMyCourses ? (
             <>
+              <Link to="/mycourse">My Courses</Link>
               <span className="breadcrumb-separator">›</span>
-              <Link
-                to={
-                  course.category_id
-                    ? `/student-landing?category_id=${course.category_id}#explore-courses`
-                    : '/student-landing#explore-courses'
-                }
-                className="breadcrumb-category-link"
-              >
-                {course.category_path}
-              </Link>
+              <span className="breadcrumb-active">{course.title}</span>
+            </>
+          ) : (
+            <>
+              <Link to="/">Home</Link>
+              <span className="breadcrumb-separator">›</span>
+              <Link to="/student-landing#explore-courses">Explore</Link>
+              {course.category_path && (
+                <>
+                  <span className="breadcrumb-separator">›</span>
+                  <Link
+                    to={
+                      course.category_id
+                        ? `/student-landing?category_id=${course.category_id}#explore-courses`
+                        : '/student-landing#explore-courses'
+                    }
+                    className="breadcrumb-category-link"
+                  >
+                    {course.category_path}
+                  </Link>
+                </>
+              )}
+              <span className="breadcrumb-separator">›</span>
+              <span className="breadcrumb-active">{course.title}</span>
             </>
           )}
-          <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-active">{course.title}</span>
         </nav>
 
         {/* Hero Section */}
         <section className="course-detail-hero">
           <div className="course-detail-hero-tags">
             <span className={`course-badge-mode is-${deliveryMode}`}>
-              {deliveryMode === 'offline' ? '🏢' : deliveryMode === 'hybrid' ? '🔄' : '🌐'} {deliveryLabel}
+              {deliveryLabel}
             </span>
             {course.level && (
               <span className="course-badge-level">
@@ -384,7 +543,15 @@ export default function CourseDetail() {
               </span>
             )}
             {course.language && (
-              <span className="course-badge-language">🗣 {course.language}</span>
+              <span className="course-badge-language">{course.language}</span>
+            )}
+            {isLocationBasedCourse && distanceKm !== null && (
+              <span className="course-distance-badge">
+                <span className="course-distance-label">From you</span>
+                <strong>
+                  {distanceKm < 1 ? 'Less than 1 km' : `${distanceKm.toFixed(1)} km`}
+                </strong>
+              </span>
             )}
           </div>
 
@@ -413,24 +580,26 @@ export default function CourseDetail() {
               </span>
               <span className="hero-verified-pill">✓ Verified</span>
               {course.instructor_city && (
-                <span className="hero-instructor-city">📍 {course.instructor_city}</span>
+                <span className="hero-instructor-location">
+                  <span className="location-label">Based in</span>
+                  <strong>{course.instructor_city}</strong>
+                </span>
               )}
               {isFromPreviousCourse ? (
                 <span className="hero-instructor-rating hero-rating-previous">
-                  ⭐ {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'} • from previous course)
+                  Rating {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'} from previous course)
                 </span>
               ) : hasDirectReviews ? (
                 <span className="hero-instructor-rating">
-                  ⭐ {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'})
+                  Rating {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'})
                 </span>
               ) : hasInstructorReviews ? (
                 <span className="hero-instructor-rating hero-rating-instructor">
-                  ⭐ {Number(course.instructor_avg_rating).toFixed(1)} Instructor Rating ({course.instructor_total_reviews} reviews)
+                  Instructor rating {Number(course.instructor_avg_rating).toFixed(1)} ({course.instructor_total_reviews} reviews)
                 </span>
               ) : (
                 <span className="hero-fresh-trust-badge">
-                  <span className="hero-new-pill">✨ New Course</span>
-                  <span className="hero-mentor-tag">Verified New Mentor</span>
+                  <span className="hero-new-pill">New Course</span>
                 </span>
               )}
             </div>
@@ -450,7 +619,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'about' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('about')}
               >
-                About Course
+                About
               </button>
 
               <button
@@ -460,7 +629,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'instructor' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('instructor')}
               >
-                About Instructor
+                Instructor
               </button>
 
               <button
@@ -470,8 +639,7 @@ export default function CourseDetail() {
                 className={`course-detail-nav-tab ${activeTab === 'classroom' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('classroom')}
               >
-                Classroom (Trial)
-                {allLectures.length > 0 && <span className="tab-pill-badge">Free Preview</span>}
+                Classroom
               </button>
             </nav>
 
@@ -504,7 +672,7 @@ export default function CourseDetail() {
                   <h2 className="panel-heading">Course Specifications</h2>
                   <div className="course-specs-grid">
                     <div className="spec-card">
-                      <span className="spec-icon">⏱</span>
+                      <span className="spec-icon" aria-hidden="true">01</span>
                       <div className="spec-info">
                         <span className="spec-label">Duration</span>
                         <strong className="spec-value">
@@ -514,7 +682,7 @@ export default function CourseDetail() {
                     </div>
 
                     <div className="spec-card">
-                      <span className="spec-icon">👥</span>
+                      <span className="spec-icon" aria-hidden="true">02</span>
                       <div className="spec-info">
                         <span className="spec-label">Batch Size</span>
                         <strong className="spec-value">
@@ -524,7 +692,7 @@ export default function CourseDetail() {
                     </div>
 
                     <div className="spec-card">
-                      <span className="spec-icon">🌐</span>
+                      <span className="spec-icon" aria-hidden="true">03</span>
                       <div className="spec-info">
                         <span className="spec-label">Delivery Mode</span>
                         <strong className="spec-value">{deliveryLabel}</strong>
@@ -532,7 +700,7 @@ export default function CourseDetail() {
                     </div>
 
                     <div className="spec-card">
-                      <span className="spec-icon">🎓</span>
+                      <span className="spec-icon" aria-hidden="true">04</span>
                       <div className="spec-info">
                         <span className="spec-label">Level</span>
                         <strong className="spec-value">
@@ -549,18 +717,18 @@ export default function CourseDetail() {
                     <h2 className="panel-heading">Student Reviews & Ratings</h2>
                     <span className="panel-rating-badge">
                       {isFromPreviousCourse
-                        ? `⭐ ${avgRating} / 5.0 (from previous course)`
+                        ? `Rating ${avgRating} / 5.0 (from previous course)`
                         : avgRating
-                        ? `⭐ ${avgRating} / 5.0`
+                        ? `Rating ${avgRating} / 5.0`
                         : hasInstructorReviews
-                        ? `⭐ ${Number(course.instructor_avg_rating).toFixed(1)} / 5.0 (Instructor Rating)`
-                        : '✨ Fresh Launch'}
+                        ? `Instructor rating ${Number(course.instructor_avg_rating).toFixed(1)} / 5.0`
+                        : 'Fresh Launch'}
                     </span>
                   </div>
 
                   {reviews.length === 0 ? (
                     <div className="course-detail-new-course-invite-card">
-                      <div className="new-course-invite-icon">✨</div>
+                      <div className="new-course-invite-icon" aria-hidden="true">NEW</div>
                       <div className="new-course-invite-content">
                         <h3 className="new-course-invite-title">Be the First Student to Review!</h3>
                         <p className="new-course-invite-desc">
@@ -576,7 +744,7 @@ export default function CourseDetail() {
                               document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
                             }}
                           >
-                            🎓 Watch Free Trial Class →
+                            Watch Free Trial Class →
                           </button>
                           <button
                             type="button"
@@ -586,7 +754,7 @@ export default function CourseDetail() {
                               document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
                             }}
                           >
-                            👨‍🏫 View Instructor Background →
+                            View Instructor Background →
                           </button>
                         </div>
                       </div>
@@ -595,7 +763,7 @@ export default function CourseDetail() {
                     <>
                       {isFromPreviousCourse && (
                         <div className="previous-course-reviews-banner">
-                          <span className="prev-banner-icon">ℹ️</span>
+                          <span className="prev-banner-icon" aria-hidden="true">i</span>
                           <span className="prev-banner-text">
                             Showing verified student reviews from previous course edition ({reviews[0]?.previous_course_title || 'parent course'}).
                           </span>
@@ -614,7 +782,7 @@ export default function CourseDetail() {
                                 )}
                               </div>
                               <span className="course-detail-review-rating">
-                                {'⭐'.repeat(review.rating)}
+                                {review.rating}/5
                               </span>
                             </div>
                             {review.comment && (
@@ -728,7 +896,9 @@ export default function CourseDetail() {
                         Educator & Specialist at LevelUp
                       </p>
                       {course.instructor_city && (
-                        <p className="instructor-profile-city">📍 {course.instructor_city}, India</p>
+                        <p className="instructor-profile-city">
+                          <span>Based in</span> <strong>{course.instructor_city}, India</strong>
+                        </p>
                       )}
                     </div>
                   </div>
@@ -737,12 +907,12 @@ export default function CourseDetail() {
                     <div className="ribbon-item">
                       <span className="ribbon-num">
                         {isFromPreviousCourse
-                          ? `⭐ ${avgRating}`
+                          ? `Rating ${avgRating}`
                           : avgRating
-                          ? `⭐ ${avgRating}`
+                          ? `Rating ${avgRating}`
                           : hasInstructorReviews
-                          ? `⭐ ${Number(course.instructor_avg_rating).toFixed(1)}`
-                          : '✨ New'}
+                          ? `Rating ${Number(course.instructor_avg_rating).toFixed(1)}`
+                          : 'New'}
                       </span>
                       <span className="ribbon-label">
                         {isFreshLaunch ? 'Fresh Mentor' : 'Rating'}
@@ -803,8 +973,8 @@ export default function CourseDetail() {
                             <p className="course-detail-session-desc">{session.description}</p>
                           )}
                           <p className="course-detail-session-when">
-                            📅 {new Date(session.scheduled_at).toLocaleString()}
-                            {session.location ? ` · 📍 ${session.location}` : ''}
+                            {new Date(session.scheduled_at).toLocaleString()}
+                            {session.location ? ` · ${session.location}` : ''}
                           </p>
                         </div>
                       ))}
@@ -814,76 +984,285 @@ export default function CourseDetail() {
               </div>
             )}
 
-            {/* TAB 3: CLASSROOM (FREE TRIAL CLASSES) */}
+            {/* TAB 3: CLASSROOM */}
             {activeTab === 'classroom' && (
               <div className="course-detail-tab-pane">
-                <div className="course-detail-card-panel classroom-trial-panel">
-                  <div className="classroom-trial-header">
-                    <span className="classroom-trial-tag">🎓 FREE TRIAL CLASSROOM</span>
-                    <h2 className="panel-heading">Attend a Sample Class Before Enrolling</h2>
-                    <p className="classroom-trial-desc">
-                      Experience the instructor&apos;s teaching style with zero commitment. Click any free preview lecture below to watch.
-                    </p>
-                  </div>
-
-                  {/* Embedded Trial Player */}
-                  <div className="classroom-video-player-container">
-                    {trialVideoPreview?.type === 'youtube' ? (
-                      <iframe
-                        className="classroom-trial-iframe"
-                        src={trialVideoPreview.src}
-                        title={currentTrialLecture?.title || 'Trial Class Preview'}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : trialVideoPreview?.type === 'video' ? (
-                      <video
-                        className="classroom-trial-video"
-                        src={trialVideoPreview.src}
-                        controls
-                        poster={course.thumbnail_url || undefined}
+                {alreadyEnrolled ? (
+                  <div className={`course-detail-card-panel classroom-enrolled-panel ${isHeroMinimized ? 'is-minimized' : ''}`}>
+                    <div className="classroom-enrolled-top-bar">
+                      <span className="classroom-enrolled-tag">ACTIVE CLASSROOM</span>
+                      <button
+                        type="button"
+                        className="classroom-panel-minimize-btn"
+                        onClick={() => setIsHeroMinimized(!isHeroMinimized)}
+                        aria-label={isHeroMinimized ? 'Expand classroom banner' : 'Minimize classroom banner'}
+                        title={isHeroMinimized ? 'Expand banner' : 'Minimize banner'}
                       >
-                        Your browser does not support the video tag.
-                      </video>
+                        <span aria-hidden="true">{isHeroMinimized ? '+' : '−'}</span>
+                        <span className="minimize-btn-label">{isHeroMinimized ? 'Expand' : 'Minimize'}</span>
+                      </button>
+                    </div>
+
+                    {!isHeroMinimized ? (
+                      <>
+                        <div className="classroom-enrolled-header">
+                          <div className="enrolled-header-text">
+                            <h2 className="panel-heading">
+                              {enrolledProgressPercent >= 100
+                                ? 'Course completed'
+                                : resumeLecture
+                                ? `Next Lecture: ${resumeLecture.title}`
+                                : 'Welcome to your classroom'}
+                            </h2>
+                            <p className="classroom-enrolled-desc">
+                              {enrolledProgressPercent >= 100
+                                ? 'Congratulations on completing this course! You can revisit any lecture anytime.'
+                                : 'Pick up right where you left off or jump into any lecture from the curriculum below.'}
+                            </p>
+                          </div>
+
+                          <div className="enrolled-header-actions">
+                            <button
+                              type="button"
+                              className="classroom-enrolled-launch-btn"
+                              onClick={() => {
+                                const target = resumeLecture?.id
+                                  ? `/courses/${id}/learn?lectureId=${resumeLecture.id}`
+                                  : `/courses/${id}/learn`;
+                                navigate(target);
+                              }}
+                            >
+                              <span className="btn-play-icon" aria-hidden="true">▶</span>
+                              {enrolledProgressPercent > 0
+                                ? 'Resume in Classroom Player'
+                                : 'Start Course in Player'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="classroom-enrolled-metrics-bar">
+                          <div className="enrolled-metric-item">
+                            <span className="metric-val">{enrolledProgressPercent}%</span>
+                            <span className="metric-lbl">Course Progress</span>
+                          </div>
+                          <div className="enrolled-metric-divider" />
+                          <div className="enrolled-metric-item">
+                            <span className="metric-val">
+                              {completedLecturesCount} / {totalEnrolledLectures}
+                            </span>
+                            <span className="metric-lbl">Lectures Finished</span>
+                          </div>
+                          <div className="enrolled-metric-divider" />
+                          <div className="enrolled-metric-item">
+                            <span className="metric-val">
+                              {currentModulesList.length}
+                            </span>
+                            <span className="metric-lbl">Curriculum Modules</span>
+                          </div>
+                        </div>
+                      </>
                     ) : (
-                      <div className="classroom-no-video-placeholder">
-                        <span className="placeholder-icon">▶</span>
-                        <p>Preview video currently being prepared for this lecture.</p>
+                      <div className="classroom-enrolled-compact-bar">
+                        <div className="compact-bar-info">
+                          <strong className="compact-bar-progress">{enrolledProgressPercent}% Completed</strong>
+                          <span className="compact-bar-sub">
+                            ({completedLecturesCount} of {totalEnrolledLectures} lectures finished)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="classroom-enrolled-launch-btn is-compact"
+                          onClick={() => {
+                            const target = resumeLecture?.id
+                              ? `/courses/${id}/learn?lectureId=${resumeLecture.id}`
+                              : `/courses/${id}/learn`;
+                            navigate(target);
+                          }}
+                        >
+                          <span className="btn-play-icon" aria-hidden="true">▶</span>
+                          Resume Player
+                        </button>
                       </div>
                     )}
+                  </div>
+                ) : (
+                  <div className="course-detail-card-panel classroom-trial-panel">
+                    <div className="classroom-trial-header">
+                      <span className="classroom-trial-tag">FREE TRIAL CLASSROOM</span>
+                      <h2 className="panel-heading">Attend a Sample Class Before Enrolling</h2>
+                      <p className="classroom-trial-desc">
+                        Experience the instructor&apos;s teaching style with zero commitment. Click any free preview lecture below to watch.
+                      </p>
+                    </div>
 
-                    <div className="classroom-player-info-bar">
-                      <span className="now-playing-badge">
-                        {currentTrialLecture?.is_trial ? '🎓 Free Trial Class:' : 'Now Playing Sample:'}
-                      </span>
-                      <strong className="now-playing-title">
-                        {currentTrialLecture?.title || 'Introductory Lecture'}
-                      </strong>
+                    {/* Embedded Trial Player */}
+                    <div className="classroom-video-player-container">
+                      {trialVideoPreview?.type === 'youtube' ? (
+                        <iframe
+                          className="classroom-trial-iframe"
+                          src={trialVideoPreview.src}
+                          title={currentTrialLecture?.title || 'Trial Class Preview'}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : trialVideoPreview?.type === 'video' ? (
+                        <video
+                          className="classroom-trial-video"
+                          src={trialVideoPreview.src}
+                          controls
+                          poster={course.thumbnail_url || undefined}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <div className="classroom-no-video-placeholder">
+                          <span className="placeholder-icon">▶</span>
+                          <p>Preview video currently being prepared for this lecture.</p>
+                        </div>
+                      )}
+
+                      <div className="classroom-player-info-bar">
+                        <span className="now-playing-badge">
+                          {currentTrialLecture?.is_trial ? 'Free Trial Class:' : 'Now Playing Sample:'}
+                        </span>
+                        <strong className="now-playing-title">
+                          {currentTrialLecture?.title || 'Introductory Lecture'}
+                        </strong>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Curriculum & Trial Lectures List */}
+                {/* Curriculum List */}
                 <div className="course-detail-card-panel">
-                  <h2 className="panel-heading">Curriculum & Free Trial Lectures</h2>
+                  <div className="classroom-curriculum-header-bar">
+                    <h2 className="panel-heading">
+                      {alreadyEnrolled ? 'Curriculum & Course Syllabus' : 'Curriculum & Free Trial Lectures'}
+                    </h2>
+                    {currentModulesList.length > 0 && (
+                      <button
+                        type="button"
+                        className="classroom-toggle-all-btn"
+                        onClick={toggleAllModules}
+                      >
+                        <span aria-hidden="true">{allCollapsed ? '+' : '−'}</span>
+                        <span>{allCollapsed ? 'Expand all modules' : 'Collapse all modules'}</span>
+                      </button>
+                    )}
+                  </div>
 
                   {(!course.modules || course.modules.length === 0) ? (
                     <p className="course-detail-empty">No curriculum modules uploaded yet.</p>
                   ) : (
                     <div className="classroom-curriculum-list">
-                      {course.modules.map((mod, modIdx) => (
-                        <div key={mod.id || modIdx} className="classroom-module-block">
-                          <div className="classroom-module-header">
+                      {(learningModules.length > 0 ? learningModules : course.modules).map((mod, modIdx) => {
+                        const moduleKey = mod.id || `module-${modIdx}`;
+                        const isModuleCollapsed = Boolean(collapsedModules[moduleKey]);
+
+                        return (
+                        <div key={moduleKey} className={`classroom-module-block ${isModuleCollapsed ? 'is-collapsed' : ''}`}>
+                          <div
+                            className="classroom-module-header"
+                            onClick={() => toggleModule(moduleKey)}
+                            role="button"
+                            tabIndex={0}
+                            aria-expanded={!isModuleCollapsed}
+                            aria-controls={`module-content-${moduleKey}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleModule(moduleKey);
+                              }
+                            }}
+                          >
                             <h3 className="classroom-module-title">
-                              Module {modIdx + 1}: {mod.title}
+                              Module {modIdx + 1}: {String(mod.title || '').replace(/^Module\s+\d+\s*:\s*/i, '')}
                             </h3>
-                            <span className="classroom-module-count">
-                              {mod.lectures?.length || 0} Lecture{mod.lectures?.length === 1 ? '' : 's'}
-                            </span>
+                            <div className="classroom-module-header-actions">
+                              <span className="classroom-module-count">
+                                {mod.lectures?.length || 0} Lecture{mod.lectures?.length === 1 ? '' : 's'}
+                              </span>
+                              <button
+                                type="button"
+                                className="classroom-module-toggle"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleModule(moduleKey);
+                                }}
+                                aria-expanded={!isModuleCollapsed}
+                                aria-label={`${isModuleCollapsed ? 'Expand' : 'Collapse'} module ${modIdx + 1}`}
+                              >
+                                <span aria-hidden="true">{isModuleCollapsed ? '+' : '−'}</span>
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="classroom-lectures-group">
+                          <div id={`module-content-${moduleKey}`} className="classroom-lectures-group">
                             {(mod.lectures || []).map((lec, lecIdx) => {
+                              if (alreadyEnrolled) {
+                                const isCompleted = Boolean(lec.completed || lec.completed_at);
+                                const isResume = !isCompleted && resumeLecture?.id === lec.id;
+
+                                return (
+                                  <div
+                                    key={lec.id || lecIdx}
+                                    className={`classroom-lecture-row is-enrolled-row ${isResume ? 'is-resume-row' : ''} ${isCompleted ? 'is-completed-row' : ''}`}
+                                    onClick={() => navigate(`/courses/${id}/learn?lectureId=${lec.id}`)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        navigate(`/courses/${id}/learn?lectureId=${lec.id}`);
+                                      }
+                                    }}
+                                  >
+                                    <div className="lecture-row-left">
+                                      <span
+                                        className={`lecture-icon ${
+                                          isCompleted
+                                            ? 'lecture-icon--completed'
+                                            : isResume
+                                            ? 'lecture-icon--resume'
+                                            : 'lecture-icon--standard'
+                                        }`}
+                                      >
+                                        {isCompleted ? '✓' : isResume ? '▶' : '•'}
+                                      </span>
+                                      <div className="lecture-title-col">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                          <span className="lecture-row-title">{lec.title}</span>
+                                          {isCompleted && (
+                                            <span className="classroom-lecture-tag is-completed">✓ Completed</span>
+                                          )}
+                                          {isResume && (
+                                            <span className="classroom-lecture-tag is-resume">▶ Up Next</span>
+                                          )}
+                                        </div>
+                                        {(lec.duration_minutes || lec.duration_seconds) && (
+                                          <span className="lecture-duration">
+                                            {lec.duration_minutes || 0}m {lec.duration_seconds ? `${lec.duration_seconds}s` : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="lecture-row-right">
+                                      <button
+                                        type="button"
+                                        className={`lecture-enrolled-play-btn ${isResume ? 'is-resume-btn' : ''}`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/courses/${id}/learn?lectureId=${lec.id}`);
+                                        }}
+                                      >
+                                        {isCompleted ? 'Rewatch' : isResume ? 'Resume' : 'Play'} →
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              }
+
                               // If instructor marked any lectures as trial, unlock those; otherwise default to module 1, lecture 1
                               const isFreeTrial = Boolean(lec.is_trial) || (!hasExplicitTrials && modIdx === 0 && lecIdx === 0);
                               const isSelected = currentTrialLecture?.id === lec.id;
@@ -895,7 +1274,7 @@ export default function CourseDetail() {
                                 >
                                   <div className="lecture-row-left">
                                     <span className="lecture-icon">
-                                      {isFreeTrial ? '▶' : '🔒'}
+                                      {isFreeTrial ? 'PLAY' : 'LOCKED'}
                                     </span>
                                     <div className="lecture-title-col">
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -919,14 +1298,14 @@ export default function CourseDetail() {
                                         className={`lecture-trial-play-btn ${isSelected ? 'is-active' : ''}`}
                                         onClick={() => setSelectedTrialLecture(lec)}
                                       >
-                                        {isSelected ? '✓ Watching' : '▶ Free Preview'}
+                                        {isSelected ? 'Watching' : 'Watch Preview'}
                                       </button>
                                     ) : (
                                       <span
                                         className="lecture-locked-tag"
                                         title="Enroll in this course to unlock all lectures"
                                       >
-                                        🔒 Enrolled Only
+                                        Enrolled Only
                                       </span>
                                     )}
                                   </div>
@@ -935,7 +1314,8 @@ export default function CourseDetail() {
                             })}
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -960,43 +1340,81 @@ export default function CourseDetail() {
                 </span>
               </div>
 
-              {/* Price & Guarantee */}
+              {/* Price & Guarantee (or Enrolled Progress Status) */}
               <div className="sticky-card-body">
-                <div className="sticky-price-row">
-                  <div className="sticky-price-main">
-                    <span className="sticky-currency">₹</span>
-                    <span className="sticky-amount">{course.price}</span>
-                  </div>
-                  {Number(course.price) > 0 && (
-                    <span className="sticky-discount-pill">Limited Offer</span>
-                  )}
-                </div>
+                {alreadyEnrolled ? (
+                  <div className="sticky-enrolled-status-card">
+                    <div className="sticky-enrolled-heading">
+                      <span className="sticky-card-kicker">YOUR LEARNING PLAN</span>
+                      <span className="sticky-enrolled-heading-copy">
+                        Keep building your momentum
+                      </span>
+                    </div>
+                    <div className="sticky-enrolled-badge-row">
+                      <span className="sticky-enrolled-status-pill">
+                        <span className="enrolled-check-icon" aria-hidden="true">✓</span>
+                        Enrolled
+                      </span>
+                      <strong className="sticky-enrolled-percent">{enrolledProgressPercent}%</strong>
+                    </div>
 
-                <div className="sticky-trial-guarantee">
-                  <span className="guarantee-icon">🛡</span>
-                  <div className="sticky-guarantee-info">
-                    <strong className="sticky-guarantee-title">100% Free Trial Lectures Included</strong>
-                    {isFreshLaunch ? (
-                      <span className="sticky-guarantee-sub">
-                        Instructor is newly onboarded to LevelUp.{' '}
-                        <button
-                          type="button"
-                          className="sticky-faculty-link"
-                          onClick={() => {
-                            setActiveTab('instructor');
-                            document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                        >
-                          Check Faculty Profile →
-                        </button>
-                      </span>
-                    ) : (
-                      <span className="sticky-guarantee-sub">
-                        Watch trial previews with zero financial risk
-                      </span>
-                    )}
+                    <div
+                      className="sticky-enrolled-track"
+                      role="progressbar"
+                      aria-valuenow={enrolledProgressPercent}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      <div
+                        className="sticky-enrolled-fill"
+                        style={{ width: `${enrolledProgressPercent}%` }}
+                      />
+                    </div>
+
+                    <p className="sticky-enrolled-counter">
+                      {completedLecturesCount} of {totalEnrolledLectures} lectures completed
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <span className="sticky-card-kicker">COURSE ACCESS</span>
+                    <div className="sticky-price-row">
+                      <div className="sticky-price-main">
+                        <span className="sticky-currency">₹</span>
+                        <span className="sticky-amount">{course.price}</span>
+                      </div>
+                      {Number(course.price) > 0 && (
+                        <span className="sticky-discount-pill">Limited Offer</span>
+                      )}
+                    </div>
+
+                    <div className="sticky-trial-guarantee">
+                      <span className="guarantee-icon" aria-hidden="true">SAFE</span>
+                      <div className="sticky-guarantee-info">
+                        <strong className="sticky-guarantee-title">100% Free Trial Lectures Included</strong>
+                        {isFreshLaunch ? (
+                          <span className="sticky-guarantee-sub">
+                            Instructor is newly onboarded to LevelUp.{' '}
+                            <button
+                              type="button"
+                              className="sticky-faculty-link"
+                              onClick={() => {
+                                setActiveTab('instructor');
+                                document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
+                              }}
+                            >
+                              Check Faculty Profile →
+                            </button>
+                          </span>
+                        ) : (
+                          <span className="sticky-guarantee-sub">
+                            Watch trial previews with zero financial risk
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Primary CTA Button */}
                 <div className="sticky-cta-wrap">
@@ -1005,16 +1423,34 @@ export default function CourseDetail() {
                     className={`sticky-cta-btn ${alreadyEnrolled ? 'is-enrolled' : ''}`}
                     onClick={() => {
                       if (alreadyEnrolled) {
-                        navigate(`/courses/${id}/learn`);
+                        const target = resumeLecture?.id
+                          ? `/courses/${id}/learn?lectureId=${resumeLecture.id}`
+                          : `/courses/${id}/learn`;
+                        navigate(target);
                         return;
                       }
                       handleEnroll();
                     }}
                     disabled={enrolling}
                   >
-                    {alreadyEnrolled ? 'Enrolled ✓ → Go to Classroom' : enrolling ? 'Enrolling...' : '⚡ Enroll Now'}
+                    {alreadyEnrolled ? (
+                      enrolledProgressPercent >= 100
+                        ? 'Review in Classroom →'
+                        : 'Continue Learning in Classroom →'
+                    ) : enrolling ? (
+                      'Enrolling...'
+                    ) : (
+                      'Enroll Now'
+                    )}
                   </button>
                   {enrollError && <p className="sticky-enroll-error">{enrollError}</p>}
+                  {!enrollError && (
+                    <p className="sticky-cta-note">
+                      {alreadyEnrolled
+                        ? 'Your next lesson opens directly in the classroom.'
+                        : 'Start with the included trial lectures before enrolling.'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Course Inclusions List */}
@@ -1022,23 +1458,23 @@ export default function CourseDetail() {
                   <p className="inclusions-title">This course includes:</p>
                   <ul className="inclusions-items">
                     <li>
-                      <span className="inc-icon">📹</span>
+                      <span className="inc-icon" aria-hidden="true">01</span>
                       <span>{allLectures.length || 1} On-Demand Video Lectures</span>
                     </li>
                     <li>
-                      <span className="inc-icon">📚</span>
+                      <span className="inc-icon" aria-hidden="true">02</span>
                       <span>{course.modules?.length || 1} Comprehensive Modules</span>
                     </li>
                     <li>
-                      <span className="inc-icon">🤝</span>
+                      <span className="inc-icon" aria-hidden="true">03</span>
                       <span>Scheduled Instructor Doubt Sessions</span>
                     </li>
                     <li>
-                      <span className="inc-icon">♾️</span>
+                      <span className="inc-icon" aria-hidden="true">04</span>
                       <span>Full Lifetime Learning Access</span>
                     </li>
                     <li>
-                      <span className="inc-icon">🎓</span>
+                      <span className="inc-icon" aria-hidden="true">05</span>
                       <span>Certificate of Completion</span>
                     </li>
                   </ul>

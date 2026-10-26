@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
+import CourseCard from '../components/CourseCard';
 import { API_BASE } from '../api';
 import './MyCourses.css';
 
@@ -65,10 +66,6 @@ export default function MyCourses() {
       .catch(() => setCourses([])) // if the request fails, just show the empty state
       .finally(() => setLoading(false));
   }, [user]);
-
-  const openCourse = (courseId) => {
-    navigate(`/courses/${courseId}/learn`);
-  };
 
   if (!user) return null;
 
@@ -114,38 +111,16 @@ export default function MyCourses() {
         {!loading && courses.length > 0 && (
           <div className="mycourses-grid">
             {courses.map((course) => (
-              <div
+              <CourseCard
                 key={course.course_id}
-                className="mycourses-card"
-                onClick={() => openCourse(course.course_id)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    openCourse(course.course_id);
-                  }
-                }}
-                role="button"
-                tabIndex="0"
-              >
-                <div className="mycourses-card-badge">
-                  {course.title.charAt(0).toUpperCase()}
-                </div>
-
-                <div className="mycourses-card-body">
-                  <div className="mycourses-card-topline">
-                    <span className="mycourses-card-label">ENROLLED</span>
-                    <span className="mycourses-card-arrow" aria-hidden="true">↗</span>
-                  </div>
-                  <h2 className="mycourses-card-title">{course.title}</h2>
-                  <p className="mycourses-card-instructor">by {course.instructor_name}</p>
-                  <div className="mycourses-card-footer">
-                    <p className="mycourses-card-price">₹{course.price}</p>
-                    <span className="mycourses-card-action">
-                      Continue <span aria-hidden="true">→</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
+                course={{ ...course, id: course.course_id }}
+                enrolled
+                progressPercent={
+                  course.total_lectures > 0
+                    ? Math.round((course.completed_lectures / course.total_lectures) * 100)
+                    : 0
+                }
+              />
             ))}
           </div>
         )}

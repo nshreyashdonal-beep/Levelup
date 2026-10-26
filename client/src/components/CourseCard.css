@@ -1,0 +1,416 @@
+/* client/src/components/CourseCard.css
+ * Enterprise-grade course card (Udemy / Coursera reference style)
+ */
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 14px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease;
+  outline: none;
+  text-align: left;
+}
+
+.course-card:hover,
+.course-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: #a5b4fc;
+  box-shadow: 0 16px 32px rgba(99, 102, 241, 0.12);
+}
+
+.course-card:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+ * 1. Thumbnail Container (16:9 Banner) & Overlay Badge
+ * ============================================================ */
+.course-card-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f1f5f9;
+  margin-bottom: 14px;
+}
+
+.course-card-thumb-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  background: #4338ca;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  line-height: 1;
+  user-select: none;
+}
+
+.course-card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.course-card:hover .course-card-thumb-img {
+  transform: scale(1.04);
+}
+
+/* Fallback state when image is missing or broken */
+.course-card-thumb-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%);
+  color: #4338ca;
+  user-select: none;
+}
+
+.course-card-fallback-icon {
+  color: #4338ca;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.course-card-fallback-category {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #4f46e5;
+  padding: 2px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 9999px;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+ * 2. Card Body Content
+ * ============================================================ */
+.course-card-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Full Course Title - Completely visible, multi-line wrapping */
+.course-card-title {
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  font-size: 1.08rem;
+  font-weight: 650;
+  line-height: 1.34;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.025em;
+  word-break: break-word;
+}
+
+/* Dedicated Instructor Profile Row */
+.course-card-instructor {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 3px 6px;
+  margin-left: -6px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+  outline: none;
+}
+
+.course-card-instructor:hover,
+.course-card-instructor:focus-visible {
+  background-color: #f1f5f9;
+}
+
+.course-card-instructor-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e2e8f0;
+  border: 1.5px solid #cbd5e1;
+}
+
+.course-card-instructor-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.course-card-instructor-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4338ca;
+  background: #e0e7ff;
+}
+
+.course-card-instructor-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.course-card-instructor-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  transition: color 0.15s ease;
+}
+
+.course-card-instructor:hover .course-card-instructor-name {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.course-card-instructor-city {
+  padding-left: 7px;
+  border-left: 1px solid #d1d5db;
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ============================================================
+ * 3. Typographic Metadata Line (Level • Mode • Language)
+ * ============================================================ */
+.course-card-meta-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: #64748b;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.course-card-meta-item {
+  color: #6b7280;
+  font-weight: 650;
+}
+
+.course-card-meta-dot {
+  color: #cbd5e1;
+  font-weight: 700;
+  user-select: none;
+}
+
+/* ============================================================
+ * 4. Professional Star Rating Row
+ * ============================================================ */
+.course-card-rating-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+  line-height: 1.3;
+}
+
+.rating-score {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.rating-star {
+  color: #f59e0b;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.rating-meta {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.rating-fresh-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+/* ============================================================
+ * 5. Pinned Footer: Price & Enroll CTA
+ * ============================================================ */
+.course-card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.course-card-progress-footer {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.course-card-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.course-card-progress-heading strong {
+  color: #334155;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.course-card-progress-track {
+  width: 100%;
+  height: 7px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.course-card-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  transition: width 0.25s ease;
+}
+
+.course-card-progress-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 9px;
+  color: #4f46e5;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.course-card-progress-action span {
+  font-size: 0.95rem;
+}
+
+.course-card-price-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card-price {
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  font-size: 1.16rem;
+  font-weight: 750;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* Enroll CTA Button */
+.course-card-enroll-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #4f46e5;
+  border: 1.5px solid #6366f1;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.course-card-distance-pill {
+  display: inline-flex;
+  align-items: baseline;
+  align-self: flex-start;
+  gap: 7px;
+  margin: 0 0 13px;
+  padding: 6px 9px;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.course-card-distance-pill span {
+  color: #059669;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.course-card-distance-pill strong {
+  color: #065f46;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.course-card-enroll-btn:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  transform: translateY(-1px);
+}
+
+.course-card-enroll-btn:active {
+  transform: translateY(0);
+}
+
+.course-card-enroll-btn:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
