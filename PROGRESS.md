@@ -150,6 +150,7 @@ A **branch** is a stream of work (the main line, or a side quest that jumps the 
 | 10 | Branch10_UI_Improvements | Visual overhaul, design system polish, layout responsiveness, and UI modernizations across Branch 9 features | Completed |
 | 11 | ProfileManagement | User & Instructor Profile Management: edit name, email, avatar upload via Cloudinary, instructor bio/phone/city/coords, and password reset | Planning / In progress |
 | 12 | Deployment on Render | Cloud deployment: Render managed PostgreSQL (30-day free tier), Render Web Service backend, Render Static Site frontend with SPA rewrites, and Cloudinary asset persistence | In progress / Planned |
+| 13 | Schedule Doubt Session | Instructor & Student Doubt Sessions: schedule live online and offline doubt clearing sessions, manage agenda/time/links, and student countdown/join integration | In progress |
 
 ---
 
@@ -857,6 +858,34 @@ works, same rule PROGRESS.md uses.
 - [ ] Test instructor user flow on live site: Login, Course creation/edit, Lecture Studio video streaming, Cloudinary image upload
 - [ ] Test profile management on live site: Avatar photo upload, password change, location update
 - [ ] Document the live demo presentation script and cold-start pre-warming procedure for university evaluators
+
+### Branch 13 (Schedule Doubt Session)
+
+**Feature Goal:** Provide a complete doubt clearing and interactive session scheduling system: enable instructors to schedule, reschedule, and cancel online doubt sessions, in-person offline meetups, and mock tests for their courses, with direct meeting link/location support, and allow enrolled students to view upcoming schedules, countdown timers, and join sessions directly.
+
+#### Phase 1 - Backend Enhancements (Instructor Feed, Rescheduling & Cancellation)
+- [ ] Add `GET /api/sessions/instructor` endpoint in `server/routes/sessions.js` to fetch all sessions created by the authenticated instructor across all their courses
+- [ ] Add `DELETE /api/sessions/:id` endpoint with instructor ownership authorization to cancel scheduled sessions
+- [ ] Add `PATCH /api/sessions/:id` endpoint to allow instructors to edit session title, description, scheduled date/time, and meeting link/location
+- [ ] Verify sessions API routes via automated API testing script
+
+#### Phase 2 - Instructor Session Scheduling & Management UI
+- [ ] Add "Doubt Sessions" tab or navigation option in `client/src/pages/InstructorDashboard.jsx` and `client/src/pages/ManageCourseLayout.jsx`
+- [ ] Create `ScheduleSessionModal.jsx` (Course selector, Session Type: `doubt` / `offline` / `mock_test`, Date & Time picker, Location / Meeting URL, Topic Agenda)
+- [ ] Build Instructor Sessions management list displaying upcoming vs completed sessions with `[ Reschedule ]` and `[ Cancel ]` actions
+- [ ] Verify styling matches the LevelUp design tokens (emerald accent for instructor views)
+
+#### Phase 3 - Student View & Interactive Attendance
+- [ ] Enhance `CourseDetail.jsx` (Instructor & Classroom tabs) to display upcoming doubt sessions with live countdown badge
+- [ ] Display enrolled student's upcoming doubt sessions in `StudentDashboard.jsx`
+- [ ] Provide direct `[ 💻 Join Live Session ]` or `[ 📍 View Center Location ]` action buttons for enrolled students
+- [ ] Add calendar export or reminder action for prospective attendees
+
+#### Phase 4 - Production Build Verification & Documentation
+- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [ ] End-to-end testing: Instructor schedules session $\rightarrow$ Student views session on course details $\rightarrow$ Instructor reschedules/cancels
+- [ ] Update `PROGRESS.md` with Session logs
+
 
 
 ---
