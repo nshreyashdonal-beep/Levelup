@@ -86,7 +86,7 @@ export default function ProfileMenu({ user }) {
               className={`profile-menu-link profile-menu-edit ${isInstructor ? 'profile-menu-link--instructor' : ''}`}
               onClick={() => setOpen(false)}
             >
-              ✏️ Edit Profile
+              Edit Profile
             </Link>
           </div>
 
