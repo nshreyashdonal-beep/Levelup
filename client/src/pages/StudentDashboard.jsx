@@ -134,20 +134,29 @@ export default function StudentDashboard() {
             <div className="student-dash-sessions-grid">
               {enrolledSessions.map((session) => {
                 const countdown = getSessionCountdownBadge(session.scheduled_at);
+                const isSessionOnline =
+                  session.location &&
+                  (session.location.startsWith('http') ||
+                    session.location.includes('meet.google.com'));
                 const isOffline = session.session_type === 'offline';
                 const isMock = session.session_type === 'mock_test';
-                const isOnlineMode = session.delivery_mode === 'online';
 
                 return (
                   <article key={session.id} className="student-session-card">
                     <div className="student-session-card-header">
                       <div className="student-session-badges">
-                        <span className={`student-session-type type-${session.session_type}`}>
-                          {isOffline
+                        <span
+                          className={`student-session-type ${
+                            isSessionOnline ? 'type-online' : `type-${session.session_type}`
+                          }`}
+                        >
+                          {isSessionOnline
+                            ? 'Live Online Doubt'
+                            : isOffline
                             ? 'In-Person Meetup'
                             : isMock
                             ? 'Mock Test'
-                            : 'Doubt Session'}
+                            : 'In-Person Doubt'}
                         </span>
                         <span className={`student-countdown-pill timing-${countdown.variant}`}>
                           {countdown.label}
@@ -178,11 +187,11 @@ export default function StudentDashboard() {
 
                       <div className="session-detail-row">
                         <span className="detail-label">
-                          {isOnlineMode ? 'MEETING LINK' : 'VENUE / LAB'}
+                          {isSessionOnline ? 'MEETING LINK' : 'VENUE / LAB'}
                         </span>
                         <span className="detail-value">
                           {session.location ? (
-                            isOnlineMode && session.location.startsWith('http') ? (
+                            isSessionOnline ? (
                               <a
                                 href={session.location}
                                 target="_blank"

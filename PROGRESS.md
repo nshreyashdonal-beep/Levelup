@@ -3709,3 +3709,24 @@ client/src/pages/StudentDashboard.jsx & client/src/pages/StudentDashboard.css (i
 - Production build (`npm --prefix client run build`) succeeded with 0 errors in 439ms.
 - E2E automated test verified instructor session creation, course session queries, patch rescheduling, and session cancellation.
 - Active backend server running on port 3000 (connected to PostgreSQL) and frontend on port 5173.
+
+
+### Session 2 (Branch 13 (Schedule Doubt Session)) - Dual Hybrid Workflow: In-Person Center Meetups & Live Google Meet Doubt Sessions
+
+#### Files Created/Updated So Far
+
+client/src/pages/ManageCourseSessions.jsx & client/src/pages/ManageCourseSessions.css (enhanced Hybrid course studio with dual format selector: \`In-Person at Center\` and \`Live Online (Google Meet)\`; updated quick action buttons: \`+ Schedule In-Person Meetup\`, \`+ Schedule Online Doubt Session\`, and \`+ Schedule Offline Doubt Clinic\`; added format toggle buttons, prefill logic, and \`type-online\` badges.)
+
+client/src/pages/CourseDetail.jsx & client/src/pages/CourseDetail.css (updated top countdown banner and session cards to detect whether a session is online or in-person: displays \`UPCOMING LIVE ONLINE DOUBT\` with \`Join Google Meet ↗\` button for online sessions, and \`UPCOMING IN-PERSON SESSION\` with center/room venue address for offline sessions; added \`.banner-online\` and \`.course-detail-session-type.type-online\` styles.)
+
+client/src/pages/StudentDashboard.jsx & client/src/pages/StudentDashboard.css (updated enrolled sessions list to render \`Live Online Doubt\` with clickable Google Meet link or \`In-Person Meetup\` with venue address based on session URL detection; added \`.student-session-type.type-online\` styling.)
+
+#### Decisions Log
+
+- True Hybrid Flexibility: Hybrid courses can now host physical lab workshops at the institute campus as well as live virtual doubt-clearing sessions via Google Meet, providing maximum convenience for both students and instructors.
+- URL-Based Detection: The frontend intelligently detects whether a session is online or physical via URL parsing (\`session.location.startsWith('http')\`), enabling accurate action links (\`Join Google Meet ↗\` vs \`Venue: Room\`) regardless of whether the course delivery mode is pure online, pure offline, or hybrid.
+
+#### Verification
+
+- Production build (\`npm --prefix client run build\`) succeeded with 0 errors in 604ms.
+- Active backend server running on port 3000 (connected to PostgreSQL) and frontend on port 5173.

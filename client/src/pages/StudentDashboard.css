@@ -590,3 +590,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.student-session-type.type-online {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}

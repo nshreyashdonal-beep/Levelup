@@ -651,55 +651,65 @@ export default function CourseDetail() {
           {/* LEFT COLUMN: TABS & CONTENT */}
           <div className="course-detail-primary-col">
             {/* Prominent Countdown Banner for Next Upcoming Session */}
-            {nextSession && (
-              <div
-                className={`course-detail-upcoming-banner banner-${nextSession.session_type}`}
-                role="region"
-                aria-label="Upcoming Scheduled Session"
-              >
-                <div className="upcoming-banner-eyebrow">
-                  <span className="upcoming-pulse-dot" aria-hidden="true" />
-                  <span className="upcoming-type-label">
-                    {nextSession.session_type === 'offline'
-                      ? 'UPCOMING IN-PERSON SESSION'
-                      : nextSession.session_type === 'mock_test'
-                      ? 'UPCOMING MOCK TEST'
-                      : 'UPCOMING DOUBT SESSION'}
-                  </span>
-                  <span className="upcoming-countdown-badge">
-                    {getSessionCountdownInfo(nextSession.scheduled_at).countdownText}
-                  </span>
-                </div>
-                <div className="upcoming-banner-body">
-                  <div className="upcoming-banner-main-info">
-                    <span className="upcoming-datetime">
-                      {getSessionCountdownInfo(nextSession.scheduled_at).formattedDateTime}
+            {nextSession && (() => {
+              const isNextOnline =
+                nextSession.location &&
+                (nextSession.location.startsWith('http') ||
+                  nextSession.location.includes('meet.google.com'));
+              return (
+                <div
+                  className={`course-detail-upcoming-banner banner-${
+                    isNextOnline ? 'online' : nextSession.session_type
+                  }`}
+                  role="region"
+                  aria-label="Upcoming Scheduled Session"
+                >
+                  <div className="upcoming-banner-eyebrow">
+                    <span className="upcoming-pulse-dot" aria-hidden="true" />
+                    <span className="upcoming-type-label">
+                      {isNextOnline
+                        ? 'UPCOMING LIVE ONLINE DOUBT'
+                        : nextSession.session_type === 'offline'
+                        ? 'UPCOMING IN-PERSON SESSION'
+                        : nextSession.session_type === 'mock_test'
+                        ? 'UPCOMING MOCK TEST'
+                        : 'UPCOMING IN-PERSON DOUBT CLINIC'}
                     </span>
-                    <span className="upcoming-dot-sep" aria-hidden="true">·</span>
-                    <strong className="upcoming-session-title">{nextSession.title}</strong>
+                    <span className="upcoming-countdown-badge">
+                      {getSessionCountdownInfo(nextSession.scheduled_at).countdownText}
+                    </span>
                   </div>
-                  {nextSession.location && (
-                    <div className="upcoming-banner-location">
-                      <span className="upcoming-loc-label">
-                        {deliveryMode === 'online' ? 'Link:' : 'Venue:'}
+                  <div className="upcoming-banner-body">
+                    <div className="upcoming-banner-main-info">
+                      <span className="upcoming-datetime">
+                        {getSessionCountdownInfo(nextSession.scheduled_at).formattedDateTime}
                       </span>
-                      {deliveryMode === 'online' && nextSession.location.startsWith('http') ? (
-                        <a
-                          href={nextSession.location}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="upcoming-meet-link"
-                        >
-                          Join Google Meet ↗
-                        </a>
-                      ) : (
-                        <span className="upcoming-loc-text">{nextSession.location}</span>
-                      )}
+                      <span className="upcoming-dot-sep" aria-hidden="true">·</span>
+                      <strong className="upcoming-session-title">{nextSession.title}</strong>
                     </div>
-                  )}
+                    {nextSession.location && (
+                      <div className="upcoming-banner-location">
+                        <span className="upcoming-loc-label">
+                          {isNextOnline ? 'Link:' : 'Venue:'}
+                        </span>
+                        {isNextOnline ? (
+                          <a
+                            href={nextSession.location}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="upcoming-meet-link"
+                          >
+                            Join Google Meet ↗
+                          </a>
+                        ) : (
+                          <span className="upcoming-loc-text">{nextSession.location}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Tab Navigation Buttons */}
             <nav className="course-detail-nav-tabs" role="tablist">
@@ -1061,13 +1071,27 @@ export default function CourseDetail() {
                     <div className="course-detail-sessions-list">
                       {sessions.map((session) => {
                         const { countdownText, formattedDateTime } = getSessionCountdownInfo(session.scheduled_at);
+                        const isSessionOnline =
+                          session.location &&
+                          (session.location.startsWith('http') ||
+                            session.location.includes('meet.google.com'));
                         const isOffline = session.session_type === 'offline';
                         const isMock = session.session_type === 'mock_test';
                         return (
                           <div key={session.id} className="course-detail-session-card">
                             <div className="session-card-header">
-                              <span className={`course-detail-session-type type-${session.session_type}`}>
-                                {isOffline ? 'Offline Meetup' : isMock ? 'Mock Test' : 'Doubt Session'}
+                              <span
+                                className={`course-detail-session-type ${
+                                  isSessionOnline ? 'type-online' : `type-${session.session_type}`
+                                }`}
+                              >
+                                {isSessionOnline
+                                  ? 'Live Online Doubt'
+                                  : isOffline
+                                  ? 'In-Person Meetup'
+                                  : isMock
+                                  ? 'Mock Test'
+                                  : 'In-Person Doubt'}
                               </span>
                               <span className="course-detail-session-countdown">
                                 {countdownText}
@@ -1085,9 +1109,9 @@ export default function CourseDetail() {
                               {session.location && (
                                 <div className="session-meta-item">
                                   <span className="session-meta-key">
-                                    {deliveryMode === 'online' ? 'LINK:' : 'VENUE:'}
+                                    {isSessionOnline ? 'LINK:' : 'VENUE:'}
                                   </span>
-                                  {deliveryMode === 'online' && session.location.startsWith('http') ? (
+                                  {isSessionOnline ? (
                                     <a
                                       href={session.location}
                                       target="_blank"

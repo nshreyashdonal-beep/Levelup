@@ -2,6 +2,7 @@
 // Course Studio Sessions management tab.
 // Enables instructors to schedule, reschedule, and cancel doubt sessions,
 // in-person institute meetups, and mock tests according to course delivery mode.
+// Hybrid courses fully support BOTH in-person center meetups AND live online Google Meet sessions.
 // Enterprise-grade clean UI with zero cartoon emojis.
 
 import { useState, useEffect, useCallback } from 'react';
@@ -75,6 +76,9 @@ export default function ManageCourseSessions() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Delivery format state inside modal ('in_person' or 'online')
+  const [deliveryFormat, setDeliveryFormat] = useState('in_person');
+
   // Form Fields
   const [formData, setFormData] = useState({
     session_type: 'doubt',
@@ -84,14 +88,13 @@ export default function ManageCourseSessions() {
     location: '',
   });
 
-  const deliveryMode = course?.delivery_mode || 'online';
-  const isHybrid = deliveryMode === 'hybrid';
-  const isOffline = deliveryMode === 'offline';
-  const isOnline = deliveryMode === 'online';
+  const courseMode = course?.delivery_mode || 'online';
+  const isHybrid = courseMode === 'hybrid';
+  const isOffline = courseMode === 'offline';
+  const isOnline = courseMode === 'online';
 
-  const defaultLocationHint = isOnline
-    ? 'https://meet.google.com/new'
-    : (course?.center_name || course?.address || 'Institute Campus — Lab 2');
+  const defaultInstituteAddress =
+    course?.center_name || course?.address || 'Institute Campus — Lab 2';
 
   const fetchSessions = useCallback(async () => {
     if (!course?.id) return;
@@ -119,14 +122,31 @@ export default function ManageCourseSessions() {
     fetchSessions();
   }, [fetchSessions]);
 
-  function handleOpenCreate(type = 'doubt') {
+  function handleOpenCreate(type = 'doubt', format = 'in_person') {
     setEditingSession(null);
+    const chosenFormat = isOnline ? 'online' : isOffline ? 'in_person' : format;
+    setDeliveryFormat(chosenFormat);
+
+    let defaultTitle = '';
+    let defaultLocation = '';
+
+    if (chosenFormat === 'online') {
+      defaultTitle = 'Live Online Doubt Clearing & Q&A';
+      defaultLocation = 'https://meet.google.com/new';
+    } else if (type === 'offline') {
+      defaultTitle = 'In-Person Lab & Practice Meetup';
+      defaultLocation = defaultInstituteAddress;
+    } else {
+      defaultTitle = 'In-Person Doubt Clearing Clinic';
+      defaultLocation = defaultInstituteAddress;
+    }
+
     setFormData({
       session_type: type,
-      title: type === 'offline' ? 'In-Person Lab & Practice Meetup' : 'Doubt Clearing & Q&A Session',
+      title: defaultTitle,
       description: '',
       scheduled_at: toLocalDatetimeInput(),
-      location: defaultLocationHint,
+      location: defaultLocation,
     });
     setError('');
     setIsModalOpen(true);
@@ -134,6 +154,11 @@ export default function ManageCourseSessions() {
 
   function handleOpenEdit(session) {
     setEditingSession(session);
+    const isUrl =
+      session.location &&
+      (session.location.startsWith('http') || session.location.includes('meet.google.com'));
+    setDeliveryFormat(isUrl ? 'online' : 'in_person');
+
     setFormData({
       session_type: session.session_type || 'doubt',
       title: session.title || '',
@@ -159,6 +184,14 @@ export default function ManageCourseSessions() {
     }
     if (!formData.scheduled_at) {
       setError('Please select a scheduled date and time.');
+      return;
+    }
+    if (!formData.location.trim()) {
+      setError(
+        deliveryFormat === 'online'
+          ? 'Please enter a Google Meet link for this online session.'
+          : 'Please enter a center or room venue for this in-person session.'
+      );
       return;
     }
 
@@ -245,6 +278,8 @@ export default function ManageCourseSessions() {
     }
   }
 
+  const isCurrentOnline = deliveryFormat === 'online';
+
   return (
     <section className="manage-sessions">
       {/* Header Context Banner */}
@@ -252,20 +287,20 @@ export default function ManageCourseSessions() {
         <div className="manage-sessions-title-area">
           <div className="manage-sessions-badges">
             <span className="manage-sessions-eyebrow">COURSE SESSIONS</span>
-            <span className={`manage-sessions-mode-pill mode-${deliveryMode}`}>
-              {deliveryMode.toUpperCase()} FORMAT
+            <span className={`manage-sessions-mode-pill mode-${courseMode}`}>
+              {courseMode.toUpperCase()} FORMAT
             </span>
           </div>
           <h2>
             {isHybrid
-              ? 'Schedule Doubt & Offline In-Person Sessions'
+              ? 'Schedule Doubt & In-Person Sessions'
               : isOffline
               ? 'Schedule In-Person Doubt Sessions'
               : 'Schedule Live Doubt Sessions'}
           </h2>
           <p className="manage-sessions-desc">
             {isHybrid &&
-              'Hybrid courses combine self-paced online modules with hands-on institute workshops and offline doubt clearing sessions. Coordinate in-person dates and classroom locations for enrolled students.'}
+              'Hybrid courses give you full flexibility: schedule hands-on institute workshops at your center, as well as live virtual doubt clearing sessions with Google Meet links.'}
             {isOffline &&
               'Manage classroom doubt clearing hours, lab workshops, and evaluation meets held at your physical training center.'}
             {isOnline &&
@@ -280,23 +315,30 @@ export default function ManageCourseSessions() {
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => handleOpenCreate('offline')}
+                onClick={() => handleOpenCreate('offline', 'in_person')}
               >
                 + Schedule In-Person Meetup
               </button>
               <button
                 type="button"
                 className="btn-secondary"
-                onClick={() => handleOpenCreate('doubt')}
+                onClick={() => handleOpenCreate('doubt', 'online')}
               >
-                + Schedule Doubt Session
+                + Schedule Online Doubt Session
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => handleOpenCreate('doubt', 'in_person')}
+              >
+                + Schedule Offline Doubt Clinic
               </button>
             </>
           ) : isOffline ? (
             <button
               type="button"
               className="btn-primary"
-              onClick={() => handleOpenCreate('doubt')}
+              onClick={() => handleOpenCreate('doubt', 'in_person')}
             >
               + Schedule In-Person Doubt Session
             </button>
@@ -304,7 +346,7 @@ export default function ManageCourseSessions() {
             <button
               type="button"
               className="btn-primary"
-              onClick={() => handleOpenCreate('doubt')}
+              onClick={() => handleOpenCreate('doubt', 'online')}
             >
               + Schedule Live Doubt Session
             </button>
@@ -342,7 +384,7 @@ export default function ManageCourseSessions() {
             <h4>No sessions scheduled yet</h4>
             <p>
               {isHybrid
-                ? 'Create in-person lab meetups or doubt clinics so your students know when and where to attend.'
+                ? 'Create in-person lab meetups or live Google Meet doubt clinics so students know how and where to attend.'
                 : isOffline
                 ? 'Add offline doubt clearing clinics for your classroom batches.'
                 : 'Schedule a live virtual doubt session with Google Meet.'}
@@ -350,7 +392,9 @@ export default function ManageCourseSessions() {
             <button
               type="button"
               className="btn-primary"
-              onClick={() => handleOpenCreate(isHybrid ? 'offline' : 'doubt')}
+              onClick={() =>
+                handleOpenCreate(isHybrid ? 'offline' : 'doubt', isOnline ? 'online' : 'in_person')
+              }
             >
               {isHybrid ? 'Schedule First In-Person Meetup' : 'Schedule First Session'}
             </button>
@@ -359,20 +403,28 @@ export default function ManageCourseSessions() {
           <div className="manage-sessions-grid">
             {sessions.map((session) => {
               const timing = getSessionTimingBadge(session.scheduled_at);
+              const isSessionOnline =
+                session.location &&
+                (session.location.startsWith('http') || session.location.includes('meet.google.com'));
               const isOfflineType = session.session_type === 'offline';
               const isMockTest = session.session_type === 'mock_test';
-              const isDoubt = session.session_type === 'doubt';
 
               return (
                 <article key={session.id} className="session-card">
                   <div className="session-card-top">
                     <div className="session-card-tags">
-                      <span className={`session-type-badge type-${session.session_type}`}>
-                        {isOfflineType
-                          ? 'Offline Meetup'
+                      <span
+                        className={`session-type-badge ${
+                          isSessionOnline ? 'type-online' : `type-${session.session_type}`
+                        }`}
+                      >
+                        {isSessionOnline
+                          ? 'Live Online Doubt'
+                          : isOfflineType
+                          ? 'In-Person Meetup'
                           : isMockTest
                           ? 'Mock Test'
-                          : 'Doubt Session'}
+                          : 'In-Person Doubt'}
                       </span>
                       <span className={`session-timing-pill timing-${timing.variant}`}>
                         {timing.label}
@@ -413,11 +465,11 @@ export default function ManageCourseSessions() {
 
                     <div className="session-meta-row">
                       <span className="session-meta-label">
-                        {isOnline ? 'MEETING LINK' : 'VENUE / LAB'}
+                        {isSessionOnline ? 'MEETING LINK' : 'VENUE / LAB'}
                       </span>
                       <span className="session-meta-val">
                         {session.location ? (
-                          isOnline && session.location.startsWith('http') ? (
+                          isSessionOnline ? (
                             <a
                               href={session.location}
                               target="_blank"
@@ -492,6 +544,56 @@ export default function ManageCourseSessions() {
             </div>
 
             <form onSubmit={handleSubmitForm} className="sessions-modal-form">
+              {/* Delivery Format Choice for Hybrid Courses */}
+              {isHybrid && (
+                <div className="form-field">
+                  <label>Session Format</label>
+                  <div className="format-toggle-bar">
+                    <button
+                      type="button"
+                      className={`format-toggle-btn ${
+                        deliveryFormat === 'in_person' ? 'is-active' : ''
+                      }`}
+                      onClick={() => {
+                        setDeliveryFormat('in_person');
+                        if (formData.location.startsWith('http')) {
+                          setFormData({
+                            ...formData,
+                            location: defaultInstituteAddress,
+                            session_type: formData.session_type === 'doubt' ? 'doubt' : 'offline',
+                          });
+                        }
+                      }}
+                    >
+                      In-Person at Center
+                    </button>
+                    <button
+                      type="button"
+                      className={`format-toggle-btn ${
+                        deliveryFormat === 'online' ? 'is-active' : ''
+                      }`}
+                      onClick={() => {
+                        setDeliveryFormat('online');
+                        if (!formData.location.startsWith('http')) {
+                          setFormData({
+                            ...formData,
+                            location: 'https://meet.google.com/new',
+                            session_type: 'doubt',
+                          });
+                        }
+                      }}
+                    >
+                      Live Online (Google Meet)
+                    </button>
+                  </div>
+                  <span className="field-hint">
+                    {deliveryFormat === 'in_person'
+                      ? 'Students assemble at the institute campus/lab room.'
+                      : 'Students join live virtually via Google Meet.'}
+                  </span>
+                </div>
+              )}
+
               {/* Session Type */}
               <div className="form-field">
                 <label htmlFor="session-type">Session Type</label>
@@ -503,21 +605,26 @@ export default function ManageCourseSessions() {
                   }
                   required
                 >
-                  {isHybrid && (
-                    <>
-                      <option value="offline">In-Person Lab & Workshop (At Institute)</option>
-                      <option value="doubt">Doubt Clearing Session</option>
-                      <option value="mock_test">In-Person Mock Test & Evaluation</option>
-                    </>
-                  )}
-                  {isOffline && (
+                  {isHybrid ? (
+                    deliveryFormat === 'in_person' ? (
+                      <>
+                        <option value="offline">In-Person Lab & Workshop (At Institute)</option>
+                        <option value="doubt">In-Person Doubt Clearing Clinic</option>
+                        <option value="mock_test">In-Person Mock Test & Evaluation</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="doubt">Live Virtual Doubt Session (Google Meet)</option>
+                        <option value="mock_test">Live Online Mock Test & Review</option>
+                      </>
+                    )
+                  ) : isOffline ? (
                     <>
                       <option value="doubt">In-Person Doubt Session</option>
                       <option value="offline">Practical Lab Session</option>
                       <option value="mock_test">Mock Test & Assessment</option>
                     </>
-                  )}
-                  {isOnline && (
+                  ) : (
                     <>
                       <option value="doubt">Live Virtual Doubt Session</option>
                       <option value="mock_test">Live Online Mock Test & Review</option>
@@ -532,7 +639,11 @@ export default function ManageCourseSessions() {
                 <input
                   id="session-title"
                   type="text"
-                  placeholder="e.g. Redux Toolkit Architecture & In-Person Doubt Clinic"
+                  placeholder={
+                    isCurrentOnline
+                      ? 'e.g. Weekly Live Q&A and Architecture Debugging'
+                      : 'e.g. Redux Toolkit Hands-on Lab & Doubt Clinic'
+                  }
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
@@ -559,14 +670,14 @@ export default function ManageCourseSessions() {
               {/* Location / Venue */}
               <div className="form-field">
                 <label htmlFor="session-location">
-                  {isOnline ? 'Google Meet Link' : 'Institute Center / Room Venue'}
+                  {isCurrentOnline ? 'Google Meet Link' : 'Institute Center / Room Venue'}
                 </label>
                 <div className="field-with-action">
                   <input
                     id="session-location"
                     type="text"
                     placeholder={
-                      isOnline
+                      isCurrentOnline
                         ? 'https://meet.google.com/abc-defg-hij'
                         : 'e.g. Center 2, 3rd Floor Lab, MG Road Campus'
                     }
@@ -576,7 +687,7 @@ export default function ManageCourseSessions() {
                     }
                     required
                   />
-                  {isOnline && (
+                  {isCurrentOnline && (
                     <button
                       type="button"
                       className="btn-helper-action"
@@ -590,7 +701,7 @@ export default function ManageCourseSessions() {
                   )}
                 </div>
                 <span className="field-hint">
-                  {isOnline
+                  {isCurrentOnline
                     ? 'Paste your Google Meet room link. Students will click this to join live.'
                     : 'Physical venue where students should assemble for this session.'}
                 </span>
