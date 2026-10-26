@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { API_BASE } from '../api';
 import CategorySelector from '../components/CategorySelector';
+import ThumbnailUpload from '../components/ThumbnailUpload';
 import './ManageCourseDetails.css';
 
 export default function ManageCourseDetails() {
@@ -225,10 +226,12 @@ export default function ManageCourseDetails() {
               )}
             </label>
 
-            <label className="manage-course-details-field manage-course-details-field--wide">
-              Thumbnail URL
-              <input name="thumbnail_url" value={formData.thumbnail_url} onChange={handleChange} />
-            </label>
+            <div className="manage-course-details-field manage-course-details-field--wide">
+              <ThumbnailUpload
+                value={formData.thumbnail_url}
+                onChange={(url) => setFormData((prev) => ({ ...prev, thumbnail_url: url }))}
+              />
+            </div>
           </div>
         </div>
 

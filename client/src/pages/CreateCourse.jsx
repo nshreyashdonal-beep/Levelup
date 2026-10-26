@@ -6,6 +6,7 @@ import InstructorNav from '../components/InstructorNav';
 import Footer from '../components/Footer';
 import { API_BASE } from '../api';
 import CategorySelector from '../components/CategorySelector';
+import ThumbnailUpload from '../components/ThumbnailUpload';
 import './CreateCourse.css';
 
 const initialForm = {
@@ -235,16 +236,12 @@ export default function CreateCourse() {
                 />
               </label>
 
-              <label className="create-course-field create-course-field-full">
-                Thumbnail URL
-                <input
-                  name="thumbnail_url"
-                  type="url"
-                  placeholder="https://example.com/course-image.jpg"
+              <div className="create-course-field create-course-field-full">
+                <ThumbnailUpload
                   value={formData.thumbnail_url}
-                  onChange={handleChange}
+                  onChange={(url) => setFormData((prev) => ({ ...prev, thumbnail_url: url }))}
                 />
-              </label>
+              </div>
 
               <label className="create-course-field create-course-field-full">
                 Curriculum

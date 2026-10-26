@@ -222,3 +222,107 @@ export function uploadProfileImage(file, onProgress = () => {}, onAbortRef = nul
   });
 }
 
+export function uploadCourseThumbnail(file, onProgress = () => {}, onAbortRef = null) {
+  if (!(file instanceof File)) {
+    return Promise.reject(new Error('Please choose an image file.'));
+  }
+
+  if (!file.type.startsWith('image/')) {
+    return Promise.reject(new Error('The selected file must be an image (PNG, JPG, WEBP, or GIF).'));
+  }
+
+  const maxSizeBytes = 8 * 1024 * 1024; // 8 MB for high-resolution course banners
+  if (file.size > maxSizeBytes) {
+    return Promise.reject(new Error('Thumbnail image must be smaller than 8 MB.'));
+  }
+
+  const {
+    cloudName: configuredCloudName,
+    apiKey: configuredApiKey,
+    uploadPreset: configuredPreset,
+  } = getUploadConfig();
+
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    const formData = new FormData();
+
+    formData.append('file', file);
+    formData.append('api_key', configuredApiKey);
+    formData.append('upload_preset', configuredPreset);
+
+    if (onAbortRef && typeof onAbortRef === 'object') {
+      onAbortRef.current = () => {
+        try {
+          request.abort();
+        } catch {}
+      };
+    } else if (typeof onAbortRef === 'function') {
+      onAbortRef(() => {
+        try {
+          request.abort();
+        } catch {}
+      });
+    }
+
+    request.open(
+      'POST',
+      `https://api.cloudinary.com/v1_1/${configuredCloudName}/image/upload`
+    );
+
+    request.upload.addEventListener('progress', (event) => {
+      if (!event.lengthComputable) return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    });
+
+    request.addEventListener('load', () => {
+      if (onAbortRef && typeof onAbortRef === 'object') {
+        onAbortRef.current = null;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(request.responseText);
+      } catch {
+        reject(new Error('Cloudinary returned an unreadable response.'));
+        return;
+      }
+
+      if (request.status < 200 || request.status >= 300) {
+        reject(new Error(data.error?.message || 'Cloudinary image upload failed.'));
+        return;
+      }
+
+      if (!data.secure_url) {
+        reject(new Error('Cloudinary did not return a secure image URL.'));
+        return;
+      }
+
+      onProgress(100);
+      resolve({
+        secureUrl: data.secure_url,
+        publicId: data.public_id,
+        format: data.format,
+        width: data.width,
+        height: data.height,
+      });
+    });
+
+    request.addEventListener('error', () => {
+      if (onAbortRef && typeof onAbortRef === 'object') {
+        onAbortRef.current = null;
+      }
+      reject(new Error('Could not reach Cloudinary. Please check your internet connection.'));
+    });
+
+    request.addEventListener('abort', () => {
+      if (onAbortRef && typeof onAbortRef === 'object') {
+        onAbortRef.current = null;
+      }
+      const cancelError = new Error('Upload cancelled.');
+      cancelError.isCancelled = true;
+      reject(cancelError);
+    });
+
+    request.send(formData);
+  });
+}

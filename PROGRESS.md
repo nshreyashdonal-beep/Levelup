@@ -813,11 +813,11 @@ works, same rule PROGRESS.md uses.
 - [x] Verify production build (`npm run build` with 0 errors) [Session 12]
 
 #### Phase 10 - Course Thumbnail Direct Cloudinary Upload & 16:9 Aspect Preview
-- [ ] Direct Cloudinary Integration: Export `uploadCourseThumbnail(file, onProgress, onAbortRef)` in `client/src/api/cloudinary.js` with client-side image validation (PNG, JPG, WEBP, max 5MB)
-- [ ] Reusable Thumbnail Uploader Component: Create `client/src/components/ThumbnailUpload.jsx` & `ThumbnailUpload.css` with 16:9 aspect ratio preview, drag-and-drop / click-to-upload, progress bar, SVG icons (zero emojis), and manual URL fallback
-- [ ] Create Course Integration: Integrate `ThumbnailUpload` into `client/src/pages/CreateCourse.jsx`, allowing instructors to upload an image from device or input URL
-- [ ] Course Studio Details Integration: Integrate `ThumbnailUpload` into `client/src/pages/ManageCourseDetails.jsx`, enabling existing courses to update or replace their thumbnail image
-- [ ] Production Verification: Verify production build (`npm --prefix client run build`), test direct image upload to Cloudinary, and push to GitHub `Branch10_UI_Improvements`
+- [x] Direct Cloudinary Integration: Export `uploadCourseThumbnail(file, onProgress, onAbortRef)` in `client/src/api/cloudinary.js` with client-side image validation (PNG, JPG, WEBP, max 8MB) [Session 13]
+- [x] Reusable Thumbnail Uploader Component: Create `client/src/components/ThumbnailUpload.jsx` & `ThumbnailUpload.css` with 16:9 aspect ratio preview, drag-and-drop / click-to-upload, progress bar, SVG icons (zero emojis), and manual URL fallback [Session 13]
+- [x] Create Course Integration: Integrate `ThumbnailUpload` into `client/src/pages/CreateCourse.jsx`, allowing instructors to upload an image from device or input URL [Session 13]
+- [x] Course Studio Details Integration: Integrate `ThumbnailUpload` into `client/src/pages/ManageCourseDetails.jsx`, enabling existing courses to update or replace their thumbnail image [Session 13]
+- [x] Production Verification: Verify production build (`npm --prefix client run build`), test direct image upload to Cloudinary, and push to GitHub `Branch10_UI_Improvements` [Session 13]
 
 ### Branch 11 (ProfileManagement)
 
@@ -3740,6 +3740,29 @@ client/src/pages/InstructorDashboard.jsx & client/src/pages/InstructorDashboard.
 - Backend automated guardrail suite passed with 100% pass rate: blocked draft reversion (400), blocked mode change (400), blocked level change (400), blocked below-capacity reductions (400), permitted archive (200), permitted re-publish (200).
 - Production build (`npm --prefix client run build`) succeeded with 0 errors in 563ms.
 - Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
+
+
+### Session 13 (Branch 10 (Branch10_UI_Improvements)) - Course Thumbnail Direct Cloudinary Upload & 16:9 Aspect Ratio Preview
+
+#### Files Created/Updated So Far
+
+client/src/api/cloudinary.js (added `uploadCourseThumbnail(file, onProgress, onAbortRef)` with 8MB size check, PNG/JPG/WEBP validation, XMLHttpRequest progress tracking, and abort controller.)
+
+client/src/components/ThumbnailUpload.jsx & client/src/components/ThumbnailUpload.css (created reusable enterprise thumbnail uploader featuring 16:9 aspect ratio container matching course card proportions; drag-and-drop & browse file triggers; live percentage progress bar with cancel capability; image preview with overlay 'Replace Image' and 'Remove' actions; fallback expandable manual URL input; zero emojis with clean SVG icons.)
+
+client/src/pages/CreateCourse.jsx (integrated `ThumbnailUpload` replacing raw text input in course creation form.)
+
+client/src/pages/ManageCourseDetails.jsx (integrated `ThumbnailUpload` into Course Studio Details tab, allowing instructors to update or replace existing course thumbnails.)
+
+#### Decisions Log
+
+- 16:9 Proportional Preview: Enforced 16:9 CSS aspect ratio directly within the upload container so instructors preview exactly how their banner will appear on course cards and detail pages.
+- Direct Browser-to-Cloud CDN: Handled media uploads directly to Cloudinary without streaming bytes through the Node/Express backend, conserving server RAM and bandwidth.
+- Graceful URL Fallback: Kept a collapsible manual URL input for instructors who already have external CDN links or prefer pasting URLs directly.
+
+#### Verification
+
+- Production client build (`npm --prefix client run build`) succeeded with 0 errors in 431ms.
 
 
 ### Branch 13 (Schedule Doubt Session)
