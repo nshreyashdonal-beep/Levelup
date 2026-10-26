@@ -1,99 +1,141 @@
 /* src/components/ProfileMenu.css */
-/* The profile menu defaults to the Student indigo accent and switches to
-   emerald when rendered for an instructor. */
+/* Modern circular profile avatar and dropdown menu with role-based theming */
 
 .profile-menu {
   position: relative;
 }
 
+/* Circular Avatar Trigger Button */
 .profile-menu-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 2px solid #6366f1;
-  color: #6366f1;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-sizing: border-box;
 }
 
-.profile-menu-avatar:hover {
-  background: #6366f1;
-  color: #fff;
+/* Fallback Monogram (Student) */
+.profile-menu-avatar:not(.profile-menu-avatar--has-img) {
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1.5px solid #c7d2fe;
 }
 
-.profile-menu-avatar--instructor {
-  border-color: var(--color-instructor-primary);
-  color: var(--color-instructor-primary-dark);
+.profile-menu-avatar:not(.profile-menu-avatar--has-img):hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
 
-.profile-menu-avatar--instructor:hover {
-  background: var(--color-instructor-primary);
-  color: #fff;
+/* Fallback Monogram (Instructor) */
+.profile-menu-avatar--instructor:not(.profile-menu-avatar--has-img) {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
 }
 
+.profile-menu-avatar--instructor:not(.profile-menu-avatar--has-img):hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+/* Uploaded Image Avatar */
 .profile-menu-avatar--has-img {
   padding: 0;
   overflow: hidden;
-  background: transparent;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .profile-menu-avatar--has-img:hover {
-  opacity: 0.9;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  transform: scale(1.04);
 }
 
-.profile-menu-dropdown {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: 260px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 100;
-}
-
-.profile-menu-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-}
-
-.profile-menu-header-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  background: #6366f1;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.profile-menu-header-avatar--instructor {
-  background: var(--color-instructor-primary);
-}
-
-.profile-menu-header-avatar--has-img {
-  padding: 0;
-  overflow: hidden;
-  background: transparent;
+.profile-menu-avatar--instructor.profile-menu-avatar--has-img:hover {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
 }
 
 .profile-menu-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
   display: block;
+}
+
+/* Dropdown Menu */
+.profile-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 100;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fbfcfe;
+}
+
+.profile-menu-header-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1.5px solid #c7d2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.profile-menu-header-avatar--instructor {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.profile-menu-header-avatar--has-img {
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
 }
 
 .profile-menu-header-info {
@@ -116,10 +158,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 .profile-menu-section {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f1f5f9;
   padding: 6px 0;
 }
 
@@ -127,22 +170,24 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 16px;
+  padding: 9px 16px;
   font-size: 0.875rem;
   color: #374151;
   text-decoration: none;
   background: none;
   border: none;
   cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
 }
 
 .profile-menu-link:hover {
-  background: #f3f4f6;
+  background: #f8fafc;
+  color: #111827;
 }
 
 .profile-menu-link--instructor:hover {
-  background: var(--color-instructor-soft);
-  color: var(--color-instructor-primary-dark);
+  background: var(--color-instructor-soft, #ecfdf5);
+  color: var(--color-instructor-primary-dark, #047857);
 }
 
 .profile-menu-edit {
@@ -151,9 +196,13 @@
 }
 
 .profile-menu-edit.profile-menu-link--instructor {
-  color: var(--color-instructor-primary-dark);
+  color: var(--color-instructor-primary-dark, #047857);
 }
 
 .profile-menu-logout {
   color: #dc2626;
+}
+
+.profile-menu-logout:hover {
+  background: #fef2f2;
 }
