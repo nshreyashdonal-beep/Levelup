@@ -53,22 +53,41 @@ export default function ProfileMenu({ user }) {
   return (
     <div className="profile-menu" ref={menuRef}>
       <div
-        className={`profile-menu-avatar ${isInstructor ? 'profile-menu-avatar--instructor' : ''}`}
+        className={`profile-menu-avatar ${isInstructor ? 'profile-menu-avatar--instructor' : ''} ${user.avatar_url ? 'profile-menu-avatar--has-img' : ''}`}
         onClick={() => setOpen((wasOpen) => !wasOpen)}
+        title={user.name}
       >
-        {initial}
+        {user.avatar_url ? (
+          <img src={user.avatar_url} alt={user.name} className="profile-menu-avatar-img" />
+        ) : (
+          initial
+        )}
       </div>
 
       {open && (
         <div className="profile-menu-dropdown">
           <div className="profile-menu-header">
-            <div className={`profile-menu-header-avatar ${isInstructor ? 'profile-menu-header-avatar--instructor' : ''}`}>
-              {initial}
+            <div className={`profile-menu-header-avatar ${isInstructor ? 'profile-menu-header-avatar--instructor' : ''} ${user.avatar_url ? 'profile-menu-header-avatar--has-img' : ''}`}>
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name} className="profile-menu-avatar-img" />
+              ) : (
+                initial
+              )}
             </div>
-            <div>
+            <div className="profile-menu-header-info">
               <div className="profile-menu-name">{user?.name}</div>
               <div className="profile-menu-email">{user?.email}</div>
             </div>
+          </div>
+
+          <div className="profile-menu-section">
+            <Link
+              to="/profile"
+              className={`profile-menu-link profile-menu-edit ${isInstructor ? 'profile-menu-link--instructor' : ''}`}
+              onClick={() => setOpen(false)}
+            >
+              ✏️ Edit Profile
+            </Link>
           </div>
 
           <div className="profile-menu-section">

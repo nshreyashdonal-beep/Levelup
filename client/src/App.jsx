@@ -24,6 +24,7 @@ import ManageCourseContent from './pages/ManageCourseContent.jsx'
 import PublishCourse from './pages/PublishCourse.jsx'
 import CoursePlayer from './pages/CoursePlayer.jsx'
 import InstructorProfile from './pages/InstructorProfile.jsx'
+import EditProfile from './pages/EditProfile.jsx'
 
 function App() {
   const navigate = useNavigate()
@@ -44,6 +45,7 @@ function App() {
             '/mycourse',
             '/manage-courses',
             '/create-course',
+            '/profile',
           ]
           const isProtected =
             protectedPrefixes.some((p) => window.location.pathname.startsWith(p)) ||
@@ -85,6 +87,7 @@ function App() {
         <Route path="/courses/:courseId/learn" element={<CoursePlayer />} />
         <Route path="/manage-courses" element={<ManageCourses />} />
         <Route path="/create-course" element={<CreateCourse />} />
+        <Route path="/profile" element={<EditProfile />} />
 
         {/* One shared course-management shell (guard + course fetch happen
             once in ManageCourseLayout); each child route is one job on

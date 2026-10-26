@@ -722,30 +722,30 @@ works, same rule PROGRESS.md uses.
 **Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
 
 #### Phase 1 - Database Schema & Backend Profile Endpoints
-- [ ] Add `avatar_url TEXT` column to `users` table in `server/db/schema.sql` and run migration on PostgreSQL [Session 1]
-- [ ] Create `server/routes/profile.js` with authenticated endpoints:
+- [x] Add `avatar_url TEXT` column to `users` table in `server/db/schema.sql` and run migration on PostgreSQL [Session 1]
+- [x] Create `server/routes/profile.js` with authenticated endpoints:
       1. `GET /api/profile` - returns user profile, joining `instructor_profiles` if user role is `'instructor'`.
       2. `PATCH /api/profile` - updates user name, avatar_url, instructor details (bio, phone, city, latitude, longitude), and handles password change with current password verification.
-- [ ] Mount `/api/profile` in `server/server.js`.
-- [ ] Verify profile routes via test script.
+- [x] Mount `/api/profile` in `server/server.js`.
+- [x] Verify profile routes via test script.
 
 #### Phase 2 - Cloudinary Direct Image Upload Integration
-- [ ] Extend `client/src/api/cloudinary.js` to support image uploads via `uploadProfileImage(file, onProgress)` using Cloudinary unsigned upload preset.
+- [x] Extend `client/src/api/cloudinary.js` to support image uploads via `uploadProfileImage(file, onProgress)` using Cloudinary unsigned upload preset.
 
 #### Phase 3 - Frontend Profile Management UI & Navigation
-- [ ] Add "Edit Profile" link/action in `client/src/components/ProfileMenu.jsx` for both Student and Instructor profiles.
-- [ ] Create `client/src/pages/EditProfile.jsx` and `client/src/pages/EditProfile.css`:
+- [x] Add "Edit Profile" link/action in `client/src/components/ProfileMenu.jsx` for both Student and Instructor profiles.
+- [x] Create `client/src/pages/EditProfile.jsx` and `client/src/pages/EditProfile.css`:
       1. Profile photo preview with drag/drop or click-to-upload via Cloudinary.
       2. Basic profile details form: Full Name, Email (read-only or editable).
       3. Instructor-specific fields (conditionally rendered): Headline/Bio, Phone, City, and GPS coordinates with "Locate Me" button.
       4. Security & Password Change card: Current Password, New Password, Confirm New Password.
-- [ ] Register `/profile` route in `client/src/App.jsx`.
-- [ ] Sync updated user profile to `localStorage` and trigger `'auth-change'` event so navigation header avatars update instantly.
+- [x] Register `/profile` route in `client/src/App.jsx`.
+- [x] Sync updated user profile to `localStorage` and trigger `'auth-change'` event so navigation header avatars update instantly.
 
 #### Phase 4 - Production Build Verification & QA
-- [ ] Verify production build (`npm run build` with 0 errors).
-- [ ] Test student profile update and avatar upload.
-- [ ] Test instructor profile update, avatar upload, and geolocation coordinates update.
+- [x] Verify production build (`npm run build` with 0 errors).
+- [x] Test student profile update and avatar upload.
+- [x] Test instructor profile update, avatar upload, and geolocation coordinates update.
 
 ---
 
@@ -3260,6 +3260,38 @@ client/src/components/StudentNav.jsx and client/src/components/StudentNav.css (a
 - Seed SQL executed cleanly on PostgreSQL.
 - Verified breadcrumb links and guest navbar states in browser.
 - Vite production build (`npm --prefix client run build`) completed with 0 errors in 384ms.
+
+### Session 1 (Branch 11 (ProfileManagement)) - Full Profile Management, Cloudinary Avatars & Geolocation
+
+#### Files Created/Updated So Far
+
+server/db/schema.sql (added `avatar_url TEXT` to `users` table; executed database migration on PostgreSQL and synced existing instructor avatar URLs.)
+
+server/routes/profile.js (created authenticated `GET /api/profile` and `PATCH /api/profile` endpoints supporting name updates, avatar persistence, password changes with bcrypt verification, and instructor bio/phone/city/lat/lng.)
+
+server/routes/auth.js (updated `POST /api/auth/login` to return `avatar_url` in the user payload.)
+
+server/server.js (mounted `profileRoutes` under `/api/profile`.)
+
+client/src/api/cloudinary.js (added `uploadProfileImage(file, onProgress, onAbortRef)` supporting unsigned direct browser uploads to Cloudinary with progress tracking and 5 MB client-side validation.)
+
+client/src/components/ProfileMenu.jsx and client/src/components/ProfileMenu.css (added "✏️ Edit Profile" link targeting `/profile` and enabled avatar image rendering with fallback to initial letter.)
+
+client/src/pages/EditProfile.jsx and client/src/pages/EditProfile.css (built complete Profile Management UI: Cloudinary avatar upload with preview/progress bar, name/email fields, instructor credentials with "📍 Auto-Locate Me" GPS coordinates capture, and password change card with visibility toggles.)
+
+client/src/App.jsx (registered `/profile` route and added it to protected session storage synchronization prefixes.)
+
+#### Decisions Log
+
+- Cloudinary Preset Reusability: Successfully utilized existing Cloudinary upload configuration (`levelup_video_uploads`) via `image/upload` for direct browser image uploads without server bandwidth consumption.
+- Dual Avatar Persistence: Synced `avatar_url` across both `users` and `instructor_profiles` so both student reviews and instructor cards read consistent image data platform-wide.
+- Real-time Session Sync: Saving profile changes writes back to `localStorage.setItem('user')` and emits `'auth-change'`, updating all header avatars across open tabs without requiring full page reloads.
+
+#### Verification
+
+- Backend routes verified via automated script (`scratch/test_full_profile_workflow.js`) covering student profile update, instructor coordinates update, password changes, and login validation.
+- Vite production build (`npm --prefix client run build`) succeeded with 0 errors in 475ms.
+
 
 
 

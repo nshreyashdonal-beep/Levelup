@@ -349,3 +349,11 @@ ALTER TABLE courses
 
 CREATE INDEX IF NOT EXISTS idx_courses_parent_course_id ON courses(parent_course_id);
 
+-- ============================================================
+-- users table — avatar support (Branch 11 Profile Management)
+-- Stores avatar profile picture URL for both students and instructors.
+-- ============================================================
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+

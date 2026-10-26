@@ -36,6 +36,16 @@
   color: #fff;
 }
 
+.profile-menu-avatar--has-img {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.profile-menu-avatar--has-img:hover {
+  opacity: 0.9;
+}
+
 .profile-menu-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -73,15 +83,39 @@
   background: var(--color-instructor-primary);
 }
 
+.profile-menu-header-avatar--has-img {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.profile-menu-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-menu-header-info {
+  min-width: 0;
+  flex: 1;
+}
+
 .profile-menu-name {
   font-size: 0.875rem;
   font-weight: 600;
   color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-menu-email {
   font-size: 0.75rem;
   color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-menu-section {
@@ -108,6 +142,18 @@
 
 .profile-menu-link--instructor:hover {
   background: var(--color-instructor-soft);
+  color: var(--color-instructor-primary-dark);
+}
+
+.profile-menu-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #4f46e5;
+}
+
+.profile-menu-edit.profile-menu-link--instructor {
   color: var(--color-instructor-primary-dark);
 }
 
