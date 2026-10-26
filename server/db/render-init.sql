@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS course_modules (
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   title VARCHAR(150) NOT NULL,
   position INTEGER NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'planned' CHECK (status IN ('planned', 'available')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_course_modules_course ON course_modules(course_id);
