@@ -876,11 +876,11 @@ works, same rule PROGRESS.md uses.
 - [x] Verify remote database connectivity, tables, and relationships via query check [Session 2]
 
 #### Phase 3 - Render Web Service (Backend API) Deployment
-- [ ] Ensure dynamic `PORT` binding (`process.env.PORT || 3000`) and test connection endpoint `/api/health` in `server/server.js`
-- [ ] Verify `ssl: isLocal ? false : { rejectUnauthorized: false }` handles Render internal and external database URLs in `server/config/db.js`
-- [ ] Create Render Web Service (`levelup-api`, Node environment, Root Directory: `server`, Build: `npm install`, Start: `node server.js`)
-- [ ] Link database via Render's private internal network using `DATABASE_URL` (Internal Database URL) and configure `JWT_SECRET` and `NODE_ENV=production`
-- [ ] Deploy backend and verify live health check endpoint `https://<levelup-api>.onrender.com/api/health` returning `{ status: 'ok', db: 'connected' }`
+- [x] Ensure dynamic `PORT` binding (`process.env.PORT || 3000`) and test connection endpoint `/api/health` in `server/server.js` [Session 3]
+- [x] Verify `ssl: isLocal ? false : { rejectUnauthorized: false }` handles Render internal and external database URLs in `server/config/db.js` [Session 3]
+- [x] Create Render Web Service (`levelup-api`, Node environment, Root Directory: `server`, Build: `npm install`, Start: `node server.js`) [Session 3]
+- [x] Link database via Render's private internal network using `DATABASE_URL` (Internal Database URL) and configure `JWT_SECRET` and `NODE_ENV=production` [Session 3]
+- [x] Deploy backend and verify live health check endpoint `https://levelup-api-tnuy.onrender.com/api/health` returning `{ status: 'ok', db: 'connected' }` [Session 3]
 
 #### Phase 4 - Render Static Site (Frontend Client) Deployment
 - [ ] Create Render Static Site (`levelup-web`, Root Directory: `client`, Build: `npm run build`, Publish Directory: `dist`)
@@ -3837,3 +3837,19 @@ server/db/init.js (executed against remote Render cloud PostgreSQL instance with
   - sessions: 6 records
   - reviews: 3 records
 - Direct SQL test confirmed all 5 instructors, 1 student, and 6 published courses across Online, Offline, and Hybrid delivery modes.
+
+### Session 3 (Branch 12 (Deployment on Render)) - Render Web Service (Backend API) Deployment & Live Verification
+
+#### Files Created/Updated So Far
+
+server/config/db.js (added automatic sanitization for `process.env.DATABASE_URL` to strip line breaks and spaces, preventing `getaddrinfo EINVAL` errors on cloud environment variable injection.)
+
+#### Decisions Log
+
+- Database Sanitization: Enhanced `db.js` to defensively trim and strip carriage returns and newlines from `DATABASE_URL`, protecting against browser/UI clipboard formatting artifacts.
+- Internal Network Architecture: Utilized Render's zero-egress internal private networking hostname (`dpg-dbfsnn2jnfac738g60hg-a`) for backend-to-database communication.
+
+#### Verification
+
+- Live Web Service URL: `https://levelup-api-tnuy.onrender.com`
+- Health check verification: `GET https://levelup-api-tnuy.onrender.com/api/health` returns `{ "status": "ok", "db": "connected" }` with HTTP 200.
