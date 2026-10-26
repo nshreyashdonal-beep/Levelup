@@ -121,7 +121,8 @@ A **branch** is a stream of work (the main line, or a side quest that jumps the 
 | 6 | FilterSearch | Search and filter instructors and courses according to student requirements | Completed |
 | 7 | InstructorLectureStudio | Instructor End: Video file upload (Cloudinary CDN), smart URL embeds (YouTube/Vimeo/MP4), and live video preview in ManageCourseContent | In progress |
 | 8 | StudentClassroomPlayer | Student End: Dedicated classroom video player (/courses/:id/learn), auto-completion on video finish, 5-second autoplay progression | Completed |
-| 9 | Improving Website and Solving Bugs | Polish website UI/UX, fix visual/functional bugs, layout responsiveness, and refine student & instructor user flows | In progress |
+| 9 | Improving Website and Solving Bugs | Polish website UI/UX, fix visual/functional bugs, layout responsiveness, and refine student & instructor user flows | Completed |
+| 10 | Branch10_UI_Improvements | Visual overhaul, design system polish, layout responsiveness, and UI modernizations across Branch 9 features | Planning / In progress |
 
 ---
 
@@ -688,6 +689,12 @@ works, same rule PROGRESS.md uses.
       1. Unlock all lectures where `lec.is_trial` is true (with fallback to first lecture if none marked)
       2. Allow prospective students to click and watch any instructor-designated trial preview lecture
 - [x] Verify production build (`npm run build` with 0 errors) [Session 8]
+
+### Branch 10 (Branch10_UI_Improvements)
+
+**Feature Goal:** Comprehensive visual overhaul, typography, styling, responsive layouts, and user interface enhancements for features built in Branch 9 based on user feedback.
+
+*(Phases and action tasks will be converted from user feedback and documented here).*
 
 ---
 
