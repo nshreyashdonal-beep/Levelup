@@ -779,6 +779,15 @@ works, same rule PROGRESS.md uses.
 - [x] Global Curriculum Controls: Added `[− Collapse all modules] / [+ Expand all modules]` toggle in the curriculum header row [Session 9]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 9]
 
+#### Phase 7 - Comprehensive Instructor Dashboard Cockpit (Option B)
+- [x] Backend Aggregation Route: Added authenticated `GET /api/instructors/dashboard` computing live stats (total students, total earnings, average rating, published vs draft course counts), per-course performance, recent student enrollments, and recent reviews [Session 10]
+- [x] Real-time 4 Stats Cards: Replaced mock placeholders with live values (`X Published`, `Y Students`, `₹Z Earnings`, `X.X ★ Rating`) and contextual subtitles in `InstructorDashboard.jsx` [Session 10]
+- [x] Actionable Quick Actions: Upgraded mock non-clickable cards with 4 live navigation actions: `+ Create Course` (`/create-course`), `📦 Manage All Courses` (`/manage-courses`), `👁️ View Public Profile` (`/instructors/:id`), and `⚙️ Edit Profile & Bio` (`/profile`) [Session 10]
+- [x] Course Performance Breakdown: Implemented per-course table displaying status pills, price, enrolled students, generated revenue, ratings, and direct `Manage →` links [Session 10]
+- [x] Recent Activity Feeds: Added two-column layout showing recent student enrollments (with relative dates and course titles) and recent student reviews (with gold stars, comments, and student attribution) [Session 10]
+- [x] Navigational Link Consistency: Corrected `Dashboard` link in `InstructorNav.jsx` and `ProfileMenu.jsx` to route directly to `/instructor-dashboard` instead of the static welcome journey [Session 10]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 10]
+
 ### Branch 11 (ProfileManagement)
 
 **Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
@@ -861,31 +870,41 @@ works, same rule PROGRESS.md uses.
 
 ### Branch 13 (Schedule Doubt Session)
 
-**Feature Goal:** Provide a complete doubt clearing and interactive session scheduling system: enable instructors to schedule, reschedule, and cancel online doubt sessions, in-person offline meetups, and mock tests for their courses, with direct meeting link/location support, and allow enrolled students to view upcoming schedules, countdown timers, and join sessions directly.
+**Feature Goal:** Provide an adaptive doubt clearing and interactive session scheduling system: enable instructors to schedule, reschedule, and cancel in-person offline meetups, classroom labs, and doubt sessions for their courses, with delivery-mode awareness (in-person at institute for Hybrid/Offline with room/agenda, and Google Meet for Online), and display prominent countdown badges and upcoming schedules for enrolled students.
 
-#### Phase 1 - Backend Enhancements (Instructor Feed, Rescheduling & Cancellation)
-- [ ] Add `GET /api/sessions/instructor` endpoint in `server/routes/sessions.js` to fetch all sessions created by the authenticated instructor across all their courses
-- [ ] Add `DELETE /api/sessions/:id` endpoint with instructor ownership authorization to cancel scheduled sessions
-- [ ] Add `PATCH /api/sessions/:id` endpoint to allow instructors to edit session title, description, scheduled date/time, and meeting link/location
+#### Phase 1 - Backend Enhancements (Student Enrolled Feed, Rescheduling & Cancellation)
+- [ ] Add `GET /api/sessions/enrolled` endpoint in `server/routes/sessions.js` to fetch upcoming sessions across all courses the authenticated student is enrolled in
+- [ ] Add `PATCH /api/sessions/:id` endpoint with instructor course-ownership verification to allow updating title, description, scheduled date/time, and room/location
+- [ ] Add `DELETE /api/sessions/:id` endpoint with instructor course-ownership verification to allow canceling scheduled sessions
 - [ ] Verify sessions API routes via automated API testing script
 
-#### Phase 2 - Instructor Session Scheduling & Management UI
-- [ ] Add "Doubt Sessions" tab or navigation option in `client/src/pages/InstructorDashboard.jsx` and `client/src/pages/ManageCourseLayout.jsx`
-- [ ] Create `ScheduleSessionModal.jsx` (Course selector, Session Type: `doubt` / `offline` / `mock_test`, Date & Time picker, Location / Meeting URL, Topic Agenda)
-- [ ] Build Instructor Sessions management list displaying upcoming vs completed sessions with `[ Reschedule ]` and `[ Cancel ]` actions
-- [ ] Verify styling matches the LevelUp design tokens (emerald accent for instructor views)
+#### Phase 2 - Instructor Course Studio Sessions Tab & Delivery-Adaptive Scheduling
+- [ ] Add 4th navigation tab in `client/src/pages/ManageCourseLayout.jsx` immediately to the right of `Publish`:
+      1. For `hybrid` courses: labeled **`Doubt & Offline Sessions`**
+      2. For `online` and `offline` courses: labeled **`Doubt Sessions`**
+- [ ] Register child route `sessions` under `/manage-courses/:courseId` in `client/src/App.jsx`
+- [ ] Create `client/src/pages/ManageCourseSessions.jsx` & `client/src/pages/ManageCourseSessions.css`:
+      1. Delivery-mode adaptive layout:
+         • For **Hybrid & Offline**: Tailored strictly for in-person sessions at the institute (Date, Time, Topic Agenda, and Institute Center / Lab Room) with zero Google Meet clutter
+         • For **Online**: Live virtual doubt clearing with Google Meet link
+      2. Dual quick action buttons for Hybrid: `[ 🏢 + Schedule In-Person Meetup / Lab ]` and `[ 💬 + Schedule Offline Doubt Session ]`
+      3. Modal form with datetime picker, topic description, and institute center/room pre-fill
+      4. Chronological sessions timeline with `[ ✏️ Edit / Reschedule ]` and `[ 🗑️ Cancel ]` actions
 
-#### Phase 3 - Student View & Interactive Attendance
-- [ ] Enhance `CourseDetail.jsx` (Instructor & Classroom tabs) to display upcoming doubt sessions with live countdown badge
-- [ ] Display enrolled student's upcoming doubt sessions in `StudentDashboard.jsx`
-- [ ] Provide direct `[ 💻 Join Live Session ]` or `[ 📍 View Center Location ]` action buttons for enrolled students
-- [ ] Add calendar export or reminder action for prospective attendees
+#### Phase 3 - Student View & In-Person Countdown Alerts
+- [ ] Prominent Countdown Alert on `client/src/pages/CourseDetail.jsx`:
+      Display top banner when a session is upcoming (e.g. `🔔 Next In-Person Meet in 3 Days (Saturday at 11:00 AM at Indore Center — Lab 2)`)
+- [ ] Add "Upcoming In-Person Meets & Doubt Sessions" panel on `client/src/pages/StudentDashboard.jsx` loading from `GET /api/sessions/enrolled`
+- [ ] Direct venue/room badges and topic agenda display for enrolled students
 
-#### Phase 4 - Production Build Verification & Documentation
+#### Phase 4 - Production Build Verification & End-to-End Testing
 - [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
-- [ ] End-to-end testing: Instructor schedules session $\rightarrow$ Student views session on course details $\rightarrow$ Instructor reschedules/cancels
+- [ ] End-to-end testing: Instructor schedules in-person session $\rightarrow$ Student views countdown badge on course details $\rightarrow$ Instructor reschedules/cancels
 - [ ] Update `PROGRESS.md` with Session logs
 
+#### Phase 5 - Branch Verification & Fast-Forward Git Merge to Branch 10
+- [ ] Complete all Branch 13 checklist items
+- [ ] Fast-forward merge `Branch13_Schedule_Doubt_Session` back into `Branch10_UI_Improvements` (Option A)
 
 
 ---
@@ -3607,4 +3626,28 @@ client/src/pages/CourseDetail.css (styled `.classroom-enrolled-top-bar`, `.class
 #### Verification
 
 - Production build (`npm --prefix client run build`) succeeded with 0 errors in 596ms.
+- Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
+
+
+### Session 10 (Branch 10 (Branch10_UI_Improvements)) - Comprehensive Instructor Dashboard Cockpit (Option B)
+
+#### Files Created/Updated So Far
+
+server/routes/instructors.js (added `requireAuth` and `requireRole('instructor')`; created authenticated endpoint `GET /api/instructors/dashboard` placed before `/:id` returning real-time aggregated metrics: published/draft/total course count, total distinct students, total course enrollments, total revenue earned from student enrollments, average rating across all reviews, per-course performance breakdown, recent student enrollments, and recent reviews.)
+
+client/src/components/InstructorNav.jsx & client/src/components/ProfileMenu.jsx (corrected `Dashboard` links from `/instructor-welcome` to `/instructor-dashboard` so instructors access their real analytics dashboard.)
+
+client/src/pages/InstructorDashboard.jsx & client/src/pages/InstructorDashboard.css (overhauled dashboard into a complete cockpit: live 4-card metric overview with currency formatting and review counts; 4 actionable quick action cards with accent colors and hover states; course performance breakdown table tracking enrollments and revenue per course with quick manage links; two-column activity feed tracking recent student enrollments and student reviews with star badges; top greeting row with verified badge and `View Public Profile` action.)
+
+#### Decisions Log
+
+- Accurate Revenue Aggregation: Instead of summing catalog prices, `total_earnings` strictly aggregates course prices for verified student enrollments (`COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN c.price ELSE 0 END), 0)`), ensuring instructors see real sales revenue.
+- Unique Students vs Enrollments: Primary metric displays distinct students taught (`COUNT(DISTINCT enrollments.student_id)`), accompanied by a sub-caption showing total course enrollments.
+- Actionable Quick Actions: Removed dead mock cards ("Go Live", "Schedule Offline") and replaced them with high-utility workflows: `+ Create Course`, `📦 Manage All Courses`, `👁️ View Public Profile`, and `⚙️ Edit Profile & Bio`.
+- Express Route Precedence: Placed `GET /dashboard` prior to `GET /:id` in `server/routes/instructors.js` to ensure the route is correctly resolved by Express instead of treated as a dynamic ID parameter.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 742ms.
+- Verified `GET /api/instructors/dashboard` returns 200 OK with live database data.
 - Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
