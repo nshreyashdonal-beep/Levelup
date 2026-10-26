@@ -414,3 +414,86 @@
   outline: 2px solid #6366f1;
   outline-offset: 2px;
 }
+
+
+/* ============================================================
+ * Instructor Mode Card Enhancements (Variant="instructor")
+ * ============================================================ */
+.course-card-thumb-badge.is-published {
+  background: #059669;
+}
+
+.course-card-thumb-badge.is-archived {
+  background: #475569;
+}
+
+.course-card-thumb-badge.is-draft {
+  background: #d97706;
+}
+
+.course-card-thumb-students {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+  border-radius: 7px;
+  line-height: 1;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.course-card-thumb-students svg {
+  stroke: #ffffff;
+}
+
+/* Instructor Manage CTA Button */
+.course-card-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1.5px solid #10b981;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  white-space: nowrap;
+}
+
+.course-card-manage-btn:hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  transform: translateY(-1px);
+}
+
+.course-card-manage-btn:active {
+  transform: translateY(0);
+}
+
+.course-card-manage-btn:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+
+.course-card--instructor:hover,
+.course-card--instructor:focus-visible {
+  border-color: #a7f3d0;
+  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.12);
+}

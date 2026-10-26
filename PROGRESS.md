@@ -871,9 +871,9 @@ works, same rule PROGRESS.md uses.
 - [x] Test database seeder script (`node server/db/init.js`) locally
 
 #### Phase 2 - Render PostgreSQL Provisioning & Cloud Seeding
-- [ ] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region)
-- [ ] Populate Render cloud database via `DATABASE_URL="<external-url>" npm --prefix server run db:init`
-- [ ] Verify remote database connectivity, tables, and relationships via query check
+- [x] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region) [Session 2]
+- [x] Populate Render cloud database via `DATABASE_URL="<external-url>" npm --prefix server run db:init` [Session 2]
+- [x] Verify remote database connectivity, tables, and relationships via query check [Session 2]
 
 #### Phase 3 - Render Web Service (Backend API) Deployment
 - [ ] Ensure dynamic `PORT` binding (`process.env.PORT || 3000`) and test connection endpoint `/api/health` in `server/server.js`
@@ -3715,7 +3715,9 @@ client/src/pages/ManageCourseDetails.jsx & client/src/pages/ManageCourseDetails.
 
 client/src/pages/PublishCourse.jsx & client/src/pages/PublishCourse.css (overhauled lifecycle management to support `published`, `archived`, and `draft` states; displayed active student enrollment badge; for published courses with active learners, replaced the hazardous "Move to Draft" action with an enterprise "Close Enrollments (Archive)" workflow that delists from Explore while guaranteeing continued access for enrolled learners; added "Re-open Enrollments (Publish)" action for archived courses.)
 
-client/src/pages/ManageCourses.jsx & client/src/pages/ManageCourses.css (split course list into Draft, Published, and Archived sections; rendered `ARCHIVED` and `{enrolled_count} students` badges on course cards.)
+client/src/components/CourseCard.jsx & client/src/components/CourseCard.css (extended modern rectangular card component to support `variant="instructor"`; omitted redundant self-profile row and distance badge; added top-left lifecycle badges for `LIVE`, `ARCHIVED`, and `DRAFT`; added top-right student count pill with vector SVG icon; replaced enroll action with branded `[ Manage Course → ]` CTA button with emerald hover states.)
+
+client/src/pages/ManageCourses.jsx & client/src/pages/ManageCourses.css (overhauled instructor My Courses page to use the unified 16:9 `CourseCard` with `variant="instructor"`; removed legacy card implementation; updated `SkeletonCourseCard` to match 16:9 aspect ratio and height; replaced empty state emoji with clean vector SVG package icon; organized courses into Draft, Published, and Archived sections.)
 
 client/src/pages/InstructorDashboard.jsx & client/src/pages/InstructorDashboard.css (updated course performance breakdown table to properly render distinct `Archived` status pills and updated active courses stat card subtitle.)
 
@@ -3810,3 +3812,28 @@ server/package.json (added `"db:init": "node db/init.js"` script for one-command
 
 - Local database seeder test (`npm --prefix server run db:init`) executed in 0.10s and verified all 8 core tables populated.
 - Production client build (`npm --prefix client run build`) succeeded with 0 errors in 486ms and confirmed `dist/_redirects` is copied to publish directory.
+
+
+### Session 2 (Branch 12 (Deployment on Render)) - Render PostgreSQL Provisioning & Cloud Seeding
+
+#### Files Created/Updated So Far
+
+server/db/init.js (executed against remote Render cloud PostgreSQL instance with SSL rejection bypass; seeded all tables, indexes, extensions, and curated demo dataset in 0.46s.)
+
+#### Decisions Log
+
+- Single-Pass Cloud Population: The automated database runner successfully populated the remote cloud database in Singapore via SSL without requiring manual GUI tools (pgAdmin).
+- Verified Integrity: Queried remote PostgreSQL directly to confirm users, instructors, hybrid/offline/online courses, modules, trial lectures, and sessions are present and ready for backend connection.
+
+#### Verification
+
+- Cloud seeder (`npm --prefix server run db:init`) finished in 0.46s:
+  - users: 6 records
+  - categories: 27 records
+  - courses: 6 records
+  - instructor_profiles: 5 records
+  - course_modules: 12 records
+  - course_lectures: 18 records
+  - sessions: 6 records
+  - reviews: 3 records
+- Direct SQL test confirmed all 5 instructors, 1 student, and 6 published courses across Online, Offline, and Hybrid delivery modes.

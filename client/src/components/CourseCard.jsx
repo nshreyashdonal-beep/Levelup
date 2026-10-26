@@ -6,12 +6,13 @@ import './CourseCard.css';
 /**
  * CourseCard - Modern professional course card (Udemy / Coursera reference style)
  * Features:
- * - 16:9 Thumbnail banner with lazy loading, gradient fallback, and top-left 'NEW' overlay badge
+ * - 16:9 Thumbnail banner with lazy loading, gradient fallback, and top-left overlay badge
  * - Full multi-line course title with zero truncation
- * - Dedicated clickable instructor profile row with circular avatar & location
+ * - Dedicated clickable instructor profile row with circular avatar & location (student view)
  * - Typographic metadata line: Level • Delivery Mode • Language (e.g. Beginner • Hybrid • English)
  * - Enterprise star rating row (4.8 ★ (14) or 4.8 ★ (from previous course))
- * - Pinned bottom footer with formatted Price (₹) and high-visibility Enroll CTA
+ * - Pinned bottom footer with formatted Price (₹) and high-visibility Enroll or Manage CTA
+ * - Supports variant="instructor" for teaching space with status badge, student count & manage action
  */
 export default function CourseCard({
   course,
@@ -21,13 +22,26 @@ export default function CourseCard({
   distanceKm: distanceKmOverride = null,
   enrolled = false,
   progressPercent = 0,
+  variant = 'student', // 'student' | 'instructor'
+  onManageClick,
 }) {
   const navigate = useNavigate();
   const [imgFailed, setImgFailed] = useState(false);
 
   if (!course) return null;
 
+  const isInstructor = variant === 'instructor';
+
   const handleCardClick = () => {
+    if (isInstructor) {
+      if (onManageClick) {
+        onManageClick(course);
+      } else {
+        navigate(`/manage-courses/${course.id}`);
+      }
+      return;
+    }
+
     navigate(
       enrolled
         ? `/courses/${course.id}?from=mycourses&tab=classroom`
@@ -48,6 +62,15 @@ export default function CourseCard({
       onEnrollClick(course);
     } else {
       navigate(`/courses/${course.id}`);
+    }
+  };
+
+  const handleManageClick = (e) => {
+    e.stopPropagation();
+    if (onManageClick) {
+      onManageClick(course);
+    } else {
+      navigate(`/manage-courses/${course.id}`);
     }
   };
 
@@ -101,19 +124,21 @@ export default function CourseCard({
 
   // Typographic metadata array
   const metaItems = [levelLabel, modeLabel, languageLabel].filter(Boolean);
-  // Distance calculation & location awareness
+
+  // Distance calculation & location awareness (only needed for student view)
   const hasUserLocation = Boolean(
-    userLocation &&
+    !isInstructor &&
+      userLocation &&
       Number.isFinite(Number(userLocation.latitude)) &&
       Number.isFinite(Number(userLocation.longitude))
   );
 
   const rawDistance =
-    distanceKmOverride !== null && distanceKmOverride !== undefined
+    !isInstructor && distanceKmOverride !== null && distanceKmOverride !== undefined
       ? Number(distanceKmOverride)
-      : course.distance_km !== null && course.distance_km !== undefined
+      : !isInstructor && course.distance_km !== null && course.distance_km !== undefined
       ? Number(course.distance_km)
-      : course.distanceKm !== null && course.distanceKm !== undefined
+      : !isInstructor && course.distanceKm !== null && course.distanceKm !== undefined
       ? Number(course.distanceKm)
       : null;
 
@@ -146,6 +171,7 @@ export default function CourseCard({
       : calculatedDistanceKm;
 
   const hasDistance =
+    !isInstructor &&
     (hasUserLocation || rawDistance !== null) &&
     resolvedDistanceKm !== null &&
     Number.isFinite(resolvedDistanceKm) &&
@@ -160,19 +186,54 @@ export default function CourseCard({
         })}`
       : 'Free';
 
+  const enrolledCount = Number(course.enrolled_count || 0);
+
   return (
     <article
-      className="course-card"
+      className={`course-card ${isInstructor ? 'course-card--instructor' : ''}`}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`View course: ${course.title}`}
+      aria-label={`${isInstructor ? 'Manage' : 'View'} course: ${course.title}`}
     >
       {/* 1. 16:9 Thumbnail Banner with Overlay Badge */}
       <div className="course-card-thumb-wrapper">
-        {badgeText && (
-          <span className="course-card-thumb-badge">{badgeText}</span>
+        {isInstructor ? (
+          <>
+            <span className={`course-card-thumb-badge is-${course.status || 'draft'}`}>
+              {course.status === 'published'
+                ? 'LIVE'
+                : course.status === 'archived'
+                ? 'ARCHIVED'
+                : 'DRAFT'}
+            </span>
+            {course.enrolled_count !== undefined && (
+              <span className="course-card-thumb-students" title={`${enrolledCount} enrolled students`}>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>{enrolledCount} {enrolledCount === 1 ? 'student' : 'students'}</span>
+              </span>
+            )}
+          </>
+        ) : (
+          badgeText && (
+            <span className="course-card-thumb-badge">{badgeText}</span>
+          )
         )}
 
         {!thumbnailSrc || imgFailed ? (
@@ -201,8 +262,8 @@ export default function CourseCard({
         {/* Course Title (Completely visible, multi-line) */}
         <h3 className="course-card-title">{course.title}</h3>
 
-        {/* Dedicated Instructor Row */}
-        {!hideInstructor && (
+        {/* Dedicated Instructor Row (Student view only) */}
+        {!isInstructor && !hideInstructor && (
           <div
             className="course-card-instructor"
             onClick={handleInstructorClick}
@@ -234,7 +295,7 @@ export default function CourseCard({
               </span>
               {course.instructor_city && (
                 <span className="course-card-instructor-city">
-                  📍 {course.instructor_city}
+                  {course.instructor_city}
                 </span>
               )}
             </div>
@@ -242,7 +303,7 @@ export default function CourseCard({
         )}
 
         {/* Distance Badge (Visible when user clicks 'Use my location') */}
-        {hasDistance && (
+        {!isInstructor && hasDistance && (
           <div className="course-card-distance-pill">
             <span>From you</span>
             <strong>
@@ -277,7 +338,7 @@ export default function CourseCard({
               ({course.review_count} • from previous course)
             </span>
           </div>
-        ) : course.rating_source === 'direct' && Number(course.avg_rating) > 0 ? (
+        ) : (course.rating_source === 'direct' || course.review_count > 0) && Number(course.avg_rating) > 0 ? (
           <div
             className="course-card-rating-row"
             title={`${course.review_count || 0} student reviews`}
@@ -308,8 +369,22 @@ export default function CourseCard({
         )}
       </div>
 
-      {/* 3. Footer: enrollment progress or purchase action */}
-      {enrolled ? (
+      {/* 3. Footer: enrollment progress, purchase action, or instructor manage CTA */}
+      {isInstructor ? (
+        <div className="course-card-footer">
+          <div className="course-card-price-col">
+            <span className="course-card-price">{formattedPrice}</span>
+          </div>
+          <button
+            type="button"
+            className="course-card-manage-btn"
+            onClick={handleManageClick}
+            aria-label={`Manage ${course.title}`}
+          >
+            Manage Course <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      ) : enrolled ? (
         <div className="course-card-progress-footer">
           <div className="course-card-progress-heading">
             <span>Course progress</span>
