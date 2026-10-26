@@ -7,11 +7,14 @@ const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-// Pool reads DATABASE_URL from your .env file automatically.
-const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+// Sanitize connection string by stripping unwanted newlines or whitespace that can occur from UI copy-pastes
+const rawDbUrl = process.env.DATABASE_URL || '';
+const cleanDbUrl = rawDbUrl.trim().replace(/[\r\n\s]+/g, '');
+
+const isLocal = !cleanDbUrl || cleanDbUrl.includes('localhost') || cleanDbUrl.includes('127.0.0.1');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: cleanDbUrl,
   ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
