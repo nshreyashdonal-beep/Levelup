@@ -812,6 +812,13 @@ works, same rule PROGRESS.md uses.
       1. Display Archived courses section and status badges [Session 12]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 12]
 
+#### Phase 10 - Course Thumbnail Direct Cloudinary Upload & 16:9 Aspect Preview
+- [ ] Direct Cloudinary Integration: Export `uploadCourseThumbnail(file, onProgress, onAbortRef)` in `client/src/api/cloudinary.js` with client-side image validation (PNG, JPG, WEBP, max 5MB)
+- [ ] Reusable Thumbnail Uploader Component: Create `client/src/components/ThumbnailUpload.jsx` & `ThumbnailUpload.css` with 16:9 aspect ratio preview, drag-and-drop / click-to-upload, progress bar, SVG icons (zero emojis), and manual URL fallback
+- [ ] Create Course Integration: Integrate `ThumbnailUpload` into `client/src/pages/CreateCourse.jsx`, allowing instructors to upload an image from device or input URL
+- [ ] Course Studio Details Integration: Integrate `ThumbnailUpload` into `client/src/pages/ManageCourseDetails.jsx`, enabling existing courses to update or replace their thumbnail image
+- [ ] Production Verification: Verify production build (`npm --prefix client run build`), test direct image upload to Cloudinary, and push to GitHub `Branch10_UI_Improvements`
+
 ### Branch 11 (ProfileManagement)
 
 **Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
