@@ -19,6 +19,16 @@ router.post('/', requireAuth, requireRole('student'), async (req, res) => {
   }
 
   try {
+    // Verify that the student is actually enrolled in this course
+    const enrollmentCheck = await db.query(
+      'SELECT id FROM enrollments WHERE student_id = $1 AND course_id = $2',
+      [req.user.id, course_id]
+    );
+
+    if (enrollmentCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'You must be enrolled in this course to leave a review' });
+    }
+
     const result = await db.query(
       `INSERT INTO reviews (student_id, course_id, rating, comment)
        VALUES ($1, $2, $3, $4)

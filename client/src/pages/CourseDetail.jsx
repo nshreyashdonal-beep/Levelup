@@ -252,6 +252,11 @@ export default function CourseDetail() {
       return;
     }
 
+    if (!alreadyEnrolled) {
+      setReviewError('You must be enrolled in this course to leave a review');
+      return;
+    }
+
     if (!reviewRating) {
       setReviewError('Please select a rating');
       return;
@@ -640,6 +645,19 @@ export default function CourseDetail() {
                       </p>
                     ) : user.role !== 'student' ? (
                       <p className="course-detail-review-login-msg">Only students can leave reviews.</p>
+                    ) : !alreadyEnrolled ? (
+                      <p className="course-detail-review-login-msg">
+                        Only enrolled students can leave a review.{' '}
+                        <button
+                          type="button"
+                          className="course-detail-review-login-btn"
+                          onClick={handleEnroll}
+                          disabled={enrolling}
+                        >
+                          {enrolling ? 'Enrolling...' : 'Enroll in this course'}
+                        </button>{' '}
+                        to share your feedback.
+                      </p>
                     ) : (
                       <form onSubmit={handleReviewSubmit} className="course-detail-review-form">
                         <p className="course-detail-review-form-label">Leave a review</p>
