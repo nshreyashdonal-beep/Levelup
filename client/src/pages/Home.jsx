@@ -83,6 +83,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
   const [courses, setCourses] = useState([])
   const [coursesLoading, setCoursesLoading] = useState(true)
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [selectedCategoryName, setSelectedCategoryName] = useState('')
+  // searchInput updates immediately as the visitor types
+  const [searchInput, setSearchInput] = useState('')
+  // debouncedQuery updates 300ms after typing stops to prevent rapid API calls & map redraws
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+
   const [locationStatus, setLocationStatus] = useState('idle')
   const [visitorLocation, setVisitorLocation] = useState(null)
   const [nearbyInstructors, setNearbyInstructors] = useState([])
@@ -98,8 +105,48 @@ export default function Home() {
   const navigate = useNavigate()
   const location = useLocation()
 
+
+  // Sync URL query params & auto-scroll to map if hash is present
   useEffect(() => {
-    fetch(`${API_BASE}/api/courses`)
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q') || params.get('search')
+    const cat = params.get('category_id')
+    if (q) {
+      setSearchInput(q)
+      setDebouncedQuery(q)
+    }
+    if (cat) {
+      setSelectedCategoryId(cat)
+    }
+
+    if (window.location.hash === '#nearby-map-section') {
+      const timer = setTimeout(() => {
+        const mapEl = document.getElementById('nearby-map-section')
+        if (mapEl) {
+          mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 250)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchInput.trim())
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // Fetch courses whenever selected category or debounced search query changes
+  useEffect(() => {
+    setCoursesLoading(true)
+    const params = new URLSearchParams()
+    if (selectedCategoryId) params.append('category_id', selectedCategoryId)
+    if (debouncedQuery) params.append('q', debouncedQuery)
+    const query = params.toString() ? `?${params.toString()}` : ''
+
+    fetch(`${API_BASE}/api/courses${query}`)
       .then(response => response.json())
       .then(data => {
         setCourses(Array.isArray(data) ? data : [])
@@ -109,7 +156,7 @@ export default function Home() {
         console.error('Failed to fetch public courses:', error)
         setCoursesLoading(false)
       })
-  }, [])
+  }, [selectedCategoryId, debouncedQuery])
 
   useEffect(() => {
     if (location.hash !== '#explore-courses') return
@@ -155,13 +202,22 @@ export default function Home() {
     )
   }
 
+  // Fetch nearby instructors whenever location, category, or debounced search changes
   useEffect(() => {
     if (!visitorLocation) return
 
     const controller = new AbortController()
+    setNearbyLoading(true)
+
+    const params = new URLSearchParams({
+      lat: visitorLocation.latitude,
+      lng: visitorLocation.longitude,
+    })
+    if (selectedCategoryId) params.append('category_id', selectedCategoryId)
+    if (debouncedQuery) params.append('q', debouncedQuery)
 
     fetch(
-      `${API_BASE}/api/instructors/nearby?lat=${visitorLocation.latitude}&lng=${visitorLocation.longitude}`,
+      `${API_BASE}/api/instructors/nearby?${params.toString()}`,
       { signal: controller.signal }
     )
       .then(response => {
@@ -182,7 +238,7 @@ export default function Home() {
       })
 
     return () => controller.abort()
-  }, [visitorLocation])
+  }, [visitorLocation, selectedCategoryId, debouncedQuery])
 
   useEffect(() => {
     if (!mapElementRef.current) return
@@ -255,7 +311,8 @@ export default function Home() {
           `<strong>${escapeHtml(instructor.instructor_name)}</strong>` +
           `<br />${escapeHtml(instructor.city || 'LevelUp instructor')}` +
           `<br /><span>${instructor.distance_km} km away</span>` +
-          `<br />${courseLinks}`
+          `<br /><div style="margin: 6px 0;"><a href="/instructors/${instructor.instructor_id}" style="font-weight: 700; color: #4f46e5; text-decoration: none;">View Full Profile & Courses →</a></div>` +
+          (courseLinks ? `<small style="color: #64748b;">Courses:</small><br />${courseLinks}` : '')
         )
         .addTo(mapMarkersRef.current)
 
@@ -341,10 +398,42 @@ export default function Home() {
 
   const locationButtonDisabled = locationStatus === 'loading'
 
+    const handleSearchSubmit = () => {
+    setDebouncedQuery(searchInput.trim())
+    const mapEl = document.getElementById('nearby-map-section')
+    if (mapEl) {
+      mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleCategoryChange = (catId, catName) => {
+    setSelectedCategoryId(catId)
+    setSelectedCategoryName(catName || '')
+    const mapEl = document.getElementById('nearby-map-section')
+    if (mapEl) {
+      mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleResetFilters = () => {
+    setSearchInput('')
+    setDebouncedQuery('')
+    setSelectedCategoryId('')
+    setSelectedCategoryName('')
+  }
+
+  const hasActiveFilters = Boolean(searchInput || debouncedQuery || selectedCategoryId)
 
   return (
     <div className="home-page">
-      <Navbar />
+      <Navbar
+        searchInput={searchInput}
+        onSearchInputChange={setSearchInput}
+        selectedCategoryId={selectedCategoryId}
+        selectedCategoryName={selectedCategoryName}
+        onCategoryChange={handleCategoryChange}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
       <main className="home-main">
 
@@ -399,7 +488,7 @@ export default function Home() {
         </section>
 
         {/* Nearby map panel — markers are added only after location permission. */}
-        <section className="home-location-section" aria-labelledby="home-location-title">
+        <section id="nearby-map-section" className="home-location-section" aria-labelledby="home-location-title">
           <div className="home-location-card">
             <div className="home-location-header">
               <div className="home-location-icon" aria-hidden="true">⌖</div>
@@ -439,6 +528,8 @@ export default function Home() {
                 )}
               </div>
             </div>
+
+            
 
             {/* Map + instructor list side by side */}
             <div className={`home-map-list-wrap${listPanelVisible ? ' home-map-list-wrap--open' : ''}`}>
@@ -508,7 +599,20 @@ export default function Home() {
                         </div>
                       ) : nearbyInstructors.length === 0 ? (
                         <div className="home-nearby-status">
-                          No instructors near you yet. Try again later as more local courses are published.
+                          {hasActiveFilters ? (
+                            <>
+                              No nearby instructors teach courses matching your filter.
+                              <button
+                                type="button"
+                                className="home-nearby-reset-link"
+                                onClick={handleResetFilters}
+                              >
+                                Reset filters
+                              </button>
+                            </>
+                          ) : (
+                            'No instructors near you yet. Try again later as more local courses are published.'
+                          )}
                         </div>
                       ) : (
                         <div className="home-nearby-list">
@@ -580,10 +684,74 @@ export default function Home() {
             )}
           </div>
 
+          {/* Active filters summary */}
+          {hasActiveFilters && (
+            <div className="course-active-filter-bar">
+              <span className="course-active-filter-label">Active filters:</span>
+              {selectedCategoryName && (
+                <span className="course-active-filter-chip">
+                  Category: <strong>{selectedCategoryName}</strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryId('')
+                      setSelectedCategoryName('')
+                    }}
+                    aria-label="Remove category filter"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              {debouncedQuery && (
+                <span className="course-active-filter-chip">
+                  Search: <strong>"{debouncedQuery}"</strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput('')
+                      setDebouncedQuery('')
+                    }}
+                    aria-label="Remove search query"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                className="course-active-filter-reset"
+                onClick={handleResetFilters}
+              >
+                Reset all filters
+              </button>
+            </div>
+          )}
+
           {coursesLoading ? (
             <div className="home-course-status">Finding courses for you...</div>
           ) : courses.length === 0 ? (
-            <div className="home-course-status">New courses will appear here soon.</div>
+            <div className="home-course-status home-course-status--empty">
+              <div className="home-course-status-icon" aria-hidden="true">
+                {hasActiveFilters ? '🔍' : '📚'}
+              </div>
+              <p>
+                {debouncedQuery
+                  ? `No courses match "${debouncedQuery}"`
+                  : selectedCategoryId
+                  ? 'No courses found in this category'
+                  : 'New courses will appear here soon.'}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="course-empty-reset-btn"
+                  onClick={handleResetFilters}
+                >
+                  Reset filters
+                </button>
+              )}
+            </div>
           ) : (
             <div className="home-course-grid">
               {courses.map(course => (
@@ -600,14 +768,62 @@ export default function Home() {
                   role="button"
                   tabIndex="0"
                 >
-                  <div className="home-course-avatar">
-                    {course.title.charAt(0).toUpperCase()}
+                  <div className="home-course-card-top">
+                    <div className="home-course-badges">
+                      <span className={`home-course-mode-pill is-${course.delivery_mode || 'online'}`}>
+                        {course.delivery_mode === 'offline' ? '🏢 Offline' : course.delivery_mode === 'hybrid' ? '🔄 Hybrid' : '🌐 Online'}
+                      </span>
+                      {course.level && (
+                        <span className="home-course-level-pill">
+                          {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="home-course-card-arrow" aria-hidden="true">↗</span>
                   </div>
+
                   <h3>{course.title}</h3>
-                  <p>By {course.instructor_name || 'LevelUp instructor'}</p>
+
+                  <div
+                    className="home-course-instructor-row"
+                    onClick={(e) => {
+                      if (course.instructor_id) {
+                        e.stopPropagation();
+                        navigate(`/instructors/${course.instructor_id}`);
+                      }
+                    }}
+                    title={`View ${course.instructor_name || 'instructor'}'s full profile`}
+                  >
+                    <div className="home-course-instructor-avatar">
+                      {course.instructor_avatar_url ? (
+                        <img
+                          src={course.instructor_avatar_url}
+                          alt={course.instructor_name}
+                          className="home-course-instructor-img"
+                        />
+                      ) : (
+                        <div className="home-course-instructor-initials">
+                          {(course.instructor_name || 'I').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="home-course-instructor-info">
+                      <span className="home-course-instructor-name">
+                        {course.instructor_name || 'LevelUp Instructor'}
+                      </span>
+                      {course.instructor_city && (
+                        <span className="home-course-instructor-city">
+                          📍 {course.instructor_city}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="home-course-meta">
                     <strong>₹{course.price}</strong>
-                    <span>View course →</span>
+                    <span>
+                      {Number(course.avg_rating) > 0 ? `⭐ ${Number(course.avg_rating).toFixed(1)}` : 'View course →'}
+                    </span>
                   </div>
                 </article>
               ))}

@@ -9,7 +9,7 @@
 // toggle here wouldn't change the request at all. Left it out rather than
 // keep a control that does nothing.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -22,6 +22,21 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect to active dashboard
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      const user = stored ? JSON.parse(stored) : null;
+      if (user) {
+        if (user.role === 'instructor') {
+          navigate('/instructor-dashboard', { replace: true });
+        } else {
+          navigate('/student-landing', { replace: true });
+        }
+      }
+    } catch {}
+  }, [navigate]);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,6 +64,7 @@ export default function Login() {
       // Save the token so future requests can prove who's logged in.
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('auth-change'));
 
       // Send each role to its own landing spot. Students land on the
       // Student Dashboard first (with StudentNav), which has an

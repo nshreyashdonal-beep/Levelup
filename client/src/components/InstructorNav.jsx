@@ -20,7 +20,7 @@ import './InstructorNav.css';
 export default function InstructorNav({ user }) {
   return (
     <header className="instructor-nav">
-      <Link to="/" className="instructor-nav-logo">
+      <Link to="/instructor-dashboard" className="instructor-nav-logo">
         <BrandLogo variant="instructor" compact />
       </Link>
 

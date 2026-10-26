@@ -10,6 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 24px;
 }
 
@@ -18,6 +19,7 @@
   align-items: center;
   gap: 8px;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .instructor-nav-logo-badge {
@@ -40,10 +42,10 @@
 }
 
 .instructor-nav-search-wrap {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 288px;
+  flex: 0 1 320px;
+  min-width: 140px;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
 .instructor-nav-search {
@@ -65,6 +67,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-shrink: 0;
 }
 
 .instructor-nav-link {
@@ -72,6 +75,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.15s;
 }
 
@@ -79,9 +83,28 @@
   color: var(--color-instructor-primary-dark);
 }
 
-/* Avatar + dropdown is now ProfileMenu.jsx/.css, shared with StudentNav,
-   instead of a plain non-clickable div styled here. */
+@media (max-width: 860px) {
+  .instructor-nav {
+    padding: 10px 16px;
+    gap: 12px;
+  }
 
-/* Note: .instructor-nav is already `position: sticky` above, which is
-   enough to make it the positioning context for the absolutely-centered
-   search bar (any non-static position value establishes that). */
+  .instructor-nav-search-wrap {
+    flex: 0 1 200px;
+    max-width: 220px;
+  }
+
+  .instructor-nav-links {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .instructor-nav-search-wrap {
+    display: none;
+  }
+
+  .instructor-nav-links {
+    gap: 12px;
+  }
+}

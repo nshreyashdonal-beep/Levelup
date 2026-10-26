@@ -3,7 +3,8 @@
 // No CSS import here — App itself renders no markup of its own, just
 // routes to whichever page component matches the current URL.
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
@@ -21,8 +22,47 @@ import ManageCourseLayout from './pages/ManageCourseLayout.jsx'
 import ManageCourseDetails from './pages/ManageCourseDetails.jsx'
 import ManageCourseContent from './pages/ManageCourseContent.jsx'
 import PublishCourse from './pages/PublishCourse.jsx'
+import CoursePlayer from './pages/CoursePlayer.jsx'
+import InstructorProfile from './pages/InstructorProfile.jsx'
 
 function App() {
+  const navigate = useNavigate()
+
+  // Cross-tab session synchronization:
+  // If user logs out or switches accounts in another tab, sync this tab immediately.
+  useEffect(() => {
+    function handleStorage(event) {
+      if (event.key === 'token' || event.key === 'user') {
+        const token = localStorage.getItem('token')
+        const user = localStorage.getItem('user')
+
+        if (!token || !user) {
+          // User logged out in another tab
+          const protectedPrefixes = [
+            '/student-',
+            '/instructor-',
+            '/mycourse',
+            '/manage-courses',
+            '/create-course',
+          ]
+          const isProtected =
+            protectedPrefixes.some((p) => window.location.pathname.startsWith(p)) ||
+            window.location.pathname.includes('/learn')
+
+          if (isProtected) {
+            navigate('/', { replace: true })
+          }
+        } else {
+          // Token or user switched in another tab — reload to sync active session
+          window.location.reload()
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [navigate])
+
   return (
     <>
       {/* Resets scroll position on every route change — see
@@ -40,6 +80,8 @@ function App() {
         <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
         <Route path="/mycourse" element={<MyCourses />} />
         <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/instructors/:id" element={<InstructorProfile />} />
+        <Route path="/courses/:courseId/learn" element={<CoursePlayer />} />
         <Route path="/manage-courses" element={<ManageCourses />} />
         <Route path="/create-course" element={<CreateCourse />} />
 

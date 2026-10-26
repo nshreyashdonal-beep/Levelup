@@ -23,6 +23,72 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 
 -- ============================================================
+-- categories table
+-- Stores the category tree used to organize courses. A category
+-- can have a parent category, while top-level categories leave
+-- `parent_id` blank.
+-- ============================================================
+CREATE TABLE categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL,
+  parent_id UUID REFERENCES categories(id)
+);
+
+-- Speeds up finding the direct children of a category
+CREATE INDEX idx_categories_parent ON categories(parent_id);
+
+-- Seed the initial 3-level Technology category tree.
+INSERT INTO categories (name)
+VALUES ('Technology');
+
+INSERT INTO categories (name, parent_id)
+SELECT subcategory.name, technology.id
+FROM (
+  VALUES
+    ('Programming'),
+    ('Web Development'),
+    ('Data & AI'),
+    ('Cybersecurity'),
+    ('Design & Multimedia')
+) AS subcategory(name)
+CROSS JOIN categories AS technology
+WHERE technology.name = 'Technology'
+  AND technology.parent_id IS NULL;
+
+INSERT INTO categories (name, parent_id)
+SELECT topic.name, subcategory.id
+FROM (
+  VALUES
+    ('Programming', 'Python'),
+    ('Programming', 'JavaScript'),
+    ('Programming', 'Java'),
+    ('Programming', 'C / C++'),
+    ('Programming', 'Other'),
+    ('Web Development', 'Frontend'),
+    ('Web Development', 'Backend'),
+    ('Web Development', 'Full Stack'),
+    ('Web Development', 'Other'),
+    ('Data & AI', 'Data Analysis'),
+    ('Data & AI', 'Machine Learning'),
+    ('Data & AI', 'Artificial Intelligence'),
+    ('Data & AI', 'Other'),
+    ('Cybersecurity', 'Network Security'),
+    ('Cybersecurity', 'Ethical Hacking'),
+    ('Cybersecurity', 'Cloud Security'),
+    ('Cybersecurity', 'Other'),
+    ('Design & Multimedia', 'UI / UX Design'),
+    ('Design & Multimedia', 'Graphic Design'),
+    ('Design & Multimedia', 'Video & Animation'),
+    ('Design & Multimedia', 'Other')
+) AS topic(subcategory_name, name)
+JOIN categories AS subcategory
+  ON subcategory.name = topic.subcategory_name
+JOIN categories AS technology
+  ON technology.id = subcategory.parent_id
+ AND technology.name = 'Technology'
+WHERE subcategory.parent_id IS NOT NULL;
+
+-- ============================================================
 -- courses table
 -- Each course belongs to one instructor (a user with role = 'instructor').
 -- ============================================================
@@ -37,6 +103,17 @@ CREATE TABLE courses (
 
 -- Speeds up "show all courses by this instructor" queries
 CREATE INDEX idx_courses_instructor ON courses(instructor_id);
+
+-- ============================================================
+-- courses table — structured category link (Branch 6 / FilterSearch)
+-- Kept nullable during migration so existing courses remain valid
+-- until they are backfilled into the category tree.
+-- ============================================================
+ALTER TABLE courses
+  ADD COLUMN category_id UUID REFERENCES categories(id);
+
+-- Speeds up filtering courses by category
+CREATE INDEX idx_courses_category ON courses(category_id);
 
 -- ============================================================
 -- enrollments table
@@ -106,6 +183,10 @@ ALTER TABLE instructor_profiles
 ALTER TABLE instructor_profiles
   RENAME COLUMN location TO city;
 
+-- Instructor avatar profile picture URL (Cloudinary or uploaded image)
+ALTER TABLE instructor_profiles
+  ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
 -- ============================================================
 -- sessions table
 -- One extra "event" tied to a course: a doubt session, an
@@ -152,6 +233,41 @@ ALTER TABLE courses
   ADD COLUMN outcomes TEXT,
   ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
 
+-- Backfill existing legacy course categories into the new tree.
+-- Courses already assigned a category are left unchanged. Unknown legacy
+-- values use Programming > Other as the neutral Technology fallback.
+UPDATE courses
+SET category_id = (
+  SELECT topic.id
+  FROM categories AS topic
+  JOIN categories AS subcategory
+    ON topic.parent_id = subcategory.id
+  JOIN categories AS technology
+    ON subcategory.parent_id = technology.id
+  WHERE technology.name = 'Technology'
+    AND technology.parent_id IS NULL
+    AND topic.name = CASE
+      WHEN lower(coalesce(courses.title, '') || ' ' || coalesce(courses.description, ''))
+        LIKE '%python%'
+        THEN 'Python'
+      ELSE 'Other'
+    END
+    AND subcategory.name = CASE
+      WHEN lower(coalesce(courses.category, '')) IN ('design', 'photography')
+        THEN 'Design & Multimedia'
+      WHEN lower(coalesce(courses.category, '')) IN ('database', 'data', 'sql')
+        THEN 'Data & AI'
+      WHEN lower(coalesce(courses.category, '')) IN ('technology', 'development', 'programming')
+        THEN 'Programming'
+      WHEN lower(coalesce(courses.title, '') || ' ' || coalesce(courses.description, ''))
+        LIKE '%javascript%'
+        THEN 'Web Development'
+      ELSE 'Programming'
+    END
+  LIMIT 1
+)
+WHERE courses.category_id IS NULL;
+
 -- ============================================================
 -- course_modules table
 -- A module is one major section of a course (e.g. "Week 1: Basics").
@@ -185,6 +301,7 @@ CREATE TABLE course_lectures (
   content TEXT,
   video_url TEXT,
   duration_minutes INTEGER,
+  duration_seconds INTEGER,
   position INTEGER NOT NULL DEFAULT 0,
   status VARCHAR(20) NOT NULL DEFAULT 'planned' CHECK (status IN ('planned', 'available')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -192,3 +309,32 @@ CREATE TABLE course_lectures (
 
 -- Speeds up "show all lectures for this module, in order" queries
 CREATE INDEX idx_course_lectures_module ON course_lectures(module_id);
+
+-- Flag to designate lecture as a free trial preview for prospective students
+ALTER TABLE course_lectures
+  ADD COLUMN IF NOT EXISTS is_trial BOOLEAN NOT NULL DEFAULT false;
+
+-- ============================================================
+-- lecture_progress table (Branch 8 / StudentClassroomPlayer)
+-- Records the moment a student finishes a lecture. One student
+-- can complete each lecture only once.
+-- ============================================================
+CREATE TABLE lecture_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES users(id),
+  lecture_id UUID NOT NULL REFERENCES course_lectures(id),
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, lecture_id)
+);
+
+-- Speeds up loading one student's completion state for a classroom.
+CREATE INDEX idx_lecture_progress_student ON lecture_progress(student_id);
+
+
+-- ============================================================
+-- courses table — schema cleanup (Branch 6 / FilterSearch Phase 8)
+-- The legacy free-text `category` column is dropped now that all
+-- courses have been migrated to the structured `category_id` tree.
+-- ============================================================
+ALTER TABLE courses
+  DROP COLUMN IF EXISTS category;

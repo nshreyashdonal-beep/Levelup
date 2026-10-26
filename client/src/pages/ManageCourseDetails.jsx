@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { API_BASE } from '../api';
+import CategorySelector from '../components/CategorySelector';
 import './ManageCourseDetails.css';
 
 export default function ManageCourseDetails() {
@@ -13,6 +14,7 @@ export default function ManageCourseDetails() {
     description: course.description || '',
     price: course.price ?? '',
     category: course.category || '',
+    category_id: course.category_id || '',
     level: course.level || '',
     delivery_mode: course.delivery_mode || '',
     language: course.language || '',
@@ -94,10 +96,17 @@ export default function ManageCourseDetails() {
               <textarea name="description" rows="5" value={formData.description} onChange={handleChange} />
             </label>
 
-            <label className="manage-course-details-field">
-              Category
-              <input name="category" value={formData.category} onChange={handleChange} />
-            </label>
+            <div className="manage-course-details-field--wide">
+              <CategorySelector
+                value={formData.category_id}
+                onChange={({ categoryId }) => {
+                  setFormData((current) => ({
+                    ...current,
+                    category_id: categoryId,
+                  }));
+                }}
+              />
+            </div>
 
             <label className="manage-course-details-field">
               Language

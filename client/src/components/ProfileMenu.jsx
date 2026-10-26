@@ -34,9 +34,15 @@ export default function ProfileMenu({ user }) {
   }, []);
 
   function handleLogout() {
+    setOpen(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/');
+    window.dispatchEvent(new Event('auth-change'));
+    if (window.location.pathname === '/') {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/');
+    }
   }
 
   const initial = user?.name?.charAt(0).toUpperCase() || '?';

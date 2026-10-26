@@ -13,6 +13,8 @@ const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
 const sessionRoutes = require('./routes/sessions');
 const instructorRoutes = require('./routes/instructors');
+const categoryRoutes = require('./routes/categories');
+const learningRoutes = require('./routes/learning');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -47,6 +49,12 @@ app.use('/api/sessions', sessionRoutes);
 
 // Public instructor discovery routes, including nearby instructors.
 app.use('/api/instructors', instructorRoutes);
+
+// Public course category tree used by the search and filter controls.
+app.use('/api/categories', categoryRoutes);
+
+// Student classroom and lecture-progress routes.
+app.use('/api/learning', learningRoutes);
 
 // Temporary test route to prove the middleware works — remove once real
 // protected routes (courses, etc.) exist to test against instead.

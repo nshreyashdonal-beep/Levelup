@@ -2,17 +2,211 @@
 // This page keeps module and lecture management together so the instructor
 // can build the actual course content step by step.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { API_BASE } from '../api';
+import { uploadLectureVideo } from '../api/cloudinary';
 import './ManageCourseContent.css';
 
 const emptyLecture = {
   title: '',
   content: '',
   video_url: '',
-  duration_minutes: '',
+  duration_seconds: '',
+  is_trial: false,
 };
+
+function getVideoPreview(url) {
+  if (!url?.trim()) return null;
+
+  try {
+    const parsedUrl = new URL(url.trim());
+    const hostname = parsedUrl.hostname.toLowerCase().replace(/^www\./, '');
+
+    if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+      const videoId = parsedUrl.searchParams.get('v');
+      return videoId
+        ? {
+            type: 'youtube',
+            src: `https://www.youtube.com/embed/${videoId}`,
+            videoId,
+          }
+        : { type: 'unsupported' };
+    }
+
+    if (hostname === 'youtu.be') {
+      const videoId = parsedUrl.pathname.split('/').filter(Boolean)[0];
+      return videoId
+        ? {
+            type: 'youtube',
+            src: `https://www.youtube.com/embed/${videoId}`,
+            videoId,
+          }
+        : { type: 'unsupported' };
+    }
+
+    if (hostname === 'vimeo.com') {
+      const videoId = parsedUrl.pathname.split('/').filter(Boolean)[0];
+      return /^\d+$/.test(videoId || '')
+        ? { type: 'embed', src: `https://player.vimeo.com/video/${videoId}` }
+        : { type: 'unsupported' };
+    }
+
+    const isCloudinaryVideo = hostname.endsWith('cloudinary.com')
+      && parsedUrl.pathname.includes('/video/upload/');
+    const isDirectVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(parsedUrl.pathname);
+
+    if (isCloudinaryVideo) {
+      parsedUrl.pathname = parsedUrl.pathname.replace(
+        '/video/upload/',
+        '/video/upload/vc_h264,ac_aac,f_mp4/'
+      );
+    }
+
+    return isCloudinaryVideo || isDirectVideo
+      ? { type: 'video', src: parsedUrl.toString() }
+      : { type: 'unsupported' };
+  } catch {
+    return { type: 'unsupported' };
+  }
+}
+
+function getVideoDurationSeconds(file) {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    const objectUrl = URL.createObjectURL(file);
+
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      const durationSeconds = Number.isFinite(video.duration)
+        ? Math.max(0, Math.round(video.duration))
+        : null;
+      URL.revokeObjectURL(objectUrl);
+      resolve(durationSeconds);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(null);
+    };
+    video.src = objectUrl;
+  });
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '';
+  if (seconds < 60) return `${seconds} sec`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return remainingSeconds ? `${minutes} min ${remainingSeconds} sec` : `${minutes} min`;
+}
+
+function secondsToDuration(seconds) {
+  return Number.isFinite(seconds) && seconds >= 0
+    ? Math.max(0, Math.round(seconds))
+    : null;
+}
+
+function YouTubePreview({ preview, onDurationDetected }) {
+  useEffect(() => {
+    let player;
+    let cancelled = false;
+
+    function createPlayer() {
+      if (cancelled || !window.YT?.Player) return;
+
+      player = new window.YT.Player('lecture-youtube-preview', {
+        videoId: preview.videoId,
+        events: {
+          onReady: (event) => {
+            const duration = event.target.getDuration();
+            if (Number.isFinite(duration) && duration > 0) {
+              onDurationDetected(secondsToDuration(duration));
+            }
+          },
+        },
+      });
+    }
+
+    if (window.YT?.Player) {
+      createPlayer();
+    } else {
+      const existingScript = document.querySelector(
+        'script[src="https://www.youtube.com/iframe_api"]'
+      );
+
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://www.youtube.com/iframe_api';
+        document.body.appendChild(script);
+      }
+
+      const previousReady = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        previousReady?.();
+        createPlayer();
+      };
+    }
+
+    return () => {
+      cancelled = true;
+      player?.destroy();
+    };
+  }, [preview.videoId]);
+
+  return <div id="lecture-youtube-preview" className="manage-course-content-youtube-preview" />;
+}
+
+function VideoPreview({ url, onDurationDetected }) {
+  const preview = getVideoPreview(url);
+
+  if (!preview) return null;
+
+  return (
+    <div className="manage-course-content-preview">
+      <span className="manage-course-content-preview-label">Live Preview</span>
+
+      {preview.type === 'youtube' && (
+        <YouTubePreview
+          preview={preview}
+          onDurationDetected={onDurationDetected}
+        />
+      )}
+
+      {preview.type === 'embed' && (
+        <iframe
+          src={preview.src}
+          title="Lecture video preview"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      )}
+
+      {preview.type === 'video' && (
+        <video
+          controls
+          preload="metadata"
+          playsInline
+          src={preview.src}
+          onLoadedMetadata={(event) => {
+            event.currentTarget.muted = false;
+            event.currentTarget.volume = 1;
+            const durationSeconds = secondsToDuration(event.currentTarget.duration);
+            if (durationSeconds !== null) onDurationDetected?.(durationSeconds);
+          }}
+        >
+          Your browser does not support video playback.
+        </video>
+      )}
+
+      {preview.type === 'unsupported' && (
+        <p className="manage-course-content-preview-message">
+          Preview is unavailable for this URL. Use YouTube, Vimeo, or a direct
+          MP4/WebM/OGG video URL.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function ManageCourseContent() {
   const { course, updateCourse } = useOutletContext();
@@ -26,12 +220,25 @@ export default function ManageCourseContent() {
   const [addingModule, setAddingModule] = useState(false);
   const [addingLectureId, setAddingLectureId] = useState(null);
   const [savingLectureId, setSavingLectureId] = useState(null);
+  const [uploadingVideoKey, setUploadingVideoKey] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const uploadAbortRef = useRef(null);
 
   function clearMessages() {
     setMessage('');
     setError('');
+  }
+
+  function cancelUpload() {
+    if (uploadAbortRef.current) {
+      uploadAbortRef.current();
+      uploadAbortRef.current = null;
+    }
+    setUploadingVideoKey(null);
+    setUploadProgress(0);
+    setMessage('Video upload was cancelled.');
   }
 
   function getLectureForm(moduleId) {
@@ -46,6 +253,46 @@ export default function ManageCourseContent() {
         [field]: value,
       },
     }));
+  }
+
+  async function uploadVideo(file, formKey, updateForm) {
+    clearMessages();
+    setUploadingVideoKey(formKey);
+    setUploadProgress(0);
+
+    try {
+      const uploadedVideo = await uploadLectureVideo(
+        file,
+        setUploadProgress,
+        uploadAbortRef
+      );
+      const cloudinaryDurationSeconds = secondsToDuration(uploadedVideo.duration);
+
+      updateForm({
+        secureUrl: uploadedVideo.secureUrl,
+        durationSeconds: cloudinaryDurationSeconds,
+      });
+      setMessage('Video uploaded successfully. URL and exact duration filled in.');
+
+      if (cloudinaryDurationSeconds === null) {
+        const localDurationSeconds = await getVideoDurationSeconds(file);
+        if (localDurationSeconds !== null) {
+          updateForm({
+            secureUrl: uploadedVideo.secureUrl,
+            durationSeconds: localDurationSeconds,
+          });
+        }
+      }
+    } catch (uploadError) {
+      if (uploadError.isCancelled) {
+        setMessage('Video upload was cancelled.');
+      } else {
+        setError(uploadError.message || 'Could not upload the video.');
+      }
+    } finally {
+      uploadAbortRef.current = null;
+      setUploadingVideoKey(null);
+    }
   }
 
   async function addModule(event) {
@@ -119,10 +366,11 @@ export default function ManageCourseContent() {
           title: form.title.trim(),
           content: form.content.trim() || null,
           video_url: form.video_url.trim() || null,
-          duration_minutes: form.duration_minutes
-            ? Number(form.duration_minutes)
+          duration_seconds: form.duration_seconds !== ''
+            ? Number(form.duration_seconds)
             : null,
           position: module.lectures?.length || 0,
+          is_trial: Boolean(form.is_trial),
         }),
       });
 
@@ -164,7 +412,9 @@ export default function ManageCourseContent() {
       title: lecture.title || '',
       content: lecture.content || '',
       video_url: lecture.video_url || '',
-      duration_minutes: lecture.duration_minutes ?? '',
+      duration_seconds: lecture.duration_seconds
+        ?? (lecture.duration_minutes != null ? lecture.duration_minutes * 60 : ''),
+      is_trial: Boolean(lecture.is_trial),
     });
   }
 
@@ -195,9 +445,10 @@ export default function ManageCourseContent() {
           title: editLectureForm.title.trim(),
           content: editLectureForm.content.trim() || null,
           video_url: editLectureForm.video_url.trim() || null,
-          duration_minutes: editLectureForm.duration_minutes
-            ? Number(editLectureForm.duration_minutes)
+          duration_seconds: editLectureForm.duration_seconds !== ''
+            ? Number(editLectureForm.duration_seconds)
             : null,
+          is_trial: Boolean(editLectureForm.is_trial),
         }),
       });
 
@@ -481,18 +732,21 @@ export default function ManageCourseContent() {
 
                                 <div className="manage-course-content-form-row">
                                   <label>
-                                    Duration (minutes)
+                                    Duration (seconds)
                                     <input
                                       type="number"
                                       min="0"
-                                      value={editLectureForm.duration_minutes}
+                                      value={editLectureForm.duration_seconds}
                                       onChange={(event) =>
                                         setEditLectureForm((current) => ({
                                           ...current,
-                                          duration_minutes: event.target.value,
+                                          duration_seconds: event.target.value,
                                         }))
                                       }
                                     />
+                                    <small>
+                                      {formatDuration(Number(editLectureForm.duration_seconds))}
+                                    </small>
                                   </label>
 
                                   <label>
@@ -510,6 +764,72 @@ export default function ManageCourseContent() {
                                     />
                                   </label>
                                 </div>
+
+                                <label className="manage-course-content-upload-field">
+                                  Or upload a video file directly to Cloudinary
+                                  <input
+                                    type="file"
+                                    accept="video/*"
+                                    disabled={uploadingVideoKey === `edit-${lecture.id}`}
+                                    onChange={(event) => {
+                                      const file = event.target.files?.[0];
+                                      if (!file) return;
+                                      uploadVideo(
+                                        file,
+                                        `edit-${lecture.id}`,
+                                        ({ secureUrl, durationSeconds }) =>
+                                          setEditLectureForm((current) => ({
+                                            ...current,
+                                            video_url: secureUrl,
+                                            ...(durationSeconds !== null && {
+                                              duration_seconds: durationSeconds,
+                                            }),
+                                          }))
+                                      );
+                                      event.target.value = '';
+                                    }}
+                                  />
+                                  {uploadingVideoKey === `edit-${lecture.id}` && (
+                                    <div className="manage-course-content-upload-progress-row">
+                                      <span className="manage-course-content-upload-progress">
+                                        Uploading... {uploadProgress}%
+                                      </span>
+                                      <button
+                                        type="button"
+                                        className="manage-course-content-cancel-upload-btn"
+                                        onClick={cancelUpload}
+                                      >
+                                        Cancel Upload
+                                      </button>
+                                    </div>
+                                  )}
+                                </label>
+
+                                <VideoPreview
+                                  url={editLectureForm.video_url}
+                                  onDurationDetected={(durationSeconds) =>
+                                    setEditLectureForm((current) => ({
+                                      ...current,
+                                      duration_seconds: durationSeconds,
+                                    }))
+                                  }
+                                />
+
+                                <label className="manage-course-content-trial-checkbox-field">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(editLectureForm.is_trial)}
+                                    onChange={(event) =>
+                                      setEditLectureForm((current) => ({
+                                        ...current,
+                                        is_trial: event.target.checked,
+                                      }))
+                                    }
+                                  />
+                                  <span>
+                                    🎓 Allow Free Trial Class Preview (prospective students can watch this lecture without enrolling)
+                                  </span>
+                                </label>
 
                                 <div className="manage-course-content-edit-actions">
                                   <button
@@ -537,12 +857,21 @@ export default function ManageCourseContent() {
                                 </span>
 
                                 <div className="manage-course-content-lecture-info">
-                                  <strong>{lecture.title}</strong>
+                                  <div className="manage-course-content-lecture-title-row">
+                                    <strong>{lecture.title}</strong>
+                                    {lecture.is_trial && (
+                                      <span className="manage-course-content-trial-badge">
+                                        🎓 Free Trial Preview
+                                      </span>
+                                    )}
+                                  </div>
 
                                   <span>
-                                    {lecture.duration_minutes
-                                      ? `${lecture.duration_minutes} min`
-                                      : 'No duration set'}
+                                    {lecture.duration_seconds != null
+                                      ? formatDuration(lecture.duration_seconds)
+                                      : lecture.duration_minutes != null
+                                        ? formatDuration(lecture.duration_minutes * 60)
+                                        : 'No duration set'}
                                   </span>
 
                                   {lecture.content && (
@@ -630,20 +959,23 @@ export default function ManageCourseContent() {
 
                       <div className="manage-course-content-form-row">
                         <label>
-                          Duration (minutes)
+                          Duration (seconds)
                           <input
                             type="number"
                             min="0"
-                            value={getLectureForm(module.id).duration_minutes}
+                            value={getLectureForm(module.id).duration_seconds}
                             onChange={(event) =>
                               updateNewLecture(
                                 module.id,
-                                'duration_minutes',
+                                'duration_seconds',
                                 event.target.value
                               )
                             }
-                            placeholder="e.g. 30"
+                            placeholder="e.g. 300"
                           />
+                          <small>
+                            {formatDuration(Number(getLectureForm(module.id).duration_seconds))}
+                          </small>
                         </label>
 
                         <label>
@@ -662,6 +994,73 @@ export default function ManageCourseContent() {
                           />
                         </label>
                       </div>
+
+                      <label className="manage-course-content-upload-field">
+                        Or upload a video file directly to Cloudinary
+                        <input
+                          type="file"
+                          accept="video/*"
+                          disabled={uploadingVideoKey === `new-${module.id}`}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (!file) return;
+                            uploadVideo(
+                              file,
+                              `new-${module.id}`,
+                              ({ secureUrl, durationSeconds }) => {
+                                setLectureForms((current) => ({
+                                  ...current,
+                                  [module.id]: {
+                                    ...(current[module.id] || emptyLecture),
+                                    video_url: secureUrl,
+                                    ...(durationSeconds !== null && {
+                                      duration_seconds: durationSeconds,
+                                    }),
+                                  },
+                                }));
+                            }
+                            );
+                            event.target.value = '';
+                          }}
+                        />
+                        {uploadingVideoKey === `new-${module.id}` && (
+                          <div className="manage-course-content-upload-progress-row">
+                            <span className="manage-course-content-upload-progress">
+                              Uploading... {uploadProgress}%
+                            </span>
+                            <button
+                              type="button"
+                              className="manage-course-content-cancel-upload-btn"
+                              onClick={cancelUpload}
+                            >
+                              Cancel Upload
+                            </button>
+                          </div>
+                        )}
+                      </label>
+
+                      <VideoPreview
+                        url={getLectureForm(module.id).video_url}
+                      />
+
+                      <label className="manage-course-content-trial-checkbox-field">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(getLectureForm(module.id).is_trial)}
+                          onChange={(event) =>
+                            setLectureForms((current) => ({
+                              ...current,
+                              [module.id]: {
+                                ...(current[module.id] || emptyLecture),
+                                is_trial: event.target.checked,
+                              },
+                            }))
+                          }
+                        />
+                        <span>
+                          🎓 Allow Free Trial Class Preview (prospective students can watch this lecture without enrolling)
+                        </span>
+                      </label>
 
                       <div className="manage-course-content-add-lecture-actions">
                         <span>

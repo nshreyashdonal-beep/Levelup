@@ -26,6 +26,13 @@ export default function StudentLanding() {
   const [user, setUser] = useState(null)
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [selectedCategoryName, setSelectedCategoryName] = useState('')
+  // searchInput updates immediately as the student types
+  const [searchInput, setSearchInput] = useState('')
+  // debouncedQuery updates 300ms after typing stops to prevent rapid API calls & map redraws
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+
   const [locationStatus, setLocationStatus] = useState('idle')
   const [visitorLocation, setVisitorLocation] = useState(null)
   const [nearbyInstructors, setNearbyInstructors] = useState([])
@@ -45,9 +52,50 @@ export default function StudentLanding() {
     if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
+  }, [])
 
-    // Fetch all courses to display
-    fetch(`${API_BASE}/api/courses`)
+
+  // Sync URL query params & auto-scroll to map if hash is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q') || params.get('search')
+    const cat = params.get('category_id')
+    if (q) {
+      setSearchInput(q)
+      setDebouncedQuery(q)
+    }
+    if (cat) {
+      setSelectedCategoryId(cat)
+    }
+
+    if (window.location.hash === '#nearby-map-section') {
+      const timer = setTimeout(() => {
+        const mapEl = document.getElementById('nearby-map-section')
+        if (mapEl) {
+          mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 250)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchInput.trim())
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // Fetch courses whenever selected category or debounced query changes
+  useEffect(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (selectedCategoryId) params.append('category_id', selectedCategoryId)
+    if (debouncedQuery) params.append('q', debouncedQuery)
+    const query = params.toString() ? `?${params.toString()}` : ''
+
+    fetch(`${API_BASE}/api/courses${query}`)
       .then(res => res.json())
       .then(data => {
         setCourses(Array.isArray(data) ? data : [])
@@ -57,7 +105,7 @@ export default function StudentLanding() {
         console.error('Failed to fetch courses:', err)
         setLoading(false)
       })
-  }, [])
+  }, [selectedCategoryId, debouncedQuery])
 
   const handleLocationRequest = () => {
     if (!navigator.geolocation) {
@@ -92,13 +140,22 @@ export default function StudentLanding() {
     )
   }
 
+  // Fetch nearby instructors whenever location, category, or debounced search changes
   useEffect(() => {
     if (!visitorLocation) return
 
     const controller = new AbortController()
+    setNearbyLoading(true)
+
+    const params = new URLSearchParams({
+      lat: visitorLocation.latitude,
+      lng: visitorLocation.longitude,
+    })
+    if (selectedCategoryId) params.append('category_id', selectedCategoryId)
+    if (debouncedQuery) params.append('q', debouncedQuery)
 
     fetch(
-      `${API_BASE}/api/instructors/nearby?lat=${visitorLocation.latitude}&lng=${visitorLocation.longitude}`,
+      `${API_BASE}/api/instructors/nearby?${params.toString()}`,
       { signal: controller.signal }
     )
       .then(response => {
@@ -119,7 +176,7 @@ export default function StudentLanding() {
       })
 
     return () => controller.abort()
-  }, [visitorLocation])
+  }, [visitorLocation, selectedCategoryId, debouncedQuery])
 
   useEffect(() => {
     if (!mapElementRef.current) return
@@ -192,7 +249,8 @@ export default function StudentLanding() {
           `<strong>${escapeHtml(instructor.instructor_name)}</strong>` +
           `<br />${escapeHtml(instructor.city || 'LevelUp instructor')}` +
           `<br /><span>${instructor.distance_km} km away</span>` +
-          `<br />${courseLinks}`
+          `<br /><div style="margin: 6px 0;"><a href="/instructors/${instructor.instructor_id}" style="font-weight: 700; color: #4f46e5; text-decoration: none;">View Full Profile & Courses →</a></div>` +
+          (courseLinks ? `<small style="color: #64748b;">Courses:</small><br />${courseLinks}` : '')
         )
         .addTo(mapMarkersRef.current)
 
@@ -278,18 +336,52 @@ export default function StudentLanding() {
 
   const locationButtonDisabled = locationStatus === 'loading'
 
-
   const handleCourseClick = (courseId) => {
     navigate(`/courses/${courseId}`)
   }
 
+    const handleSearchSubmit = () => {
+    setDebouncedQuery(searchInput.trim())
+    const mapEl = document.getElementById('nearby-map-section')
+    if (mapEl) {
+      mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleCategoryChange = (catId, catName) => {
+    setSelectedCategoryId(catId)
+    setSelectedCategoryName(catName || '')
+    const mapEl = document.getElementById('nearby-map-section')
+    if (mapEl) {
+      mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleResetFilters = () => {
+    setSearchInput('')
+    setDebouncedQuery('')
+    setSelectedCategoryId('')
+    setSelectedCategoryName('')
+  }
+
+  const hasActiveFilters = Boolean(searchInput || debouncedQuery || selectedCategoryId)
+
   return (
     <div className="student-landing-page">
-      <StudentNav user={user} activeLink="explore" />
+      <StudentNav
+        user={user}
+        activeLink="explore"
+        searchInput={searchInput}
+        onSearchInputChange={setSearchInput}
+        selectedCategoryId={selectedCategoryId}
+        selectedCategoryName={selectedCategoryName}
+        onCategoryChange={handleCategoryChange}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
       <main className="student-landing-main">
         {/* Nearby map panel — markers are added only after location permission. */}
-        <section className="home-location-section" aria-labelledby="home-location-title">
+        <section id="nearby-map-section" className="home-location-section" aria-labelledby="home-location-title">
           <div className="home-location-card">
             <div className="home-location-header">
               <div className="home-location-icon" aria-hidden="true">⌖</div>
@@ -329,6 +421,8 @@ export default function StudentLanding() {
                 )}
               </div>
             </div>
+
+            
 
             {/* Map + instructor list side by side */}
             <div className={`home-map-list-wrap${listPanelVisible ? ' home-map-list-wrap--open' : ''}`}>
@@ -398,7 +492,20 @@ export default function StudentLanding() {
                         </div>
                       ) : nearbyInstructors.length === 0 ? (
                         <div className="home-nearby-status">
-                          No instructors near you yet. Try again later as more local courses are published.
+                          {hasActiveFilters ? (
+                            <>
+                              No nearby instructors teach courses matching your filter.
+                              <button
+                                type="button"
+                                className="home-nearby-reset-link"
+                                onClick={handleResetFilters}
+                              >
+                                Reset filters
+                              </button>
+                            </>
+                          ) : (
+                            'No instructors near you yet. Try again later as more local courses are published.'
+                          )}
                         </div>
                       ) : (
                         <div className="home-nearby-list">
@@ -469,6 +576,50 @@ export default function StudentLanding() {
             )}
           </div>
 
+          {/* Active filters summary */}
+          {hasActiveFilters && (
+            <div className="course-active-filter-bar">
+              <span className="course-active-filter-label">Active filters:</span>
+              {selectedCategoryName && (
+                <span className="course-active-filter-chip">
+                  Category: <strong>{selectedCategoryName}</strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryId('')
+                      setSelectedCategoryName('')
+                    }}
+                    aria-label="Remove category filter"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              {debouncedQuery && (
+                <span className="course-active-filter-chip">
+                  Search: <strong>"{debouncedQuery}"</strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput('')
+                      setDebouncedQuery('')
+                    }}
+                    aria-label="Remove search query"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                className="course-active-filter-reset"
+                onClick={handleResetFilters}
+              >
+                Reset all filters
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="student-landing-status-card">
               <div className="student-landing-status-icon" aria-hidden="true">✦</div>
@@ -477,9 +628,30 @@ export default function StudentLanding() {
             </div>
           ) : courses.length === 0 ? (
             <div className="student-landing-status-card">
-              <div className="student-landing-status-icon" aria-hidden="true">📚</div>
-              <p className="student-landing-empty">No courses available yet</p>
-              <span>New learning opportunities will appear here soon.</span>
+              <div className="student-landing-status-icon" aria-hidden="true">
+                {hasActiveFilters ? '🔍' : '📚'}
+              </div>
+              <p className="student-landing-empty">
+                {debouncedQuery
+                  ? `No courses match "${debouncedQuery}"`
+                  : selectedCategoryId
+                  ? 'No courses found in this category'
+                  : 'No courses available yet'}
+              </p>
+              <span>
+                {hasActiveFilters
+                  ? 'Try checking for typos, searching for a different keyword, or resetting your filters.'
+                  : 'New learning opportunities will appear here soon.'}
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="course-empty-reset-btn"
+                  onClick={handleResetFilters}
+                >
+                  Reset filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="student-landing-courses-grid">
@@ -497,24 +669,66 @@ export default function StudentLanding() {
                   role="button"
                   tabIndex="0"
                 >
-                  {/* Course icon/avatar */}
+                  {/* Card Header: Delivery Mode & Level Badges */}
                   <div className="course-card-top">
-                    <div className="course-card-avatar">
-                    {course.title.charAt(0).toUpperCase()}
+                    <div className="course-card-badges-row">
+                      <span className={`course-card-mode-pill is-${course.delivery_mode || 'online'}`}>
+                        {course.delivery_mode === 'offline' ? '🏢 Offline' : course.delivery_mode === 'hybrid' ? '🔄 Hybrid' : '🌐 Online'}
+                      </span>
+                      {course.level && (
+                        <span className="course-card-level-pill">
+                          {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
+                        </span>
+                      )}
                     </div>
                     <span className="course-card-open" aria-hidden="true">↗</span>
                   </div>
 
-                  {/* Course info */}
+                  {/* Course Content */}
                   <div className="course-card-content">
                     <h3 className="course-card-title">{course.title}</h3>
-                    <p className="course-card-instructor">
-                      By {course.instructor_name || 'Unknown'}
-                    </p>
+                    
+                    {/* Instructor Row with Profile Avatar & City */}
+                    <div
+                      className="course-card-instructor-row"
+                      onClick={(e) => {
+                        if (course.instructor_id) {
+                          e.stopPropagation();
+                          navigate(`/instructors/${course.instructor_id}`);
+                        }
+                      }}
+                      title={`View ${course.instructor_name || 'instructor'}'s full profile`}
+                    >
+                      <div className="course-card-instructor-avatar">
+                        {course.instructor_avatar_url ? (
+                          <img
+                            src={course.instructor_avatar_url}
+                            alt={course.instructor_name}
+                            className="course-card-instructor-img"
+                          />
+                        ) : (
+                          <div className="course-card-instructor-initials">
+                            {(course.instructor_name || 'I').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="course-card-instructor-details">
+                        <span className="course-card-instructor-name">
+                          {course.instructor_name || 'LevelUp Instructor'}
+                        </span>
+                        {course.instructor_city && (
+                          <span className="course-card-instructor-city">
+                            📍 {course.instructor_city}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="course-card-meta">
                       <span className="course-card-price">₹{course.price}</span>
                       <span className="course-card-rating">
-                        ⭐ {(course.avg_rating || 0).toFixed(1)}
+                        ⭐ {Number(course.avg_rating) > 0 ? Number(course.avg_rating).toFixed(1) : 'New'}
+                        {course.review_count ? ` (${course.review_count})` : ''}
                       </span>
                     </div>
                   </div>

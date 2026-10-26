@@ -3,8 +3,9 @@
 // Every other file that needs to run a SQL query imports this same pool
 // instead of opening a brand new connection every time.
 
+const path = require('path');
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Pool reads DATABASE_URL from your .env file automatically.
 const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');

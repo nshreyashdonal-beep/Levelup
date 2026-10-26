@@ -1,0 +1,480 @@
+/* src/pages/InstructorProfile.css */
+/* Modern public instructor profile & course catalogue styling */
+
+.instructor-profile-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: inherit;
+}
+
+.instructor-profile-main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 20px 80px;
+}
+
+.instructor-profile-status {
+  text-align: center;
+  color: #64748b;
+  font-size: 1.1rem;
+  padding: 60px 20px;
+}
+
+.instructor-profile-empty-card {
+  text-align: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 48px 24px;
+  max-width: 600px;
+  margin: 40px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.instructor-profile-empty-card h2 {
+  font-family: 'Montserrat', sans-serif;
+  color: #0f172a;
+  margin: 0 0 10px;
+}
+
+.instructor-profile-empty-card p {
+  color: #64748b;
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+}
+
+.instructor-profile-back-btn {
+  display: inline-block;
+  background: #4f46e5;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+/* Breadcrumb */
+.instructor-profile-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.instructor-profile-breadcrumb a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.instructor-profile-breadcrumb a:hover {
+  color: #4f46e5;
+}
+
+.breadcrumb-active {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Top Hero Card */
+.instructor-hero-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 36px 40px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.instructor-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+
+.instructor-hero-avatar-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.instructor-hero-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.instructor-hero-avatar-initials {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.instructor-hero-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.instructor-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.instructor-hero-name {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.instructor-hero-verified-badge {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.instructor-hero-title {
+  color: #475569;
+  font-size: 1rem;
+  margin: 6px 0 4px;
+}
+
+.instructor-hero-location {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Stats Ribbon */
+.instructor-hero-stats-ribbon {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.stats-ribbon-val {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stats-ribbon-lbl {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Bio Section */
+.instructor-hero-bio {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 24px;
+}
+
+.instructor-bio-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 10px;
+}
+
+.instructor-bio-text {
+  font-size: 0.98rem;
+  color: #334155;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* Catalogue Section */
+.instructor-catalogue-section {
+  margin-top: 16px;
+}
+
+.instructor-catalogue-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.instructor-catalogue-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.instructor-catalogue-subtitle {
+  color: #64748b;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.instructor-catalogue-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.catalogue-filter-pill {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.catalogue-filter-pill:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.catalogue-filter-pill.is-active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: white;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+/* Course Grid & Cards */
+.instructor-catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.instructor-course-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.instructor-course-card:hover,
+.instructor-course-card:focus-visible {
+  border-color: #a5b4fc;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.12);
+}
+
+.instructor-course-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.instructor-course-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.instructor-card-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.instructor-card-mode-pill.is-online {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.instructor-card-mode-pill.is-hybrid {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.instructor-card-mode-pill.is-offline {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.instructor-card-level-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.instructor-card-arrow {
+  color: #4f46e5;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.instructor-course-card-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.instructor-course-card-desc {
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.instructor-course-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.instructor-course-card-price {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #4f46e5;
+}
+
+.instructor-course-card-rating {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.instructor-course-card-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  color: #4f46e5;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.instructor-catalogue-empty {
+  text-align: center;
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 48px 24px;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.instructor-catalogue-empty p {
+  color: #64748b;
+  margin: 0 0 16px;
+  font-size: 1rem;
+}
+
+.reset-filter-btn {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reset-filter-btn:hover {
+  background: #dbeafe;
+}
+
+@media (max-width: 768px) {
+  .instructor-hero-card {
+    padding: 24px;
+  }
+
+  .instructor-hero-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .instructor-hero-stats-ribbon {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .instructor-catalogue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}

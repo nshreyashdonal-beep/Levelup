@@ -8,6 +8,7 @@
 const express = require('express');
 const db = require('../config/db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { isUuid, validateLectureMedia } = require('../utils/lectureValidation');
 
 const router = express.Router();
 
@@ -21,10 +22,32 @@ const router = express.Router();
 // when it's first created.
 router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
-  const { title, content, video_url, duration_minutes, position } = req.body;
+  const {
+    title,
+    content,
+    video_url,
+    duration_minutes,
+    duration_seconds,
+    position,
+    is_trial,
+  } = req.body;
+
+  if (!isUuid(id)) {
+    return res.status(400).json({ error: 'module id must be a valid UUID' });
+  }
 
   if (!title) {
     return res.status(400).json({ error: 'title is required' });
+  }
+
+  const mediaError = validateLectureMedia({
+    content,
+    video_url,
+    duration_minutes,
+    duration_seconds,
+  });
+  if (mediaError) {
+    return res.status(400).json({ error: mediaError });
   }
 
   try {
@@ -46,10 +69,18 @@ router.post('/:id/lectures', requireAuth, requireRole('instructor'), async (req,
     }
 
     const result = await db.query(
-      `INSERT INTO course_lectures (module_id, title, content, video_url, duration_minutes, position)
-       VALUES ($1, $2, $3, $4, $5, COALESCE($6::integer, 0))
-       RETURNING id, module_id, title, content, video_url, duration_minutes, position, status, created_at`,
-      [id, title, content, video_url, duration_minutes, position]
+      `INSERT INTO course_lectures
+         (module_id, title, content, video_url, duration_minutes, duration_seconds, position, is_trial)
+       VALUES ($1, $2, $3, $4,
+               COALESCE($5::integer, CASE WHEN $6::integer IS NOT NULL
+                 THEN CEIL($6::numeric / 60)::integer END),
+               COALESCE($6::integer, CASE WHEN $5::integer IS NOT NULL
+                 THEN $5::integer * 60 END),
+               COALESCE($7::integer, 0),
+               COALESCE($8::boolean, false))
+       RETURNING id, module_id, title, content, video_url,
+                 duration_minutes, duration_seconds, position, status, is_trial, created_at`,
+      [id, title, content, video_url, duration_minutes, duration_seconds, position, is_trial]
     );
 
     res.status(201).json(result.rows[0]);

@@ -1,0 +1,131 @@
+/* CategoryFilterBar.css */
+/* Student-facing category filter bar with cascading Category/Subcategory -> Topic */
+
+.category-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 2rem;
+}
+
+.category-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #4b5563);
+}
+
+.category-filter-icon {
+  width: 16px;
+  height: 16px;
+  color: #6366f1;
+}
+
+.category-filter-select-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.category-filter-select {
+  appearance: none;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem 2rem 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3e%3cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem 1.25rem;
+}
+
+.category-filter-select:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.category-filter-select:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.category-filter-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+}
+
+.category-filter-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background-color: transparent;
+  color: #ef4444;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-filter-clear-btn:hover {
+  background-color: #fef2f2;
+  border-color: #f87171;
+}
+
+.category-filter-active-badge {
+  font-size: 0.8125rem;
+  color: #6366f1;
+  background-color: #eef2ff;
+  border: 1px solid #e0e7ff;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+@media (max-width: 640px) {
+  .category-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-filter-select {
+    width: 100%;
+  }
+
+  .category-filter-active-badge {
+    align-self: flex-start;
+  }
+}

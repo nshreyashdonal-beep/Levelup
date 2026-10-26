@@ -9,7 +9,7 @@
 //   2. This public signup is student-only. Instructors use the separate
 //      Become Instructor page, so registration always sends role: "student".
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -22,6 +22,21 @@ export default function Signup() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect to active dashboard
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      const user = stored ? JSON.parse(stored) : null;
+      if (user) {
+        if (user.role === 'instructor') {
+          navigate('/instructor-dashboard', { replace: true });
+        } else {
+          navigate('/student-landing', { replace: true });
+        }
+      }
+    } catch {}
+  }, [navigate]);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });

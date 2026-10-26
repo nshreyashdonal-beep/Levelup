@@ -5,13 +5,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import InstructorNav from '../components/InstructorNav';
 import Footer from '../components/Footer';
 import { API_BASE } from '../api';
+import CategorySelector from '../components/CategorySelector';
 import './CreateCourse.css';
 
 const initialForm = {
   title: '',
   description: '',
   price: '',
-  category: '',
+  category_id: '',
   level: '',
   delivery_mode: '',
   language: '',
@@ -140,16 +141,17 @@ export default function CreateCourse() {
                 />
               </label>
 
-              <label className="create-course-field">
-                Category
-                <input
-                  name="category"
-                  type="text"
-                  placeholder="e.g. Development"
-                  value={formData.category}
-                  onChange={handleChange}
+              <div className="create-course-field-full">
+                <CategorySelector
+                  value={formData.category_id}
+                  onChange={({ categoryId }) => {
+                    setFormData((current) => ({
+                      ...current,
+                      category_id: categoryId,
+                    }));
+                  }}
                 />
-              </label>
+              </div>
 
               <label className="create-course-field">
                 Language

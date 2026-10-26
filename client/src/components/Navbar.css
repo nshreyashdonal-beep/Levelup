@@ -80,8 +80,8 @@
 
 .navbar-search-wrap {
   position: relative;
-  flex: 1;
-  max-width: 300px;
+  flex: 0 1 500px;
+  max-width: 540px;
 }
 
 .navbar-search-icon {

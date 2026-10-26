@@ -1,24 +1,69 @@
 // src/components/Navbar.jsx
-// Site header shown on every page: logo, center nav links + search,
-// and login/signup buttons. Styling lives in Navbar.css (colocated).
+// Public site header: Logo, unified Category Filter + Search, center nav links,
+// and login/signup buttons (or user profile menu if already logged in).
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import BrandLogo from './BrandLogo.jsx'
+import NavbarSearchFilter from './NavbarSearchFilter.jsx'
+import ProfileMenu from './ProfileMenu.jsx'
 import './Navbar.css'
 
-export default function Navbar() {
+export default function Navbar({
+  searchInput,
+  onSearchInputChange,
+  selectedCategoryId,
+  onCategoryChange,
+  onSearchSubmit,
+  selectedCategoryName,
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  })
+
+  useEffect(() => {
+    function syncUser() {
+      try {
+        const stored = localStorage.getItem('user')
+        setUser(stored ? JSON.parse(stored) : null)
+      } catch {
+        setUser(null)
+      }
+    }
+
+    syncUser()
+
+    window.addEventListener('storage', syncUser)
+    window.addEventListener('auth-change', syncUser)
+
+    return () => {
+      window.removeEventListener('storage', syncUser)
+      window.removeEventListener('auth-change', syncUser)
+    }
+  }, [])
 
   function closeMenu() {
     setMenuOpen(false)
   }
 
+  const isInstructor = user?.role === 'instructor'
+  const homeLink = user
+    ? isInstructor
+      ? '/instructor-dashboard'
+      : '/student-landing'
+    : '/'
+
   return (
     <header className="navbar">
       <div className="navbar-inner">
-        <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <BrandLogo />
+        <Link to={homeLink} className="navbar-logo" onClick={closeMenu}>
+          <BrandLogo variant={isInstructor ? 'instructor' : 'student'} />
         </Link>
 
         <button
@@ -41,31 +86,43 @@ export default function Navbar() {
             <Link to="/#explore-courses" className="navbar-link" onClick={closeMenu}>
               Explore
             </Link>
-            <Link to="/become-instructor" className="navbar-link" onClick={closeMenu}>
-              Become Instructor
-            </Link>
+            {!user && (
+              <Link to="/become-instructor" className="navbar-link" onClick={closeMenu}>
+                Become Instructor
+              </Link>
+            )}
+            {user && (
+              <Link to={homeLink} className="navbar-link" onClick={closeMenu}>
+                Dashboard
+              </Link>
+            )}
           </nav>
 
           <div className="navbar-search-wrap">
-            <svg className="navbar-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M16 16L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search courses..."
-              aria-label="Search courses"
-              className="navbar-search"
+            <NavbarSearchFilter
+              searchInput={searchInput}
+              onSearchInputChange={onSearchInputChange}
+              selectedCategoryId={selectedCategoryId}
+              onCategoryChange={onCategoryChange}
+              onSearchSubmit={onSearchSubmit}
+              selectedCategoryName={selectedCategoryName}
+              placeholder="Search courses, topics (e.g. Python, React)..."
             />
           </div>
 
           <div className="navbar-auth">
-            <Link to="/login" className="btn btn-outline" onClick={closeMenu}>
-              Log in
-            </Link>
-            <Link to="/signup" className="btn btn-solid" onClick={closeMenu}>
-              Get started
-            </Link>
+            {user ? (
+              <ProfileMenu user={user} />
+            ) : (
+              <>
+                <Link to="/login" className="btn btn-outline" onClick={closeMenu}>
+                  Log in
+                </Link>
+                <Link to="/signup" className="btn btn-solid" onClick={closeMenu}>
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

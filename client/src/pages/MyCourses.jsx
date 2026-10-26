@@ -67,7 +67,7 @@ export default function MyCourses() {
   }, [user]);
 
   const openCourse = (courseId) => {
-    navigate(`/courses/${courseId}`);
+    navigate(`/courses/${courseId}/learn`);
   };
 
   if (!user) return null;
@@ -115,13 +115,13 @@ export default function MyCourses() {
           <div className="mycourses-grid">
             {courses.map((course) => (
               <div
-                key={course.id}
+                key={course.course_id}
                 className="mycourses-card"
-                onClick={() => openCourse(course.id)}
+                onClick={() => openCourse(course.course_id)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    openCourse(course.id);
+                    openCourse(course.course_id);
                   }
                 }}
                 role="button"

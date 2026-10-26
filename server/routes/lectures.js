@@ -9,6 +9,7 @@
 const express = require('express');
 const db = require('../config/db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { isUuid, validateLectureMedia } = require('../utils/lectureValidation');
 
 const router = express.Router();
 
@@ -24,7 +25,30 @@ const router = express.Router();
 // invalid values from being saved.
 router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) => {
   const { id } = req.params;
-  const { title, content, video_url, duration_minutes, position, status } = req.body;
+  const {
+    title,
+    content,
+    video_url,
+    duration_minutes,
+    duration_seconds,
+    position,
+    status,
+    is_trial,
+  } = req.body;
+
+  if (!isUuid(id)) {
+    return res.status(400).json({ error: 'lecture id must be a valid UUID' });
+  }
+
+  const mediaError = validateLectureMedia({
+    content,
+    video_url,
+    duration_minutes,
+    duration_seconds,
+  });
+  if (mediaError) {
+    return res.status(400).json({ error: mediaError });
+  }
 
   try {
     // Check ownership: does this instructor own the course that contains this lecture?
@@ -51,13 +75,36 @@ router.patch('/:id', requireAuth, requireRole('instructor'), async (req, res) =>
        SET title = COALESCE($2, title),
            content = COALESCE($3, content),
            video_url = COALESCE($4, video_url),
-           duration_minutes = COALESCE($5::integer, duration_minutes),
-           position = COALESCE($6::integer, position),
-           status = COALESCE($7, status)
+           duration_minutes = COALESCE(
+             $5::integer,
+             CASE WHEN $6::integer IS NOT NULL
+               THEN CEIL($6::numeric / 60)::integer
+             ELSE duration_minutes
+             END
+           ),
+           duration_seconds = COALESCE(
+             $6::integer,
+             CASE WHEN $5::integer IS NOT NULL THEN $5::integer * 60
+             ELSE duration_seconds
+             END
+           ),
+           position = COALESCE($7::integer, position),
+           status = COALESCE($8, status),
+           is_trial = COALESCE($9::boolean, is_trial)
        WHERE id = $1
        RETURNING id, module_id, title, content, video_url, duration_minutes,
-                 position, status, created_at`,
-      [id, title, content, video_url, duration_minutes, position, status]
+                 duration_seconds, position, status, is_trial, created_at`,
+      [
+        id,
+        title,
+        content,
+        video_url,
+        duration_minutes,
+        duration_seconds,
+        position,
+        status,
+        is_trial !== undefined ? is_trial : null,
+      ]
     );
 
     if (result.rows.length === 0) {
