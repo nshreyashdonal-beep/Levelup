@@ -169,6 +169,12 @@ export default function ManageCourseLayout() {
               >
                 Publish
               </Link>
+              <Link
+                to={`/manage-courses/${courseId}/sessions`}
+                className={currentPath.endsWith('/sessions') ? 'is-active' : ''}
+              >
+                {course?.delivery_mode === 'hybrid' ? 'Doubt & Offline Sessions' : 'Doubt Sessions'}
+              </Link>
             </nav>
 
             {/* Outlet only swaps this content — InstructorNav/Footer above

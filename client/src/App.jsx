@@ -22,6 +22,7 @@ import ManageCourseLayout from './pages/ManageCourseLayout.jsx'
 import ManageCourseDetails from './pages/ManageCourseDetails.jsx'
 import ManageCourseContent from './pages/ManageCourseContent.jsx'
 import PublishCourse from './pages/PublishCourse.jsx'
+import ManageCourseSessions from './pages/ManageCourseSessions.jsx'
 import CoursePlayer from './pages/CoursePlayer.jsx'
 import InstructorProfile from './pages/InstructorProfile.jsx'
 import EditProfile from './pages/EditProfile.jsx'
@@ -97,6 +98,7 @@ function App() {
           <Route path="details" element={<ManageCourseDetails />} />
           <Route path="content" element={<ManageCourseContent />} />
           <Route path="publish" element={<PublishCourse />} />
+          <Route path="sessions" element={<ManageCourseSessions />} />
         </Route>
       </Routes>
     </>

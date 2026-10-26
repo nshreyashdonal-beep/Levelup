@@ -468,6 +468,46 @@ export default function CourseDetail() {
     ];
   }
 
+  function getSessionCountdownInfo(dateString) {
+    if (!dateString) return { countdownText: '', formattedDateTime: '' };
+    const target = new Date(dateString);
+    const now = new Date();
+    const diffMs = target - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    let countdownText = '';
+    if (diffMs < -3 * 60 * 60 * 1000) {
+      countdownText = 'Completed';
+    } else if (diffMs < 0) {
+      countdownText = 'Happening Today';
+    } else if (diffHours < 24 && target.getDate() === now.getDate()) {
+      countdownText = 'Today';
+    } else if (diffDays === 0 || (diffHours < 36 && target.getDate() === now.getDate() + 1)) {
+      countdownText = 'Tomorrow';
+    } else if (diffDays === 1) {
+      countdownText = 'In 1 day';
+    } else {
+      countdownText = `In ${diffDays} days`;
+    }
+
+    const formattedDateTime = target.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return { countdownText, formattedDateTime };
+  }
+
+  const upcomingSessions = (sessions || [])
+    .filter((s) => new Date(s.scheduled_at) > new Date(Date.now() - 3 * 60 * 60 * 1000))
+    .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+  const nextSession = upcomingSessions[0];
+
   if (loading) {
     return (
       <div className="course-detail-page">
@@ -610,6 +650,57 @@ export default function CourseDetail() {
         <div className="course-detail-layout-grid">
           {/* LEFT COLUMN: TABS & CONTENT */}
           <div className="course-detail-primary-col">
+            {/* Prominent Countdown Banner for Next Upcoming Session */}
+            {nextSession && (
+              <div
+                className={`course-detail-upcoming-banner banner-${nextSession.session_type}`}
+                role="region"
+                aria-label="Upcoming Scheduled Session"
+              >
+                <div className="upcoming-banner-eyebrow">
+                  <span className="upcoming-pulse-dot" aria-hidden="true" />
+                  <span className="upcoming-type-label">
+                    {nextSession.session_type === 'offline'
+                      ? 'UPCOMING IN-PERSON SESSION'
+                      : nextSession.session_type === 'mock_test'
+                      ? 'UPCOMING MOCK TEST'
+                      : 'UPCOMING DOUBT SESSION'}
+                  </span>
+                  <span className="upcoming-countdown-badge">
+                    {getSessionCountdownInfo(nextSession.scheduled_at).countdownText}
+                  </span>
+                </div>
+                <div className="upcoming-banner-body">
+                  <div className="upcoming-banner-main-info">
+                    <span className="upcoming-datetime">
+                      {getSessionCountdownInfo(nextSession.scheduled_at).formattedDateTime}
+                    </span>
+                    <span className="upcoming-dot-sep" aria-hidden="true">·</span>
+                    <strong className="upcoming-session-title">{nextSession.title}</strong>
+                  </div>
+                  {nextSession.location && (
+                    <div className="upcoming-banner-location">
+                      <span className="upcoming-loc-label">
+                        {deliveryMode === 'online' ? 'Link:' : 'Venue:'}
+                      </span>
+                      {deliveryMode === 'online' && nextSession.location.startsWith('http') ? (
+                        <a
+                          href={nextSession.location}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="upcoming-meet-link"
+                        >
+                          Join Google Meet ↗
+                        </a>
+                      ) : (
+                        <span className="upcoming-loc-text">{nextSession.location}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Tab Navigation Buttons */}
             <nav className="course-detail-nav-tabs" role="tablist">
               <button
@@ -958,26 +1049,62 @@ export default function CourseDetail() {
 
                 {/* Scheduled Sessions */}
                 <div className="course-detail-card-panel">
-                  <h2 className="panel-heading">Scheduled Doubt Sessions & Offline Meets</h2>
+                  <div className="panel-heading-row">
+                    <h2 className="panel-heading">Scheduled Doubt Sessions & Offline Meets</h2>
+                    <span className="panel-sub-count">
+                      {sessions.length} scheduled session{sessions.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
                   {sessions.length === 0 ? (
                     <p className="course-detail-empty">No sessions currently scheduled for this course.</p>
                   ) : (
                     <div className="course-detail-sessions-list">
-                      {sessions.map((session) => (
-                        <div key={session.id} className="course-detail-session-card">
-                          <span className="course-detail-session-type">
-                            {SESSION_TYPE_LABELS[session.session_type] || session.session_type}
-                          </span>
-                          <p className="course-detail-session-title">{session.title}</p>
-                          {session.description && (
-                            <p className="course-detail-session-desc">{session.description}</p>
-                          )}
-                          <p className="course-detail-session-when">
-                            {new Date(session.scheduled_at).toLocaleString()}
-                            {session.location ? ` · ${session.location}` : ''}
-                          </p>
-                        </div>
-                      ))}
+                      {sessions.map((session) => {
+                        const { countdownText, formattedDateTime } = getSessionCountdownInfo(session.scheduled_at);
+                        const isOffline = session.session_type === 'offline';
+                        const isMock = session.session_type === 'mock_test';
+                        return (
+                          <div key={session.id} className="course-detail-session-card">
+                            <div className="session-card-header">
+                              <span className={`course-detail-session-type type-${session.session_type}`}>
+                                {isOffline ? 'Offline Meetup' : isMock ? 'Mock Test' : 'Doubt Session'}
+                              </span>
+                              <span className="course-detail-session-countdown">
+                                {countdownText}
+                              </span>
+                            </div>
+                            <h3 className="course-detail-session-title">{session.title}</h3>
+                            {session.description && (
+                              <p className="course-detail-session-desc">{session.description}</p>
+                            )}
+                            <div className="course-detail-session-meta">
+                              <div className="session-meta-item">
+                                <span className="session-meta-key">TIME:</span>
+                                <span className="session-meta-value">{formattedDateTime}</span>
+                              </div>
+                              {session.location && (
+                                <div className="session-meta-item">
+                                  <span className="session-meta-key">
+                                    {deliveryMode === 'online' ? 'LINK:' : 'VENUE:'}
+                                  </span>
+                                  {deliveryMode === 'online' && session.location.startsWith('http') ? (
+                                    <a
+                                      href={session.location}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="course-detail-session-meet-link"
+                                    >
+                                      Join Google Meet ↗
+                                    </a>
+                                  ) : (
+                                    <span className="session-meta-value">{session.location}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

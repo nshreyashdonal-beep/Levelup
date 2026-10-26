@@ -776,18 +776,163 @@
   border-radius: 999px;
 }
 
+/* Prominent Upcoming Session Countdown Banner */
+.course-detail-upcoming-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.course-detail-upcoming-banner.banner-offline {
+  border-left: 5px solid #059669;
+  background: linear-gradient(to right, #f0fdf4 0%, #ffffff 100%);
+}
+
+.course-detail-upcoming-banner.banner-doubt {
+  border-left: 5px solid #4f46e5;
+  background: linear-gradient(to right, #eef2ff 0%, #ffffff 100%);
+}
+
+.course-detail-upcoming-banner.banner-mock_test {
+  border-left: 5px solid #2563eb;
+  background: linear-gradient(to right, #eff6ff 0%, #ffffff 100%);
+}
+
+.upcoming-banner-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upcoming-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #059669;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+}
+
+.banner-doubt .upcoming-pulse-dot {
+  background: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+}
+
+.upcoming-type-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #334155;
+  text-transform: uppercase;
+}
+
+.upcoming-countdown-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.upcoming-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (min-width: 640px) {
+  .upcoming-banner-body {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}
+
+.upcoming-banner-main-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.upcoming-datetime {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.upcoming-dot-sep {
+  color: #94a3b8;
+}
+
+.upcoming-session-title {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.upcoming-banner-location {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.upcoming-loc-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.upcoming-loc-text {
+  color: #334155;
+  font-weight: 500;
+}
+
+.upcoming-meet-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.upcoming-meet-link:hover {
+  color: #1d4ed8;
+}
+
 /* Sessions */
 .course-detail-sessions-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .course-detail-session-card {
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  background: #f8fafc;
+  border-radius: 10px;
+  padding: 18px 20px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .course-detail-session-type {
@@ -795,30 +940,92 @@
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #4f46e5;
-  background: #eef2ff;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
-  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.course-detail-session-type.type-offline {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.course-detail-session-type.type-doubt {
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+
+.course-detail-session-type.type-mock_test {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.course-detail-session-countdown {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
 .course-detail-session-title {
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
   color: #0f172a;
-  margin: 0 0 4px;
+  margin: 0;
+  line-height: 1.35;
 }
 
 .course-detail-session-desc {
   font-size: 0.88rem;
   color: #475569;
-  margin: 0 0 8px;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.course-detail-session-when {
-  font-size: 0.82rem;
+.course-detail-session-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.session-meta-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.84rem;
+}
+
+.session-meta-key {
+  font-size: 0.68rem;
+  font-weight: 700;
   color: #64748b;
-  margin: 0;
+  width: 70px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.session-meta-value {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.course-detail-session-meet-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.course-detail-session-meet-link:hover {
+  color: #1d4ed8;
 }
 
 /* Reviews List & Form */

@@ -169,7 +169,7 @@ export default function InstructorDashboard() {
       Icon: Icons.Eye,
       title: 'View Public Profile',
       desc: 'See how students discover and experience your profile',
-      to: `/instructors/${user.id}`,
+      to: `/instructors/${user.id}?from=dashboard`,
       accent: 'action-sky',
     },
     {
@@ -194,7 +194,7 @@ export default function InstructorDashboard() {
           <div className="instructor-dash-welcome-bottom">
             <span className="instructor-dash-welcome-email">{user.email}</span>
             <div className="instructor-dash-welcome-actions">
-              <Link to={`/instructors/${user.id}`} className="instructor-view-profile-btn">
+              <Link to={`/instructors/${user.id}?from=dashboard`} className="instructor-view-profile-btn">
                 <Icons.Eye />
                 <span>View Public Profile</span>
               </Link>

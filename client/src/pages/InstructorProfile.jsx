@@ -5,8 +5,9 @@
 //   - Direct navigation to individual course detail pages
 
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
+import InstructorNav from '../components/InstructorNav';
 import Footer from '../components/Footer';
 import CourseCard from '../components/CourseCard';
 import { API_BASE } from '../api';
@@ -14,6 +15,7 @@ import './InstructorProfile.css';
 
 export default function InstructorProfile() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [instructor, setInstructor] = useState(null);
   const [courses, setCourses] = useState([]);
@@ -71,14 +73,22 @@ export default function InstructorProfile() {
     return mode === modeFilter;
   });
 
+  const isInstructorViewer = user?.role === 'instructor';
+  const isOwner = isInstructorViewer && user?.id === id;
+  const isFromDashboard = searchParams.get('from') === 'dashboard' || isOwner;
+
   if (loading) {
     return (
       <div className="instructor-profile-page">
-        <StudentNav user={user} activeLink="explore" />
+        {isInstructorViewer ? (
+          <InstructorNav user={user} />
+        ) : (
+          <StudentNav user={user} activeLink="explore" />
+        )}
         <main className="instructor-profile-main">
           <p className="instructor-profile-status">Loading instructor profile...</p>
         </main>
-        <Footer />
+        <Footer variant={isInstructorViewer ? 'instructor' : undefined} />
       </div>
     );
   }
@@ -86,35 +96,77 @@ export default function InstructorProfile() {
   if (notFound || !instructor) {
     return (
       <div className="instructor-profile-page">
-        <StudentNav user={user} activeLink="explore" />
+        {isInstructorViewer ? (
+          <InstructorNav user={user} />
+        ) : (
+          <StudentNav user={user} activeLink="explore" />
+        )}
         <main className="instructor-profile-main">
           <div className="instructor-profile-empty-card">
             <h2>Instructor not found</h2>
             <p>The instructor you are looking for does not exist or has been removed.</p>
-            <Link to="/student-landing" className="instructor-profile-back-btn">
-              ← Back to Explore Courses
+            <Link
+              to={isFromDashboard ? '/instructor-dashboard' : '/student-landing'}
+              className="instructor-profile-back-btn"
+            >
+              {isFromDashboard ? '← Back to Dashboard' : '← Back to Explore Courses'}
             </Link>
           </div>
         </main>
-        <Footer />
+        <Footer variant={isInstructorViewer ? 'instructor' : undefined} />
       </div>
     );
   }
 
   return (
     <div className="instructor-profile-page">
-      <StudentNav user={user} activeLink="explore" />
+      {isInstructorViewer ? (
+        <InstructorNav user={user} />
+      ) : (
+        <StudentNav user={user} activeLink="explore" />
+      )}
 
       <main className="instructor-profile-main">
+        {/* Storefront Preview Banner for Owner */}
+        {isOwner && (
+          <div className="instructor-storefront-preview-bar">
+            <div className="preview-bar-left">
+              <span className="preview-indicator-dot" />
+              <strong>Public Storefront Preview</strong>
+              <span className="preview-subtext">
+                — This is how students see your profile and course catalog on LevelUp
+              </span>
+            </div>
+            <div className="preview-bar-actions">
+              <Link to="/profile" className="preview-bar-btn preview-bar-btn--edit">
+                Edit Profile &amp; Bio
+              </Link>
+              <Link to="/instructor-dashboard" className="preview-bar-btn preview-bar-btn--dash">
+                ← Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Breadcrumb Path */}
         <nav className="instructor-profile-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
-          <span className="breadcrumb-separator">›</span>
-          <Link to="/student-landing#explore-courses">Explore</Link>
-          <span className="breadcrumb-separator">›</span>
-          <Link to="/student-landing#nearby-map-section">Instructors</Link>
-          <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-active">{instructor.name}</span>
+          {isFromDashboard ? (
+            <>
+              <Link to="/instructor-dashboard">Dashboard</Link>
+              <span className="breadcrumb-separator">›</span>
+              <span className="breadcrumb-active">Public Profile</span>
+            </>
+          ) : (
+            <>
+              <Link to="/">Home</Link>
+              <span className="breadcrumb-separator">›</span>
+              <Link to="/student-landing#explore-courses">Explore</Link>
+              <span className="breadcrumb-separator">›</span>
+              <Link to="/student-landing#nearby-map-section">Instructors</Link>
+              <span className="breadcrumb-separator">›</span>
+              <span className="breadcrumb-active">{instructor.name}</span>
+            </>
+          )}
         </nav>
 
         {/* TOP HERO: ABOUT INSTRUCTOR */}
@@ -261,7 +313,7 @@ export default function InstructorProfile() {
         </section>
       </main>
 
-      <Footer />
+      <Footer variant={isInstructorViewer ? 'instructor' : undefined} />
     </div>
   );
 }

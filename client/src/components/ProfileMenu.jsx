@@ -98,14 +98,7 @@ export default function ProfileMenu({ user }) {
                   className="profile-menu-link profile-menu-link--instructor"
                   onClick={() => setOpen(false)}
                 >
-                  Welcome
-                </Link>
-                <Link
-                  to="/instructor-dashboard"
-                  className="profile-menu-link profile-menu-link--instructor"
-                  onClick={() => setOpen(false)}
-                >
-                  Instructor Dashboard
+                  Dashboard
                 </Link>
                 <Link
                   to="/manage-courses"

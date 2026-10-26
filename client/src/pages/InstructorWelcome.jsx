@@ -75,14 +75,26 @@ export default function InstructorWelcome() {
 
           <div className="instructor-welcome-action-cards">
             <Link to="/manage-courses" className="instructor-welcome-action-card">
-              <div className="instructor-welcome-action-icon">📦</div>
+              <div className="instructor-welcome-action-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+              </div>
               <h3 className="instructor-welcome-action-title">Manage Courses</h3>
               <p className="instructor-welcome-action-desc">Create, edit, and publish your courses</p>
               <span className="instructor-welcome-action-link">Manage Courses →</span>
             </Link>
 
             <Link to="/instructor-dashboard" className="instructor-welcome-action-card">
-              <div className="instructor-welcome-action-icon">📊</div>
+              <div className="instructor-welcome-action-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+              </div>
               <h3 className="instructor-welcome-action-title">Instructor Dashboard</h3>
               <p className="instructor-welcome-action-desc">View your courses, stats, and quick actions</p>
               <span className="instructor-welcome-action-link">Open Dashboard →</span>

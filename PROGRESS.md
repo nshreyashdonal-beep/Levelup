@@ -788,6 +788,12 @@ works, same rule PROGRESS.md uses.
 - [x] Navigational Link Consistency: Corrected `Dashboard` link in `InstructorNav.jsx` and `ProfileMenu.jsx` to route directly to `/instructor-dashboard` instead of the static welcome journey [Session 10]
 - [x] Verify production build (`npm run build` with 0 errors) [Session 10]
 
+#### Phase 8 - Public Profile Role Awareness, Adaptive Breadcrumbs & Storefront Preview
+- [x] Role-Aware Navbar: Replaced hardcoded `StudentNav` in `InstructorProfile.jsx` with dynamic role check rendering `InstructorNav` for instructors and `StudentNav` for students/visitors [Session 11]
+- [x] Context-Aware Adaptive Breadcrumbs: Integrated `Dashboard › Public Profile` breadcrumbs (targeting `/instructor-dashboard`) when navigating from dashboard or viewing own profile, preserving `Home › Explore › Instructors › [Name]` for public visitors [Session 11]
+- [x] Public Storefront Preview Banner: Added dark preview bar when an instructor views their own profile with `Public Storefront Preview` indicator and direct shortcuts `Edit Profile & Bio` and `← Back to Dashboard` [Session 11]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 11]
+
 ### Branch 11 (ProfileManagement)
 
 **Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
@@ -873,17 +879,17 @@ works, same rule PROGRESS.md uses.
 **Feature Goal:** Provide an adaptive doubt clearing and interactive session scheduling system: enable instructors to schedule, reschedule, and cancel in-person offline meetups, classroom labs, and doubt sessions for their courses, with delivery-mode awareness (in-person at institute for Hybrid/Offline with room/agenda, and Google Meet for Online), and display prominent countdown badges and upcoming schedules for enrolled students.
 
 #### Phase 1 - Backend Enhancements (Student Enrolled Feed, Rescheduling & Cancellation)
-- [ ] Add `GET /api/sessions/enrolled` endpoint in `server/routes/sessions.js` to fetch upcoming sessions across all courses the authenticated student is enrolled in
-- [ ] Add `PATCH /api/sessions/:id` endpoint with instructor course-ownership verification to allow updating title, description, scheduled date/time, and room/location
-- [ ] Add `DELETE /api/sessions/:id` endpoint with instructor course-ownership verification to allow canceling scheduled sessions
-- [ ] Verify sessions API routes via automated API testing script
+- [x] Add `GET /api/sessions/enrolled` endpoint in `server/routes/sessions.js` to fetch upcoming sessions across all courses the authenticated student is enrolled in
+- [x] Add `PATCH /api/sessions/:id` endpoint with instructor course-ownership verification to allow updating title, description, scheduled date/time, and room/location
+- [x] Add `DELETE /api/sessions/:id` endpoint with instructor course-ownership verification to allow canceling scheduled sessions
+- [x] Verify sessions API routes via automated API testing script
 
 #### Phase 2 - Instructor Course Studio Sessions Tab & Delivery-Adaptive Scheduling
-- [ ] Add 4th navigation tab in `client/src/pages/ManageCourseLayout.jsx` immediately to the right of `Publish`:
+- [x] Add 4th navigation tab in `client/src/pages/ManageCourseLayout.jsx` immediately to the right of `Publish`:
       1. For `hybrid` courses: labeled **`Doubt & Offline Sessions`**
       2. For `online` and `offline` courses: labeled **`Doubt Sessions`**
-- [ ] Register child route `sessions` under `/manage-courses/:courseId` in `client/src/App.jsx`
-- [ ] Create `client/src/pages/ManageCourseSessions.jsx` & `client/src/pages/ManageCourseSessions.css`:
+- [x] Register child route `sessions` under `/manage-courses/:courseId` in `client/src/App.jsx`
+- [x] Create `client/src/pages/ManageCourseSessions.jsx` & `client/src/pages/ManageCourseSessions.css`:
       1. Delivery-mode adaptive layout:
          • For **Hybrid & Offline**: Tailored strictly for in-person sessions at the institute (Date, Time, Topic Agenda, and Institute Center / Lab Room) with zero Google Meet clutter
          • For **Online**: Live virtual doubt clearing with Google Meet link
@@ -892,19 +898,19 @@ works, same rule PROGRESS.md uses.
       4. Chronological sessions timeline with `[ ✏️ Edit / Reschedule ]` and `[ 🗑️ Cancel ]` actions
 
 #### Phase 3 - Student View & In-Person Countdown Alerts
-- [ ] Prominent Countdown Alert on `client/src/pages/CourseDetail.jsx`:
+- [x] Prominent Countdown Alert on `client/src/pages/CourseDetail.jsx`:
       Display top banner when a session is upcoming (e.g. `🔔 Next In-Person Meet in 3 Days (Saturday at 11:00 AM at Indore Center — Lab 2)`)
-- [ ] Add "Upcoming In-Person Meets & Doubt Sessions" panel on `client/src/pages/StudentDashboard.jsx` loading from `GET /api/sessions/enrolled`
-- [ ] Direct venue/room badges and topic agenda display for enrolled students
+- [x] Add "Upcoming In-Person Meets & Doubt Sessions" panel on `client/src/pages/StudentDashboard.jsx` loading from `GET /api/sessions/enrolled`
+- [x] Direct venue/room badges and topic agenda display for enrolled students
 
 #### Phase 4 - Production Build Verification & End-to-End Testing
-- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
-- [ ] End-to-end testing: Instructor schedules in-person session $\rightarrow$ Student views countdown badge on course details $\rightarrow$ Instructor reschedules/cancels
-- [ ] Update `PROGRESS.md` with Session logs
+- [x] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [x] End-to-end testing: Instructor schedules in-person session $\rightarrow$ Student views countdown badge on course details $\rightarrow$ Instructor reschedules/cancels
+- [x] Update `PROGRESS.md` with Session logs
 
 #### Phase 5 - Branch Verification & Fast-Forward Git Merge to Branch 10
-- [ ] Complete all Branch 13 checklist items
-- [ ] Fast-forward merge `Branch13_Schedule_Doubt_Session` back into `Branch10_UI_Improvements` (Option A)
+- [x] Complete all Branch 13 checklist items
+- [x] Fast-forward merge `Branch13_Schedule_Doubt_Session` back into `Branch10_UI_Improvements` (Option A)
 
 
 ---
@@ -3651,3 +3657,55 @@ client/src/pages/InstructorDashboard.jsx & client/src/pages/InstructorDashboard.
 - Production build (`npm --prefix client run build`) succeeded with 0 errors in 742ms.
 - Verified `GET /api/instructors/dashboard` returns 200 OK with live database data.
 - Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
+
+
+### Session 11 (Branch 10 (Branch10_UI_Improvements)) - Public Profile Role Awareness, Adaptive Breadcrumbs & Storefront Preview
+
+#### Files Created/Updated So Far
+
+client/src/pages/InstructorProfile.jsx (updated to conditionally render `InstructorNav` when the viewer is an instructor and `StudentNav` when a student/guest; added query param `from=dashboard` detection and `isOwner` check; made breadcrumbs adaptive: `Dashboard › Public Profile` when arriving from dashboard vs standard explore path for visitors; added `Public Storefront Preview` banner for instructors viewing their own storefront with 1-click links to `Edit Profile & Bio` and `← Back to Dashboard`.)
+
+client/src/pages/InstructorProfile.css (styled `.instructor-storefront-preview-bar`, live indicator dot, edit profile shortcut, and back-to-dashboard action with full mobile responsiveness.)
+
+client/src/pages/InstructorDashboard.jsx (updated "View Public Profile" button and quick action to pass `?from=dashboard`.)
+
+#### Decisions Log
+
+- Role-Aware Public Profile: Rather than forcing `StudentNav` on everyone, `InstructorProfile.jsx` now respects the viewer's role. Instructors viewing public profiles remain in their instructor environment with instructor navigation.
+- Storefront Preview Context: When instructors view their own profile, they receive clear visual feedback (`Public Storefront Preview — This is how students see your profile on LevelUp`) and quick return navigation, preventing them from getting lost in student explore flows.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 435ms.
+- Verified active frontend dev server (port 5173, HTTP 200) and backend server (port 3000, db connected).
+
+
+### Branch 13 (Schedule Doubt Session)
+
+### Session 1 (Branch 13 (Schedule Doubt Session)) - Adaptive Sessions Tab, Institute Venue Meetups & Student Countdown Badges
+
+#### Files Created/Updated So Far
+
+server/routes/sessions.js (added authenticated student endpoint `GET /api/sessions/enrolled` joining `sessions`, `courses`, `enrollments`, and `users` to provide upcoming schedules; added authenticated instructor route `PATCH /api/sessions/:id` with course-ownership verification to allow updating title, description, session_type, scheduled_at, and location; added authenticated instructor route `DELETE /api/sessions/:id` with course-ownership verification to allow canceling scheduled sessions.)
+
+client/src/pages/ManageCourseLayout.jsx (added 4th navigation tab link immediately right of `Publish` with delivery-adaptive naming: for `hybrid` courses labeled **`Doubt & Offline Sessions`**, for `online` and `offline` courses labeled **`Doubt Sessions`**.)
+
+client/src/App.jsx (registered child route `sessions` rendering `<ManageCourseSessions />` under `/manage-courses/:courseId`.)
+
+client/src/pages/ManageCourseSessions.jsx & client/src/pages/ManageCourseSessions.css (created enterprise-grade Course Studio Sessions management view with zero cartoon emojis; mode-aware contextual banner; dual action buttons for Hybrid: `+ Schedule In-Person Meetup` and `+ Schedule Doubt Session`; modal form supporting datetime picker, venue room address pre-filling, and online Google Meet generation; session cards displaying typographic type badges, countdown pills, when/where metadata, reschedule modal trigger, and inline cancellation confirmation.)
+
+client/src/pages/CourseDetail.jsx & client/src/pages/CourseDetail.css (added prominent top countdown banner `UPCOMING IN-PERSON SESSION • In 3 days · Saturday, Oct 30 at 11:00 AM · Indore Center (Lab 2)`; upgraded Instructor tab Scheduled Sessions card list with typographic badges, countdown timing pills, venue addresses, and Google Meet actions.)
+
+client/src/pages/StudentDashboard.jsx & client/src/pages/StudentDashboard.css (integrated `GET /api/sessions/enrolled` feed displaying upcoming in-person meetups and doubt sessions with live countdown badges, course titles, instructor locations, and quick course links; removed cartoon emojis across journey nodes and action cards in favor of clean typographic styling.)
+
+#### Decisions Log
+
+- Delivery Mode Differentiation: For Hybrid and Offline courses, workshops and doubt sessions happen in-person at the institute (Date, Time, Topic Agenda, and Center Lab Room); no Google Meet links are generated. Pure Online courses strictly provide Google Meet integration.
+- Clean Typographic UI: Avoided all cartoon emojis across all sessions components, tabs, countdown pills, journey nodes, and action cards in accordance with enterprise-grade UI design standards.
+- Fast-Forward Merging: Executed on branch `Branch13_Schedule_Doubt_Session` branching cleanly from `Branch10_UI_Improvements`, ensuring clean fast-forward merging back to Branch 10.
+
+#### Verification
+
+- Production build (`npm --prefix client run build`) succeeded with 0 errors in 439ms.
+- E2E automated test verified instructor session creation, course session queries, patch rescheduling, and session cancellation.
+- Active backend server running on port 3000 (connected to PostgreSQL) and frontend on port 5173.
