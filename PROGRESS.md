@@ -46,6 +46,8 @@ src.rar (uploaded, extracted to inspect)
 ```
 LevelUp/
 ├── PROGRESS.md
+├── seed.sql / seed.md
+├── seedCourse.sql / seedCourse.md
 └── server/
     ├── package.json
     ├── .gitignore
@@ -54,12 +56,21 @@ LevelUp/
     ├── config/
     │   └── db.js
     ├── db/
-    │   └── schema.sql
+    │   ├── schema.sql
+    │   ├── seed.sql / seed.md
+    │   └── seedCourse.sql / seedCourse.md
     ├── routes/
     │   ├── auth.js
     │   ├── courses.js
+    │   ├── modules.js
+    │   ├── lectures.js
     │   ├── enrollments.js
-    │   └── reviews.js
+    │   ├── reviews.js
+    │   ├── sessions.js
+    │   ├── instructors.js
+    │   ├── categories.js
+    │   ├── learning.js
+    │   └── profile.js
     └── middleware/
         └── auth.js
 └── client/
@@ -68,6 +79,8 @@ LevelUp/
         ├── App.jsx
         ├── index.css
         ├── api.js
+        ├── api/
+        │   └── cloudinary.js
         ├── styles/
         │   └── forms.css
         ├── components/
@@ -75,18 +88,30 @@ LevelUp/
         │   ├── Footer.jsx / Footer.css
         │   ├── StudentNav.jsx / StudentNav.css
         │   ├── InstructorNav.jsx / InstructorNav.css
-        │   └── ProfileMenu.jsx / ProfileMenu.css
+        │   ├── ProfileMenu.jsx / ProfileMenu.css
+        │   ├── BrandLogo.jsx / BrandLogo.css
+        │   ├── NavbarSearchFilter.jsx / NavbarSearchFilter.css
+        │   └── ScrollToTop.jsx
         └── pages/
             ├── Home.jsx / Home.css
             ├── Login.jsx / Login.css
             ├── Signup.jsx / Signup.css
             ├── BecomeInstructor.jsx / BecomeInstructor.css
+            ├── StudentLanding.jsx / StudentLanding.css
             ├── StudentDashboard.jsx / StudentDashboard.css
             ├── InstructorWelcome.jsx / InstructorWelcome.css
             ├── InstructorDashboard.jsx / InstructorDashboard.css
+            ├── InstructorProfile.jsx / InstructorProfile.css
             ├── MyCourses.jsx / MyCourses.css
             ├── CourseDetail.jsx / CourseDetail.css
-            └── ManageCourses.jsx / ManageCourses.css
+            ├── CoursePlayer.jsx / CoursePlayer.css
+            ├── ManageCourses.jsx / ManageCourses.css
+            ├── CreateCourse.jsx / CreateCourse.css
+            ├── ManageCourseLayout.jsx / ManageCourseLayout.css
+            ├── ManageCourseDetails.jsx / ManageCourseDetails.css
+            ├── ManageCourseContent.jsx / ManageCourseContent.css
+            ├── PublishCourse.jsx / PublishCourse.css
+            └── EditProfile.jsx / EditProfile.css
 ```
 
 **Notes chapter tracking & folder paths:** two separate numbering tracks — backend and frontend each
