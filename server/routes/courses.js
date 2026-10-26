@@ -219,14 +219,38 @@ router.get('/', async (req, res) => {
       ${cte}
       SELECT courses.id, courses.title, courses.description, courses.price,
              courses.created_at, courses.status, courses.category_id,
-             courses.instructor_id,
+             courses.instructor_id, courses.parent_course_id,
              COALESCE(courses.delivery_mode, 'online') AS delivery_mode,
              courses.level, courses.thumbnail_url,
              users.name AS instructor_name,
              instructor_profiles.avatar_url AS instructor_avatar_url,
              instructor_profiles.city AS instructor_city,
-             (SELECT COALESCE(AVG(rating), 0)::numeric(2,1) FROM reviews WHERE reviews.course_id = courses.id) AS avg_rating,
-             (SELECT COUNT(*)::int FROM reviews WHERE reviews.course_id = courses.id) AS review_count
+             (SELECT COUNT(*)::int FROM reviews WHERE reviews.course_id = courses.id) AS direct_review_count,
+             (SELECT COALESCE(AVG(rating), 0)::numeric(2,1) FROM reviews WHERE reviews.course_id = courses.id) AS direct_avg_rating,
+             (CASE
+                WHEN (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.id) > 0
+                  THEN (SELECT COALESCE(AVG(rating), 0)::numeric(2,1) FROM reviews WHERE reviews.course_id = courses.id)
+                WHEN courses.parent_course_id IS NOT NULL AND (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.parent_course_id) > 0
+                  THEN (SELECT COALESCE(AVG(rating), 0)::numeric(2,1) FROM reviews WHERE reviews.course_id = courses.parent_course_id)
+                ELSE NULL
+              END) AS avg_rating,
+             (CASE
+                WHEN (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.id) > 0
+                  THEN (SELECT COUNT(*)::int FROM reviews WHERE reviews.course_id = courses.id)
+                WHEN courses.parent_course_id IS NOT NULL AND (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.parent_course_id) > 0
+                  THEN (SELECT COUNT(*)::int FROM reviews WHERE reviews.course_id = courses.parent_course_id)
+                ELSE 0
+              END) AS review_count,
+             (CASE
+                WHEN (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.id) > 0
+                  THEN 'direct'
+                WHEN courses.parent_course_id IS NOT NULL AND (SELECT COUNT(*) FROM reviews WHERE reviews.course_id = courses.parent_course_id) > 0
+                  THEN 'previous_course'
+                ELSE 'fresh'
+              END) AS rating_source,
+             (SELECT COUNT(*)::int FROM courses c_inst WHERE c_inst.instructor_id = courses.instructor_id AND c_inst.status = 'published') AS instructor_total_courses,
+             (SELECT COALESCE(AVG(r_inst.rating), 0)::numeric(2,1) FROM reviews r_inst JOIN courses c_r ON c_r.id = r_inst.course_id WHERE c_r.instructor_id = courses.instructor_id) AS instructor_avg_rating,
+             (SELECT COUNT(*)::int FROM reviews r_inst2 JOIN courses c_r2 ON c_r2.id = r_inst2.course_id WHERE c_r2.instructor_id = courses.instructor_id) AS instructor_total_reviews
       FROM courses
       JOIN users ON users.id = courses.instructor_id
       LEFT JOIN instructor_profiles ON instructor_profiles.user_id = courses.instructor_id
@@ -256,7 +280,8 @@ router.get('/:id', async (req, res) => {
     const courseResult = await db.query(
       `SELECT courses.id, courses.title, courses.description, courses.price,
               courses.created_at, courses.instructor_id, users.name AS instructor_name,
-              courses.category_id,
+              courses.category_id, courses.parent_course_id,
+              (SELECT p.title FROM courses p WHERE p.id = courses.parent_course_id) AS parent_course_title,
               topic.name AS topic_name,
               subcategory.name AS subcategory_name,
               root.name AS root_category_name,
@@ -266,7 +291,10 @@ router.get('/:id', async (req, res) => {
               courses.status,
               instructor_profiles.avatar_url AS instructor_avatar_url,
               instructor_profiles.city AS instructor_city,
-              instructor_profiles.bio AS instructor_bio
+              instructor_profiles.bio AS instructor_bio,
+              (SELECT COUNT(*)::int FROM courses c_inst WHERE c_inst.instructor_id = courses.instructor_id AND c_inst.status = 'published') AS instructor_total_courses,
+              (SELECT COALESCE(AVG(r_inst.rating), 0)::numeric(2,1) FROM reviews r_inst JOIN courses c_r ON c_r.id = r_inst.course_id WHERE c_r.instructor_id = courses.instructor_id) AS instructor_avg_rating,
+              (SELECT COUNT(*)::int FROM reviews r_inst2 JOIN courses c_r2 ON c_r2.id = r_inst2.course_id WHERE c_r2.instructor_id = courses.instructor_id) AS instructor_total_reviews
        FROM courses
        JOIN users ON users.id = courses.instructor_id
        LEFT JOIN instructor_profiles ON instructor_profiles.user_id = courses.instructor_id

@@ -45,8 +45,10 @@ export default function ProfileMenu({ user }) {
     }
   }
 
-  const initial = user?.name?.charAt(0).toUpperCase() || '?';
-  const isInstructor = user?.role === 'instructor';
+  if (!user) return null;
+
+  const initial = user.name?.charAt(0).toUpperCase() || 'U';
+  const isInstructor = user.role === 'instructor';
 
   return (
     <div className="profile-menu" ref={menuRef}>

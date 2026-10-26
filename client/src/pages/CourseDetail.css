@@ -37,8 +37,24 @@
   margin-bottom: 20px;
 }
 
+.course-detail-breadcrumb a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.course-detail-breadcrumb a:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
 .breadcrumb-separator {
   color: #cbd5e1;
+}
+
+.breadcrumb-active {
+  color: #0f172a;
+  font-weight: 600;
 }
 
 /* Hero Section */
@@ -1140,4 +1156,208 @@
 
 .inc-icon {
   font-size: 1rem;
+}
+
+
+/* ==========================================================================
+   Branch 10 Phase 1: 3-Tier High-Trust Reviews & Badges Styles
+   ========================================================================== */
+
+/* Hero Rating & Fresh Trust Badges */
+.hero-fresh-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hero-new-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: #fdf4ff;
+  color: #a21caf;
+  border: 1px solid #f0abfc;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.hero-mentor-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.hero-rating-previous {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.hero-rating-instructor {
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+/* Tier 1 Fresh Launch Review Invitation Card */
+.course-detail-new-course-invite-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 24px 20px;
+  margin-bottom: 24px;
+}
+
+.new-course-invite-icon {
+  font-size: 2rem;
+  line-height: 1;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.new-course-invite-content {
+  flex: 1;
+}
+
+.new-course-invite-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.new-course-invite-desc {
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0 0 16px 0;
+}
+
+.new-course-invite-desc strong {
+  color: #0f172a;
+}
+
+.new-course-invite-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.invite-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.invite-action-btn.is-primary {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.invite-action-btn.is-primary:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+.invite-action-btn.is-secondary {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.invite-action-btn.is-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* Tier 3 Inherited Reviews from Previous Course */
+.previous-course-reviews-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.prev-banner-icon {
+  font-size: 1rem;
+}
+
+.review-author-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-prev-course-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Sticky Card Guarantee Expansion */
+.sticky-guarantee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sticky-guarantee-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.sticky-guarantee-sub {
+  font-size: 0.78rem;
+  color: #047857;
+  line-height: 1.4;
+}
+
+.sticky-faculty-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+}
+
+.sticky-faculty-link:hover {
+  color: #3730a3;
 }

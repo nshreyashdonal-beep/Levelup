@@ -39,18 +39,31 @@ export default function StudentNav({
       <nav className="student-nav-links">
         <a href="#" className="student-nav-link">Subscribe</a>
         <Link
-          to="/student-landing"
+          to="/student-landing#explore-courses"
           className={`student-nav-link ${activeLink === 'explore' ? 'student-nav-link--active' : ''}`}
         >
           Explore
         </Link>
-        <Link
-          to="/mycourse"
-          className={`student-nav-link ${activeLink === 'mycourse' ? 'student-nav-link--active' : ''}`}
-        >
-          My Courses
-        </Link>
-        <ProfileMenu user={user} />
+        {user ? (
+          <>
+            <Link
+              to="/mycourse"
+              className={`student-nav-link ${activeLink === 'mycourse' ? 'student-nav-link--active' : ''}`}
+            >
+              My Courses
+            </Link>
+            <ProfileMenu user={user} />
+          </>
+        ) : (
+          <div className="student-nav-auth">
+            <Link to="/login" className="student-nav-btn student-nav-btn--login">
+              Log in
+            </Link>
+            <Link to="/signup" className="student-nav-btn student-nav-btn--signup">
+              Sign up
+            </Link>
+          </div>
+        )}
       </nav>
     </header>
   );

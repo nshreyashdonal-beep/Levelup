@@ -6,7 +6,7 @@
 // Anchored by a persistent sticky enrollment card on the right column.
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
 import { API_BASE } from '../api';
@@ -180,6 +180,14 @@ export default function CourseDetail() {
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : null;
 
+  const isFromPreviousCourse = reviews.some((r) => r.is_from_previous_course);
+  const hasDirectReviews = reviews.length > 0 && !isFromPreviousCourse;
+  const hasInstructorReviews =
+    !reviews.length && Number(course?.instructor_total_reviews) > 0;
+  const isFreshLaunch =
+    reviews.length === 0 &&
+    (!course?.instructor_total_reviews || Number(course?.instructor_total_reviews) === 0);
+
   // Gather all lectures across modules
   const allLectures = course?.modules?.flatMap((m) => m.lectures || []) || [];
   const hasExplicitTrials = course?.modules?.some((m) =>
@@ -337,15 +345,26 @@ export default function CourseDetail() {
       <main className="course-detail-main">
         {/* Breadcrumb Path */}
         <nav className="course-detail-breadcrumb" aria-label="Breadcrumb">
-          <span>Home</span>
+          <Link to="/">Home</Link>
           <span className="breadcrumb-separator">›</span>
-          <span>Explore</span>
+          <Link to="/student-landing#explore-courses">Explore</Link>
           {course.category_path && (
             <>
               <span className="breadcrumb-separator">›</span>
-              <span>{course.category_path}</span>
+              <Link
+                to={
+                  course.category_id
+                    ? `/student-landing?category_id=${course.category_id}#explore-courses`
+                    : '/student-landing#explore-courses'
+                }
+                className="breadcrumb-category-link"
+              >
+                {course.category_path}
+              </Link>
             </>
           )}
+          <span className="breadcrumb-separator">›</span>
+          <span className="breadcrumb-active">{course.title}</span>
         </nav>
 
         {/* Hero Section */}
@@ -391,9 +410,24 @@ export default function CourseDetail() {
               {course.instructor_city && (
                 <span className="hero-instructor-city">📍 {course.instructor_city}</span>
               )}
-              <span className="hero-instructor-rating">
-                {avgRating ? `⭐ ${avgRating} (${reviews.length} review${reviews.length === 1 ? '' : 's'})` : '⭐ New Course'}
-              </span>
+              {isFromPreviousCourse ? (
+                <span className="hero-instructor-rating hero-rating-previous">
+                  ⭐ {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'} • from previous course)
+                </span>
+              ) : hasDirectReviews ? (
+                <span className="hero-instructor-rating">
+                  ⭐ {avgRating} ({reviews.length} review{reviews.length === 1 ? '' : 's'})
+                </span>
+              ) : hasInstructorReviews ? (
+                <span className="hero-instructor-rating hero-rating-instructor">
+                  ⭐ {Number(course.instructor_avg_rating).toFixed(1)} Instructor Rating ({course.instructor_total_reviews} reviews)
+                </span>
+              ) : (
+                <span className="hero-fresh-trust-badge">
+                  <span className="hero-new-pill">✨ New Course</span>
+                  <span className="hero-mentor-tag">Verified New Mentor</span>
+                </span>
+              )}
             </div>
           </div>
         </section>
@@ -509,28 +543,82 @@ export default function CourseDetail() {
                   <div className="panel-heading-row">
                     <h2 className="panel-heading">Student Reviews & Ratings</h2>
                     <span className="panel-rating-badge">
-                      {avgRating ? `⭐ ${avgRating} / 5.0` : 'No reviews yet'}
+                      {isFromPreviousCourse
+                        ? `⭐ ${avgRating} / 5.0 (from previous course)`
+                        : avgRating
+                        ? `⭐ ${avgRating} / 5.0`
+                        : hasInstructorReviews
+                        ? `⭐ ${Number(course.instructor_avg_rating).toFixed(1)} / 5.0 (Instructor Rating)`
+                        : '✨ Fresh Launch'}
                     </span>
                   </div>
 
                   {reviews.length === 0 ? (
-                    <p className="course-detail-empty">Be the first student to review this course!</p>
-                  ) : (
-                    <div className="course-detail-reviews-list">
-                      {reviews.map((review) => (
-                        <div key={review.id} className="course-detail-review-card">
-                          <div className="course-detail-review-header">
-                            <span className="course-detail-review-name">{review.student_name}</span>
-                            <span className="course-detail-review-rating">
-                              {'⭐'.repeat(review.rating)}
-                            </span>
-                          </div>
-                          {review.comment && (
-                            <p className="course-detail-review-comment">{review.comment}</p>
-                          )}
+                    <div className="course-detail-new-course-invite-card">
+                      <div className="new-course-invite-icon">✨</div>
+                      <div className="new-course-invite-content">
+                        <h3 className="new-course-invite-title">Be the First Student to Review!</h3>
+                        <p className="new-course-invite-desc">
+                          Instructor <strong>{course.instructor_name || 'this mentor'}</strong> recently joined LevelUp with this fresh course.
+                          Experience their teaching style with zero commitment by watching the Free Trial Class in the Classroom tab before enrolling.
+                        </p>
+                        <div className="new-course-invite-actions">
+                          <button
+                            type="button"
+                            className="invite-action-btn is-primary"
+                            onClick={() => {
+                              setActiveTab('classroom');
+                              document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                          >
+                            🎓 Watch Free Trial Class →
+                          </button>
+                          <button
+                            type="button"
+                            className="invite-action-btn is-secondary"
+                            onClick={() => {
+                              setActiveTab('instructor');
+                              document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                          >
+                            👨‍🏫 View Instructor Background →
+                          </button>
                         </div>
-                      ))}
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      {isFromPreviousCourse && (
+                        <div className="previous-course-reviews-banner">
+                          <span className="prev-banner-icon">ℹ️</span>
+                          <span className="prev-banner-text">
+                            Showing verified student reviews from previous course edition ({reviews[0]?.previous_course_title || 'parent course'}).
+                          </span>
+                        </div>
+                      )}
+                      <div className="course-detail-reviews-list">
+                        {reviews.map((review) => (
+                          <div key={review.id} className="course-detail-review-card">
+                            <div className="course-detail-review-header">
+                              <div className="review-author-wrap">
+                                <span className="course-detail-review-name">{review.student_name}</span>
+                                {review.is_from_previous_course && (
+                                  <span className="review-prev-course-pill">
+                                    Verified Student (from previous course)
+                                  </span>
+                                )}
+                              </div>
+                              <span className="course-detail-review-rating">
+                                {'⭐'.repeat(review.rating)}
+                              </span>
+                            </div>
+                            {review.comment && (
+                              <p className="course-detail-review-comment">{review.comment}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   )}
 
                   {/* Leave a Review Form */}
@@ -629,11 +717,25 @@ export default function CourseDetail() {
 
                   <div className="instructor-stats-ribbon">
                     <div className="ribbon-item">
-                      <span className="ribbon-num">{avgRating ? `⭐ ${avgRating}` : '⭐ 5.0'}</span>
-                      <span className="ribbon-label">Rating</span>
+                      <span className="ribbon-num">
+                        {isFromPreviousCourse
+                          ? `⭐ ${avgRating}`
+                          : avgRating
+                          ? `⭐ ${avgRating}`
+                          : hasInstructorReviews
+                          ? `⭐ ${Number(course.instructor_avg_rating).toFixed(1)}`
+                          : '✨ New'}
+                      </span>
+                      <span className="ribbon-label">
+                        {isFreshLaunch ? 'Fresh Mentor' : 'Rating'}
+                      </span>
                     </div>
                     <div className="ribbon-item">
-                      <span className="ribbon-num">{reviews.length}</span>
+                      <span className="ribbon-num">
+                        {reviews.length > 0
+                          ? reviews.length
+                          : Number(course.instructor_total_reviews) || 0}
+                      </span>
                       <span className="ribbon-label">Reviews</span>
                     </div>
                     <div className="ribbon-item">
@@ -854,7 +956,28 @@ export default function CourseDetail() {
 
                 <div className="sticky-trial-guarantee">
                   <span className="guarantee-icon">🛡</span>
-                  <span>100% Free Trial Lectures Included</span>
+                  <div className="sticky-guarantee-info">
+                    <strong className="sticky-guarantee-title">100% Free Trial Lectures Included</strong>
+                    {isFreshLaunch ? (
+                      <span className="sticky-guarantee-sub">
+                        Instructor is newly onboarded to LevelUp.{' '}
+                        <button
+                          type="button"
+                          className="sticky-faculty-link"
+                          onClick={() => {
+                            setActiveTab('instructor');
+                            document.querySelector('.course-detail-nav-tabs')?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                        >
+                          Check Faculty Profile →
+                        </button>
+                      </span>
+                    ) : (
+                      <span className="sticky-guarantee-sub">
+                        Watch trial previews with zero financial risk
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Primary CTA Button */}

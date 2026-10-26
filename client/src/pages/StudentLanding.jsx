@@ -68,11 +68,20 @@ export default function StudentLanding() {
       setSelectedCategoryId(cat)
     }
 
-    if (window.location.hash === '#nearby-map-section') {
+    if (window.location.hash) {
+      const targetId = window.location.hash.replace('#', '')
       const timer = setTimeout(() => {
-        const mapEl = document.getElementById('nearby-map-section')
-        if (mapEl) {
-          mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const el = document.getElementById(targetId)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 250)
+      return () => clearTimeout(timer)
+    } else if (cat) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('explore-courses')
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 250)
       return () => clearTimeout(timer)
@@ -680,6 +689,13 @@ export default function StudentLanding() {
                           {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                         </span>
                       )}
+                      {course.rating_source === 'fresh' && (
+                        Number(course.instructor_total_reviews) > 0 ? (
+                          <span className="course-card-new-pill is-release">✨ New Release</span>
+                        ) : (
+                          <span className="course-card-new-pill">✨ New Course</span>
+                        )
+                      )}
                     </div>
                     <span className="course-card-open" aria-hidden="true">↗</span>
                   </div>
@@ -726,10 +742,21 @@ export default function StudentLanding() {
 
                     <div className="course-card-meta">
                       <span className="course-card-price">₹{course.price}</span>
-                      <span className="course-card-rating">
-                        ⭐ {Number(course.avg_rating) > 0 ? Number(course.avg_rating).toFixed(1) : 'New'}
-                        {course.review_count ? ` (${course.review_count})` : ''}
-                      </span>
+                      {course.rating_source === 'previous_course' ? (
+                        <span className="course-card-rating is-previous" title="Rating from previous course edition">
+                          ⭐ {Number(course.avg_rating).toFixed(1)} <small className="from-prev-tag">({course.review_count} • from previous course)</small>
+                        </span>
+                      ) : course.rating_source === 'direct' && Number(course.avg_rating) > 0 ? (
+                        <span className="course-card-rating">
+                          ⭐ {Number(course.avg_rating).toFixed(1)} {course.review_count ? `(${course.review_count})` : ''}
+                        </span>
+                      ) : Number(course.instructor_total_reviews) > 0 ? (
+                        <span className="course-card-rating is-instructor" title={`Instructor has ${course.instructor_total_reviews} reviews across all courses`}>
+                          ★ {Number(course.instructor_avg_rating).toFixed(1)} <small className="from-prev-tag">(Instructor)</small>
+                        </span>
+                      ) : (
+                        <span className="course-card-fresh-pill">✨ Fresh Launch</span>
+                      )}
                     </div>
                   </div>
                   <span className="course-card-action">View course <span aria-hidden="true">→</span></span>

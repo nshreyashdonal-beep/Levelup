@@ -73,6 +73,41 @@
   color: #4f46e5;
 }
 
+.student-nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-nav-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.student-nav-btn--login {
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+  background: transparent;
+}
+
+.student-nav-btn--login:hover {
+  background: #eef2ff;
+}
+
+.student-nav-btn--signup {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.student-nav-btn--signup:hover {
+  background: #4338ca;
+}
+
 @media (max-width: 960px) {
   .student-nav {
     padding: 10px 16px;

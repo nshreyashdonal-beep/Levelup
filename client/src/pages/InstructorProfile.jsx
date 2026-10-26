@@ -111,9 +111,9 @@ export default function InstructorProfile() {
         <nav className="instructor-profile-breadcrumb" aria-label="Breadcrumb">
           <Link to="/">Home</Link>
           <span className="breadcrumb-separator">›</span>
-          <Link to="/student-landing">Explore</Link>
+          <Link to="/student-landing#explore-courses">Explore</Link>
           <span className="breadcrumb-separator">›</span>
-          <span>Instructors</span>
+          <Link to="/student-landing#nearby-map-section">Instructors</Link>
           <span className="breadcrumb-separator">›</span>
           <span className="breadcrumb-active">{instructor.name}</span>
         </nav>

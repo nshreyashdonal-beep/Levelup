@@ -122,7 +122,8 @@ A **branch** is a stream of work (the main line, or a side quest that jumps the 
 | 7 | InstructorLectureStudio | Instructor End: Video file upload (Cloudinary CDN), smart URL embeds (YouTube/Vimeo/MP4), and live video preview in ManageCourseContent | In progress |
 | 8 | StudentClassroomPlayer | Student End: Dedicated classroom video player (/courses/:id/learn), auto-completion on video finish, 5-second autoplay progression | Completed |
 | 9 | Improving Website and Solving Bugs | Polish website UI/UX, fix visual/functional bugs, layout responsiveness, and refine student & instructor user flows | Completed |
-| 10 | Branch10_UI_Improvements | Visual overhaul, design system polish, layout responsiveness, and UI modernizations across Branch 9 features | Planning / In progress |
+| 10 | Branch10_UI_Improvements | Visual overhaul, design system polish, layout responsiveness, and UI modernizations across Branch 9 features | Completed |
+| 11 | ProfileManagement | User & Instructor Profile Management: edit name, email, avatar upload via Cloudinary, instructor bio/phone/city/coords, and password reset | Planning / In progress |
 
 ---
 
@@ -694,7 +695,57 @@ works, same rule PROGRESS.md uses.
 
 **Feature Goal:** Comprehensive visual overhaul, typography, styling, responsive layouts, and user interface enhancements for features built in Branch 9 based on user feedback.
 
-*(Phases and action tasks will be converted from user feedback and documented here).*
+#### Phase 1 - High-Trust New Course, Mentor Track Record & Previous Course Reviews
+- [x] Database Schema: Add `parent_course_id UUID REFERENCES courses(id) ON DELETE SET NULL` to `courses` in `server/db/schema.sql` and run migration on PostgreSQL [Session 1]
+- [x] Backend API (`server/routes/courses.js` & `server/routes/reviews.js`):
+      1. In `GET /api/courses`, query `parent_course_id`, calculate `rating_source` ('direct', 'previous_course', 'fresh'), and include instructor aggregate metrics (`instructor_total_courses`, `instructor_avg_rating`, `instructor_total_reviews`) [Session 1]
+      2. In `GET /api/courses/:id`, return full course details with parent course metadata, inherited previous course reviews, and instructor aggregate metrics [Session 1]
+      3. In `GET /api/reviews`, auto-inherit parent course reviews when direct reviews are 0 and tag with `is_from_previous_course: true` [Session 1]
+- [x] Frontend Course Cards (`Home.jsx`, `StudentLanding.jsx`, `Home.css`, `StudentLanding.css`):
+      1. Tier 1 (New Course + New Mentor): Render `✨ New Course` pill and `✨ Fresh Launch` pill (replacing 0.0 ★) [Session 1]
+      2. Tier 2 (New Course + Experienced Mentor): Render `✨ New Release` pill and `★ {instructor_avg_rating} (Instructor)` [Session 1]
+      3. Tier 3 (Cloned / New Batch): Render `★ {avg_rating} ({review_count} • from previous course)` [Session 1]
+- [x] Frontend Course Details (`CourseDetail.jsx` & `CourseDetail.css`):
+      1. Hero Header: For fresh courses, display `✨ New Course • Verified New Mentor • 📍 [City]` (no empty star counter); for previous course clones, display `⭐ {avg_rating} ({review_count} reviews • from previous course)` [Session 1]
+      2. Reviews Tab: Replace empty review state with interactive invitation card featuring `[ 🎓 Watch Free Trial Class → ]` (switches to Tab 3) and `[ 👨‍🏫 View Instructor Background → ]` (switches to Tab 2); for previous courses, display banner with inherited reviews tagged `Verified Student (from previous course)` [Session 1]
+      3. Sticky Enrollment Card: For new courses, display `🎓 Includes 100% Free Trial Preview` with faculty profile link: `"Faculty is new to LevelUp with outside teaching expertise. [Check Faculty Profile →]"` [Session 1]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 1]
+
+#### Phase 2 - Seed Data, Navigation Fixes & Auth Resilience
+- [x] Curated Seed Dataset (`seed.sql`, `seed.md`, `seedCourse.sql`, `seedCourse.md`): 5 instructors and 6 courses with full modules, lectures, and trial classes [Session 2]
+- [x] Accurate Breadcrumb Navigation: `CourseDetail.jsx`, `InstructorProfile.jsx`, and `ScrollToTop.jsx` anchor navigation to `#explore-courses` and `#nearby-map-section` [Session 2]
+- [x] Phantom User Session Guard: `ProfileMenu.jsx` and `StudentNav.jsx` conditional guest actions (Login/Signup buttons for visitors) [Session 2]
+- [x] Verify production build (`npm run build` with 0 errors) [Session 2]
+
+### Branch 11 (ProfileManagement)
+
+**Feature Goal:** Comprehensive profile management for both Students and Instructors, allowing users to view and update their profile details (Name, Email, Avatar photo upload via Cloudinary CDN, Password Change, and for Instructors: Bio, Phone, City, GPS Coordinates with browser geolocation), with accessible "Edit Profile" options in navigation dropdowns.
+
+#### Phase 1 - Database Schema & Backend Profile Endpoints
+- [ ] Add `avatar_url TEXT` column to `users` table in `server/db/schema.sql` and run migration on PostgreSQL [Session 1]
+- [ ] Create `server/routes/profile.js` with authenticated endpoints:
+      1. `GET /api/profile` - returns user profile, joining `instructor_profiles` if user role is `'instructor'`.
+      2. `PATCH /api/profile` - updates user name, avatar_url, instructor details (bio, phone, city, latitude, longitude), and handles password change with current password verification.
+- [ ] Mount `/api/profile` in `server/server.js`.
+- [ ] Verify profile routes via test script.
+
+#### Phase 2 - Cloudinary Direct Image Upload Integration
+- [ ] Extend `client/src/api/cloudinary.js` to support image uploads via `uploadProfileImage(file, onProgress)` using Cloudinary unsigned upload preset.
+
+#### Phase 3 - Frontend Profile Management UI & Navigation
+- [ ] Add "Edit Profile" link/action in `client/src/components/ProfileMenu.jsx` for both Student and Instructor profiles.
+- [ ] Create `client/src/pages/EditProfile.jsx` and `client/src/pages/EditProfile.css`:
+      1. Profile photo preview with drag/drop or click-to-upload via Cloudinary.
+      2. Basic profile details form: Full Name, Email (read-only or editable).
+      3. Instructor-specific fields (conditionally rendered): Headline/Bio, Phone, City, and GPS coordinates with "Locate Me" button.
+      4. Security & Password Change card: Current Password, New Password, Confirm New Password.
+- [ ] Register `/profile` route in `client/src/App.jsx`.
+- [ ] Sync updated user profile to `localStorage` and trigger `'auth-change'` event so navigation header avatars update instantly.
+
+#### Phase 4 - Production Build Verification & QA
+- [ ] Verify production build (`npm run build` with 0 errors).
+- [ ] Test student profile update and avatar upload.
+- [ ] Test instructor profile update, avatar upload, and geolocation coordinates update.
 
 ---
 
@@ -3150,4 +3201,65 @@ client/src/pages/CourseDetail.jsx and CourseDetail.css (synced student Classroom
 
 - Database verification script confirmed `is_trial` column exists on `course_lectures` with boolean type and default false, and test update/revert operations succeeded.
 - Vite production build (`npm --prefix client run build`) completed with 0 errors in 497ms.
+
+### Session 1 (Branch 10 (Branch10_UI_Improvements)) - 3-Tier High-Trust Review & Trust System
+
+#### Files Created/Updated So Far
+
+server/db/schema.sql (added `parent_course_id UUID REFERENCES courses(id) ON DELETE SET NULL` and index `idx_courses_parent_course_id`; executed migration directly on PostgreSQL.)
+
+server/routes/courses.js (updated `GET /api/courses` to compute 3-tier rating sources: direct, inherited previous course, or fresh launch; joined with parent course title and calculated instructor-wide metrics: `instructor_total_courses`, `instructor_avg_rating`, and `instructor_total_reviews`. Updated `GET /api/courses/:id` to return these metrics alongside the single course details.)
+
+server/routes/reviews.js (updated `GET /api/reviews` so that when a course has 0 direct reviews but has `parent_course_id`, it seamlessly queries reviews from the parent course, tagging each record with `is_from_previous_course: true` and `previous_course_title`.)
+
+client/src/pages/Home.jsx and client/src/pages/Home.css (updated course card badge row to render `✨ New Course` or `✨ New Release`; replaced empty 0.0 rating with `✨ Fresh Launch` pill, instructor track record rating `⭐ X.X (X • Instructor)`, or `⭐ X.X (X • from previous course)`.)
+
+client/src/pages/StudentLanding.jsx and client/src/pages/StudentLanding.css (applied identical 3-tier presentation logic to the explore course cards.)
+
+client/src/pages/CourseDetail.jsx and client/src/pages/CourseDetail.css (in Hero header, eliminated empty star counters on fresh launches in favor of `✨ New Course • Verified New Mentor • 📍 [City]` and added subtle indicator for previous course ratings; in Reviews tab, rendered active invitation card with buttons to watch free trial class or inspect faculty credentials, and added `Verified Student (from previous course)` badge for inherited reviews; in Sticky Enrollment card, highlighted 100% Free Trial Preview with faculty profile reassurance link.)
+
+#### Decisions Log
+
+- 3-Tier Integrity: No fabricated ratings. Tier 1 (fresh course + new mentor) proudly showcases `✨ Fresh Launch` and prompts trial classes. Tier 2 (new course + experienced mentor) bridges trust via `★ X.X Instructor Rating`. Tier 3 (cloned/new edition course) inherits reviews with explicit, respectful phrasing: `(from previous course)`.
+- Phrasing Rule: Strictly avoided saying "original course" to prevent diminishing value; used `(from previous course)` / `from previous course edition`.
+- Interactive Call-to-Actions: In the empty reviews tab and sticky guarantee, action buttons instantly switch tabs to `'classroom'` or `'instructor'` with smooth scrolling.
+
+#### Verification
+
+- Database query verification script ran against PostgreSQL confirming `parent_course_id` column presence, review calculations, and instructor metrics aggregation.
+- Vite production build (`npm --prefix client run build`) completed with 0 errors in 414ms.
+
+### Session 2 (Branch 10 (Branch10_UI_Improvements)) - Seed Data, Breadcrumb Anchors & Guest Auth Guard
+
+#### Files Created/Updated So Far
+
+seed.sql, seed.md, server/db/seed.sql, server/db/seed.md (curated 5 real instructors: Shreyash Donal, Pooja Rathore, Rohan Mehta, Kavita Patel, Vikram Malhotra with realistic coordinates, bios, and verified bcrypt password hashes `64006400`.)
+
+seedCourse.sql, seedCourse.md, server/db/seedCourse.sql, server/db/seedCourse.md (generated and executed 6 courses spanning Technology, Design, and Programming with 12 modules, 12 lectures, and 6 free trial previews.)
+
+client/src/pages/CourseDetail.jsx and client/src/pages/CourseDetail.css (upgraded breadcrumbs to active navigation links targeting `#explore-courses` and filtering by category id.)
+
+client/src/pages/InstructorProfile.jsx (updated breadcrumbs so "Instructors" smoothly links to `#nearby-map-section` on the explore landing page.)
+
+client/src/components/ScrollToTop.jsx (added anchor hash recognition to scroll to targeted element anchors rather than defaulting to 0,0.)
+
+client/src/App.jsx (added `/explore` alias redirect to `/student-landing`.)
+
+client/src/components/ProfileMenu.jsx (added guard returning null when unauthenticated to prevent phantom avatar dropdown.)
+
+client/src/components/StudentNav.jsx and client/src/components/StudentNav.css (added fallback "Log in" and "Sign up" buttons when no active user session exists.)
+
+#### Decisions Log
+
+- Seed Identity Integrity: Maintained consistent test accounts with predictable credentials across the team for easy demonstration.
+- Breadcrumb Actionability: Every segment of the breadcrumb trail now maps to an exact section anchor instead of dumping visitors at the top hero banner.
+- Guest Safety: Protected profile widgets against undefined session state so guests see clear auth calls-to-action.
+
+#### Verification
+
+- Seed SQL executed cleanly on PostgreSQL.
+- Verified breadcrumb links and guest navbar states in browser.
+- Vite production build (`npm --prefix client run build`) completed with 0 errors in 384ms.
+
+
 

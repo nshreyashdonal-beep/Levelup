@@ -338,3 +338,14 @@ CREATE INDEX idx_lecture_progress_student ON lecture_progress(student_id);
 -- ============================================================
 ALTER TABLE courses
   DROP COLUMN IF EXISTS category;
+
+-- ============================================================
+-- courses table — parent course lineage (Branch 10 Phase 1)
+-- Allows cloned batches or duplicate courses to link to their
+-- previous edition to inherit ratings with high-trust copy.
+-- ============================================================
+ALTER TABLE courses
+  ADD COLUMN IF NOT EXISTS parent_course_id UUID REFERENCES courses(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_courses_parent_course_id ON courses(parent_course_id);
+

@@ -47,6 +47,9 @@ router.post('/', requireAuth, requireRole('student'), async (req, res) => {
 
 // GET /api/reviews?course_id=<id>
 // Public — anyone can browse reviews for a course, no login needed.
+// If a course is cloned or created from a previous edition (parent_course_id)
+// and has 0 direct reviews, returns reviews from the previous course with
+// is_from_previous_course = true.
 router.get('/', async (req, res) => {
   const { course_id } = req.query;
 
@@ -55,9 +58,10 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    const result = await db.query(
+    const directResult = await db.query(
       `SELECT reviews.id, reviews.rating, reviews.comment, reviews.created_at,
-              users.name AS student_name
+              users.name AS student_name,
+              false AS is_from_previous_course
        FROM reviews
        JOIN users ON users.id = reviews.student_id
        WHERE reviews.course_id = $1
@@ -65,7 +69,37 @@ router.get('/', async (req, res) => {
       [course_id]
     );
 
-    res.json(result.rows);
+    if (directResult.rows.length > 0) {
+      return res.json(directResult.rows);
+    }
+
+    // Check if course has a parent_course_id to inherit reviews from
+    const courseCheck = await db.query(
+      `SELECT courses.parent_course_id,
+              parent.title AS parent_title
+       FROM courses
+       LEFT JOIN courses parent ON parent.id = courses.parent_course_id
+       WHERE courses.id = $1`,
+      [course_id]
+    );
+
+    if (courseCheck.rows.length > 0 && courseCheck.rows[0].parent_course_id) {
+      const parentReviews = await db.query(
+        `SELECT reviews.id, reviews.rating, reviews.comment, reviews.created_at,
+                users.name AS student_name,
+                true AS is_from_previous_course,
+                $2 AS previous_course_title
+         FROM reviews
+         JOIN users ON users.id = reviews.student_id
+         WHERE reviews.course_id = $1
+         ORDER BY reviews.created_at DESC`,
+        [courseCheck.rows[0].parent_course_id, courseCheck.rows[0].parent_title || 'previous edition']
+      );
+
+      return res.json(parentReviews.rows);
+    }
+
+    res.json([]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong fetching reviews' });

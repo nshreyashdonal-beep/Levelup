@@ -119,11 +119,12 @@ export default function Home() {
       setSelectedCategoryId(cat)
     }
 
-    if (window.location.hash === '#nearby-map-section') {
+    if (window.location.hash) {
+      const targetId = window.location.hash.replace('#', '')
       const timer = setTimeout(() => {
-        const mapEl = document.getElementById('nearby-map-section')
-        if (mapEl) {
-          mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        const el = document.getElementById(targetId)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 250)
       return () => clearTimeout(timer)
@@ -778,6 +779,13 @@ export default function Home() {
                           {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                         </span>
                       )}
+                      {course.rating_source === 'fresh' && (
+                        Number(course.instructor_total_reviews) > 0 ? (
+                          <span className="home-course-new-pill is-release">✨ New Release</span>
+                        ) : (
+                          <span className="home-course-new-pill">✨ New Course</span>
+                        )
+                      )}
                     </div>
                     <span className="home-course-card-arrow" aria-hidden="true">↗</span>
                   </div>
@@ -821,9 +829,21 @@ export default function Home() {
 
                   <div className="home-course-meta">
                     <strong>₹{course.price}</strong>
-                    <span>
-                      {Number(course.avg_rating) > 0 ? `⭐ ${Number(course.avg_rating).toFixed(1)}` : 'View course →'}
-                    </span>
+                    {course.rating_source === 'previous_course' ? (
+                      <span className="home-course-rating-val is-previous" title="Rating from previous course edition">
+                        ⭐ {Number(course.avg_rating).toFixed(1)} <small className="from-prev-tag">({course.review_count} • from previous course)</small>
+                      </span>
+                    ) : course.rating_source === 'direct' && Number(course.avg_rating) > 0 ? (
+                      <span className="home-course-rating-val">
+                        ⭐ {Number(course.avg_rating).toFixed(1)} {course.review_count ? `(${course.review_count})` : ''}
+                      </span>
+                    ) : Number(course.instructor_total_reviews) > 0 ? (
+                      <span className="home-course-rating-val is-instructor" title={`Instructor has ${course.instructor_total_reviews} reviews across all courses`}>
+                        ★ {Number(course.instructor_avg_rating).toFixed(1)} <small className="from-prev-tag">(Instructor)</small>
+                      </span>
+                    ) : (
+                      <span className="home-course-fresh-pill">✨ Fresh Launch</span>
+                    )}
                   </div>
                 </article>
               ))}
