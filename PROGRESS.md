@@ -862,33 +862,36 @@ works, same rule PROGRESS.md uses.
 
 **Feature Goal:** Deploy LevelUp as a unified cloud prototype on Render: Render Managed PostgreSQL (free 30-day tier) for database hosting, Render Web Service for Express.js backend API hosting, and Render Static Site for Vite/React frontend hosting, utilizing Render's high-speed private internal network, automated database seeding, client SPA rewrites, and Cloudinary CDN for persistent media.
 
-#### Phase 1 - Render PostgreSQL Provisioning & Automated Database Seeding
-- [ ] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region)
+#### Phase 1 - Codebase Deployment Hardening & Preparation Safeguards (Local)
+- [ ] Add `client/public/_redirects` (`/*  /index.html  200`) to prevent 404 errors on browser reloads of client-side routes on Render
+- [ ] Add protocol prefix fallback safeguard in `client/src/api.js` to ensure any host format resolves to valid HTTPS
 - [ ] Create consolidated single-pass SQL script `server/db/render-init.sql` (schema, `pgcrypto`, categories tree, and curated 5-instructor & 6-course dataset)
 - [ ] Build automated Node.js database initializer `server/db/init.js` and add `"db:init"` script in `server/package.json`
+- [ ] Verify local client production build (`npm --prefix client run build`) with 0 errors
+- [ ] Test database seeder script (`node server/db/init.js`) locally
+
+#### Phase 2 - Render PostgreSQL Provisioning & Cloud Seeding
+- [ ] Create Render Managed PostgreSQL database instance (`levelup-db`, free 30-day plan, Singapore region)
 - [ ] Populate Render cloud database via `DATABASE_URL="<external-url>" npm --prefix server run db:init`
 - [ ] Verify remote database connectivity, tables, and relationships via query check
 
-#### Phase 2 - Render Web Service (Backend API) Deployment
+#### Phase 3 - Render Web Service (Backend API) Deployment
 - [ ] Ensure dynamic `PORT` binding (`process.env.PORT || 3000`) and test connection endpoint `/api/health` in `server/server.js`
 - [ ] Verify `ssl: isLocal ? false : { rejectUnauthorized: false }` handles Render internal and external database URLs in `server/config/db.js`
 - [ ] Create Render Web Service (`levelup-api`, Node environment, Root Directory: `server`, Build: `npm install`, Start: `node server.js`)
 - [ ] Link database via Render's private internal network using `DATABASE_URL` (Internal Database URL) and configure `JWT_SECRET` and `NODE_ENV=production`
 - [ ] Deploy backend and verify live health check endpoint `https://<levelup-api>.onrender.com/api/health` returning `{ status: 'ok', db: 'connected' }`
 
-#### Phase 3 - Render Static Site (Frontend Client) Deployment & SPA Rewrites
-- [ ] Add `client/public/_redirects` (`/*  /index.html  200`) to prevent 404 errors on browser reloads of client-side routes
-- [ ] Add protocol prefix fallback safeguard in `client/src/api.js` to ensure any host format resolves to valid HTTPS
-- [ ] Verify local client production build (`npm --prefix client run build`) with 0 errors
+#### Phase 4 - Render Static Site (Frontend Client) Deployment
 - [ ] Create Render Static Site (`levelup-web`, Root Directory: `client`, Build: `npm run build`, Publish Directory: `dist`)
 - [ ] Configure frontend environment variables on Render (`VITE_API_BASE`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_API_KEY`, `VITE_CLOUDINARY_UPLOAD_PRESET`)
-- [ ] Deploy frontend and confirm successful build and CDN distribution
+- [ ] Deploy frontend and confirm successful build, CDN distribution, and SPA routing on reloads
 
-#### Phase 4 - End-to-End Production Verification & Viva Demo Readiness
+#### Phase 5 - End-to-End Production Verification & Viva Demo Readiness
 - [ ] Verify SSL/HTTPS across live frontend and backend endpoints
 - [ ] Test student user flow on live site: Registration, Login, Nearby Leaflet map discovery, Course Card exploration with distance badges
 - [ ] Test mediator flow on live site: Course Card $\rightarrow$ `CourseDetail.jsx` overview and tabs $\rightarrow$ `CoursePlayer.jsx` classroom video playback
-- [ ] Test instructor user flow on live site: Login, Course creation/edit, Lecture Studio video streaming, Cloudinary image upload
+- [ ] Test instructor user flow on live site: Login, Course creation/edit, Course Studio sessions scheduling, Cloudinary image upload
 - [ ] Test profile management on live site: Avatar photo upload, password change, location update
 - [ ] Document the live demo presentation script and cold-start pre-warming procedure for university evaluators
 
