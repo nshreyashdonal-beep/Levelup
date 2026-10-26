@@ -265,7 +265,19 @@ export default function EditProfile() {
       setNewPassword('');
       setConfirmPassword('');
 
-      setMessage('Profile updated successfully!');
+      setMessage('✓ Profile updated successfully! Redirecting...');
+
+      setTimeout(() => {
+        if (window.history.length > 2) {
+          navigate(-1);
+        } else {
+          navigate(
+            (data.user?.role || currentUser?.role) === 'instructor'
+              ? '/instructor-dashboard'
+              : '/student-dashboard'
+          );
+        }
+      }, 800);
     } catch (err) {
       setError(err.message || 'Something went wrong while saving.');
     } finally {
