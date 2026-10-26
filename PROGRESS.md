@@ -883,9 +883,9 @@ works, same rule PROGRESS.md uses.
 - [x] Deploy backend and verify live health check endpoint `https://levelup-api-tnuy.onrender.com/api/health` returning `{ status: 'ok', db: 'connected' }` [Session 3]
 
 #### Phase 4 - Render Static Site (Frontend Client) Deployment
-- [ ] Create Render Static Site (`levelup-web`, Root Directory: `client`, Build: `npm run build`, Publish Directory: `dist`)
-- [ ] Configure frontend environment variables on Render (`VITE_API_BASE`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_API_KEY`, `VITE_CLOUDINARY_UPLOAD_PRESET`)
-- [ ] Deploy frontend and confirm successful build, CDN distribution, and SPA routing on reloads
+- [x] Create Render Static Site (`levelup-web`, Root Directory: `client`, Build: `npm run build`, Publish Directory: `dist`) [Session 4]
+- [x] Configure frontend environment variables on Render (`VITE_API_BASE`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_API_KEY`, `VITE_CLOUDINARY_UPLOAD_PRESET`) [Session 4]
+- [x] Deploy frontend and confirm successful build, CDN distribution, and SPA routing on reloads [Session 4]
 
 #### Phase 5 - End-to-End Production Verification & Viva Demo Readiness
 - [ ] Verify SSL/HTTPS across live frontend and backend endpoints
@@ -3853,3 +3853,22 @@ server/config/db.js (added automatic sanitization for `process.env.DATABASE_URL`
 
 - Live Web Service URL: `https://levelup-api-tnuy.onrender.com`
 - Health check verification: `GET https://levelup-api-tnuy.onrender.com/api/health` returns `{ "status": "ok", "db": "connected" }` with HTTP 200.
+
+
+### Session 4 (Branch 12 (Deployment on Render)) - Render Static Site (Frontend Client) Deployment
+
+#### Files Created/Updated So Far
+
+client/public/_redirects (ensures SPA client routing fallback to index.html with HTTP 200 on cloud CDN edge.)
+client/src/api.js (protocol prefix fallback safeguards.)
+
+#### Decisions Log
+
+- Edge CDN Static Hosting: Deployed React client on Render Static Site connected to `Branch10_UI_Improvements` tracking `client/` root with single-pass Vite bundling.
+- Cloudinary Integration: Configured production environment secrets for persistent video/image assets (`VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_API_KEY`, `VITE_CLOUDINARY_UPLOAD_PRESET`).
+- API Linkage: Linked to live cloud web service `https://levelup-api-tnuy.onrender.com`.
+
+#### Verification
+
+- Client build completed in 341ms on Render.
+- Static site live with automated SSL/HTTPS and SPA route rewrites.
