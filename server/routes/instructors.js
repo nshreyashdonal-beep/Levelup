@@ -4,6 +4,7 @@
 
 const express = require('express');
 const db = require('../config/db');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -187,6 +188,124 @@ router.get('/nearby', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong finding nearby instructors' });
+  }
+});
+
+// GET /api/instructors/dashboard
+// Private route for logged-in instructors returning aggregated dashboard metrics,
+// per-course performance, recent student enrollments, and recent student reviews.
+router.get('/dashboard', requireAuth, requireRole('instructor'), async (req, res) => {
+  const instructorId = req.user.id;
+
+  try {
+    // 1. Overall stats
+    const statsQuery = await db.query(
+      `SELECT
+         COUNT(DISTINCT c.id)::int AS total_courses,
+         COUNT(DISTINCT CASE WHEN c.status = 'published' THEN c.id END)::int AS published_courses,
+         COUNT(DISTINCT CASE WHEN c.status != 'published' THEN c.id END)::int AS draft_courses,
+         COUNT(DISTINCT e.student_id)::int AS total_students,
+         COUNT(e.id)::int AS total_enrollments,
+         COALESCE(SUM(CASE WHEN e.id IS NOT NULL THEN c.price ELSE 0 END), 0)::numeric(12, 2) AS total_earnings
+       FROM courses c
+       LEFT JOIN enrollments e ON e.course_id = c.id
+       WHERE c.instructor_id = $1`,
+      [instructorId]
+    );
+
+    const reviewsQuery = await db.query(
+      `SELECT
+         COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS avg_rating,
+         COUNT(r.id)::int AS total_reviews
+       FROM reviews r
+       JOIN courses c ON c.id = r.course_id
+       WHERE c.instructor_id = $1`,
+      [instructorId]
+    );
+
+    const stats = {
+      total_courses: statsQuery.rows[0]?.total_courses || 0,
+      published_courses: statsQuery.rows[0]?.published_courses || 0,
+      draft_courses: statsQuery.rows[0]?.draft_courses || 0,
+      total_students: statsQuery.rows[0]?.total_students || 0,
+      total_enrollments: statsQuery.rows[0]?.total_enrollments || 0,
+      total_earnings: Number(statsQuery.rows[0]?.total_earnings || 0),
+      avg_rating: Number(reviewsQuery.rows[0]?.avg_rating || 0),
+      total_reviews: reviewsQuery.rows[0]?.total_reviews || 0,
+    };
+
+    // 2. Per-course performance breakdown
+    const coursesResult = await db.query(
+      `SELECT
+         c.id,
+         c.title,
+         c.status,
+         c.price,
+         c.delivery_mode,
+         c.level,
+         c.thumbnail_url,
+         c.created_at,
+         COUNT(DISTINCT e.id)::int AS enrolled_count,
+         (COUNT(DISTINCT e.id) * c.price)::numeric(12, 2) AS course_earnings,
+         COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) AS avg_rating,
+         COUNT(DISTINCT r.id)::int AS review_count
+       FROM courses c
+       LEFT JOIN enrollments e ON e.course_id = c.id
+       LEFT JOIN reviews r ON r.course_id = c.id
+       WHERE c.instructor_id = $1
+       GROUP BY c.id
+       ORDER BY c.created_at DESC`,
+      [instructorId]
+    );
+
+    // 3. Recent student enrollments (limit 6)
+    const recentEnrollmentsResult = await db.query(
+      `SELECT
+         e.id AS enrollment_id,
+         e.enrolled_at,
+         e.student_id,
+         u.name AS student_name,
+         u.email AS student_email,
+         c.id AS course_id,
+         c.title AS course_title,
+         c.price AS course_price
+       FROM enrollments e
+       JOIN courses c ON c.id = e.course_id
+       JOIN users u ON u.id = e.student_id
+       WHERE c.instructor_id = $1
+       ORDER BY e.enrolled_at DESC
+       LIMIT 6`,
+      [instructorId]
+    );
+
+    // 4. Recent student reviews (limit 6)
+    const recentReviewsResult = await db.query(
+      `SELECT
+         r.id AS review_id,
+         r.rating,
+         r.comment,
+         r.created_at,
+         u.name AS student_name,
+         c.id AS course_id,
+         c.title AS course_title
+       FROM reviews r
+       JOIN courses c ON c.id = r.course_id
+       JOIN users u ON u.id = r.student_id
+       WHERE c.instructor_id = $1
+       ORDER BY r.created_at DESC
+       LIMIT 6`,
+      [instructorId]
+    );
+
+    res.json({
+      stats,
+      courses: coursesResult.rows,
+      recent_enrollments: recentEnrollmentsResult.rows,
+      recent_reviews: recentReviewsResult.rows,
+    });
+  } catch (err) {
+    console.error('Error fetching instructor dashboard metrics:', err);
+    res.status(500).json({ error: 'Failed to load instructor dashboard metrics' });
   }
 });
 
