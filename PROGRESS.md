@@ -941,6 +941,61 @@ works, same rule PROGRESS.md uses.
 - [x] Fast-forward merge `Branch13_Schedule_Doubt_Session` back into `Branch10_UI_Improvements` (Option A)
 
 
+### Branch 14 (PaymentGateway)
+
+**Feature Goal:** Integrate a secure, production-grade checkout and payment gateway workflow (Razorpay / Stripe / Mock Gateway) allowing students to purchase paid courses, generate payment orders, verify signatures, issue payment receipts, and automatically create enrollments upon successful payment.
+
+#### Phase 1 - Payment Gateway Backend Integration & Database Schema
+- [ ] Create `orders` / `payments` table in database schema (order_id, payment_id, student_id, course_id, amount, currency, status, signature, created_at)
+- [ ] Add backend payment order creation endpoint `POST /api/payments/create-order`
+- [ ] Add backend payment verification endpoint `POST /api/payments/verify` with signature validation
+- [ ] Automatically create student enrollment upon verified payment confirmation
+- [ ] Automated API testing for order generation and payment verification
+
+#### Phase 2 - Student Checkout & Payment UI Flow
+- [ ] Update `CourseDetail.jsx` enrollment card: for paid courses, replace direct enrollment with `Proceed to Pay` checkout trigger
+- [ ] Build clean checkout modal supporting card, UPI, and netbanking test modes (zero cartoon emojis)
+- [ ] Implement live processing states: Loading, Payment Success modal with Transaction ID, and Failure retry handling
+- [ ] Instant classroom access redirect upon successful payment confirmation
+
+#### Phase 3 - Transaction History & Student Invoices
+- [ ] Add "Billing & Payment History" section in `StudentDashboard.jsx` or `EditProfile.jsx`
+- [ ] Display transaction ID, date, course purchased, amount paid, and invoice receipt view
+- [ ] Allow students to view and print clean payment confirmation slips
+
+#### Phase 4 - Production Build Verification & Testing
+- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [ ] End-to-end testing: Student selects paid course -> Orders generated -> Completes checkout -> Instant enrollment created -> Appears in My Courses & Dashboard
+
+
+### Branch 15 (Pagination)
+
+**Feature Goal:** Implement high-performance server-side and client-side pagination for large datasets across the platform: course catalogue exploration (`StudentLanding.jsx`), instructor directory, student reviews, and instructor course management, featuring dynamic page numbers, page size selectors, smooth scroll-to-top, and URL query synchronization (`?page=1&limit=12`).
+
+#### Phase 1 - Backend API Pagination & Metadata
+- [ ] Add `page` and `limit` query parameters with SQL `LIMIT` and `OFFSET` to `GET /api/courses`
+- [ ] Return structured pagination metadata in responses: `{ data: [...], pagination: { totalItems, totalPages, currentPage, limit, hasNextPage, hasPrevPage } }`
+- [ ] Add pagination support to `GET /api/reviews` and `GET /api/instructors`
+- [ ] Verify query parameters and edge case handling (out-of-bound page numbers, empty results)
+
+#### Phase 2 - Reusable Typographic Pagination Component
+- [ ] Create `client/src/components/Pagination.jsx` and `client/src/components/Pagination.css`
+- [ ] Clean typographic navigation: Previous, Next, numeric page buttons, and dynamic ellipsis for multi-page datasets (zero cartoon emojis)
+- [ ] Accessible ARIA attributes and keyboard navigation support
+- [ ] Responsive design supporting mobile, tablet, and desktop viewports
+
+#### Phase 3 - Frontend Integration Across Views
+- [ ] Integrate pagination in `StudentLanding.jsx` / Explore Courses catalog
+- [ ] Sync pagination state with browser URL search parameters (`?page=1`) so paginated results are bookmarkable and shareable
+- [ ] Integrate pagination in `ManageCourses.jsx` for instructors with multi-course portfolios
+- [ ] Integrate pagination in `CourseDetail.jsx` for courses with high review counts
+
+#### Phase 4 - Production Build Verification & Testing
+- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [ ] Test filter changes resetting pagination to page 1
+- [ ] End-to-end testing across small and large datasets with smooth scroll-to-top behavior
+
+
 ---
 
 ## 3. Sessions Log (Files Created So Far)
