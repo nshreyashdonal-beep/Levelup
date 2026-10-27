@@ -13,6 +13,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { clearSavedVisitorLocation } from '../utils/locationStorage';
 import './ProfileMenu.css';
 
 export default function ProfileMenu({ user }) {
@@ -37,6 +38,7 @@ export default function ProfileMenu({ user }) {
     setOpen(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    clearSavedVisitorLocation();
     window.dispatchEvent(new Event('auth-change'));
     if (window.location.pathname === '/') {
       navigate('/', { replace: true });

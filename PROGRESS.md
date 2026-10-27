@@ -1003,6 +1003,11 @@ works, same rule PROGRESS.md uses.
 - [x] Integrate `useLocation` in `Login.jsx` to redirect authenticated students directly back to their target course page instead of default dashboard
 - [x] Verify seamless post-login return flow for both free and paid courses
 
+#### Phase 2 - Clean-Slate Logout & Geolocation State Reset
+- [x] Clear cached visitor geolocation (`clearSavedVisitorLocation()`) alongside `token` and `user` in `ProfileMenu.jsx` logout handler
+- [x] Ensure landing page and course discovery load silently without unexpected browser permission prompts on post-logout redirect
+- [x] Retain explicit on-demand "Use my location" button for guest visitors to voluntarily calculate distance to nearby mentors
+
 
 
 ---
