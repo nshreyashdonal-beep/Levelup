@@ -970,30 +970,31 @@ works, same rule PROGRESS.md uses.
 
 ### Branch 15 (Pagination)
 
-**Feature Goal:** Implement high-performance server-side and client-side pagination for large datasets across the platform: course catalogue exploration (`StudentLanding.jsx`), instructor directory, student reviews, and instructor course management, featuring dynamic page numbers, page size selectors, smooth scroll-to-top, and URL query synchronization (`?page=1&limit=12`).
+**Feature Goal:** Implement high-performance server-side and client-side pagination for course catalogs across both student and guest platforms (`StudentLanding.jsx` and `Home.jsx`), featuring 20 courses per page default limit, structured metadata, clean typographic controls, automatic filter reset, smooth scroll-to-top, and URL query synchronization (`?page=1`).
 
 #### Phase 1 - Backend API Pagination & Metadata
-- [ ] Add `page` and `limit` query parameters with SQL `LIMIT` and `OFFSET` to `GET /api/courses`
-- [ ] Return structured pagination metadata in responses: `{ data: [...], pagination: { totalItems, totalPages, currentPage, limit, hasNextPage, hasPrevPage } }`
-- [ ] Add pagination support to `GET /api/reviews` and `GET /api/instructors`
-- [ ] Verify query parameters and edge case handling (out-of-bound page numbers, empty results)
+- [ ] Add `page` (default 1) and `limit` (default 20, max 50) query parameters with SQL `LIMIT` and `OFFSET` to `GET /api/courses`
+- [ ] Execute parallel count query to return structured pagination metadata: `{ data: [...], pagination: { totalItems, totalPages, currentPage, limit, hasNextPage, hasPrevPage } }`
+- [ ] Ensure backward compatibility with defensive unpacking for unpaginated API consumers
+- [ ] Automated API testing for limit, offset, and out-of-bounds page handling using `api-testing` skill
 
 #### Phase 2 - Reusable Typographic Pagination Component
 - [ ] Create `client/src/components/Pagination.jsx` and `client/src/components/Pagination.css`
-- [ ] Clean typographic navigation: Previous, Next, numeric page buttons, and dynamic ellipsis for multi-page datasets (zero cartoon emojis)
+- [ ] Clean typographic controls: Previous, Next, active page states, and dynamic ellipsis windowing (zero cartoon emojis)
+- [ ] Gracefully auto-hide component when `totalPages <= 1` (zero layout shift)
 - [ ] Accessible ARIA attributes and keyboard navigation support
-- [ ] Responsive design supporting mobile, tablet, and desktop viewports
 
-#### Phase 3 - Frontend Integration Across Views
-- [ ] Integrate pagination in `StudentLanding.jsx` / Explore Courses catalog
-- [ ] Sync pagination state with browser URL search parameters (`?page=1`) so paginated results are bookmarkable and shareable
-- [ ] Integrate pagination in `ManageCourses.jsx` for instructors with multi-course portfolios
-- [ ] Integrate pagination in `CourseDetail.jsx` for courses with high review counts
+#### Phase 3 - Frontend Integration Across Explore Views
+- [ ] Integrate pagination into `StudentLanding.jsx` (Student Explore catalog with default limit 20)
+- [ ] Integrate pagination into `Home.jsx` (`#explore-courses` Guest Explore catalog with default limit 20)
+- [ ] Synchronize pagination state with browser URL search parameters (`?page=1`) for bookmarkable and shareable pages
+- [ ] Automatically reset pagination to page 1 whenever category filter or search input changes
+- [ ] Implement smooth scroll-to-top on page change to the top of the course catalog grid
 
 #### Phase 4 - Production Build Verification & Testing
 - [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
-- [ ] Test filter changes resetting pagination to page 1
-- [ ] End-to-end testing across small and large datasets with smooth scroll-to-top behavior
+- [ ] Test edge cases: out-of-bounds page numbers, category change reset, and browser forward/back navigation
+- [ ] Verify seamless operation with current 14 courses and readiness for upcoming 24-course seeding
 
 
 ### Branch 16 (Level up FINAL iMPROVEMENT)
