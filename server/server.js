@@ -16,6 +16,7 @@ const instructorRoutes = require('./routes/instructors');
 const categoryRoutes = require('./routes/categories');
 const learningRoutes = require('./routes/learning');
 const profileRoutes = require('./routes/profile');
+const paymentRoutes = require('./routes/payments');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -59,6 +60,9 @@ app.use('/api/learning', learningRoutes);
 
 // Profile management routes for students and instructors.
 app.use('/api/profile', profileRoutes);
+
+// Payment gateway and checkout routes (Razorpay)
+app.use('/api/payments', paymentRoutes);
 
 // Temporary test route to prove the middleware works — remove once real
 // protected routes (courses, etc.) exist to test against instead.

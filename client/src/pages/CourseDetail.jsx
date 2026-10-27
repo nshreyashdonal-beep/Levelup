@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
+import PaymentSuccessModal from '../components/PaymentSuccessModal';
 import { API_BASE } from '../api';
 import { getSavedVisitorLocation, saveVisitorLocation } from '../utils/locationStorage';
 import './CourseDetail.css';
@@ -110,6 +111,8 @@ export default function CourseDetail() {
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [learningModules, setLearningModules] = useState([]);
   const [learningLoading, setLearningLoading] = useState(false);
   const [collapsedModules, setCollapsedModules] = useState({});
@@ -317,6 +320,112 @@ export default function CourseDetail() {
       })
       .catch(() => setEnrollError('Something went wrong enrolling'))
       .finally(() => setEnrolling(false));
+  }
+
+
+  async function handlePaymentCheckout() {
+    const token = localStorage.getItem('token');
+    if (!token || !user) {
+      navigate('/login');
+      return;
+    }
+    if (user.role !== 'student') {
+      setEnrollError('Only students can purchase courses');
+      return;
+    }
+
+    setPaymentProcessing(true);
+    setEnrollError('');
+
+    try {
+      const orderRes = await fetch(`${API_BASE}/api/payments/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ course_id: id }),
+      });
+
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) {
+        throw new Error(orderData.error || 'Failed to initiate payment checkout');
+      }
+
+      if (!window.Razorpay) {
+        throw new Error('Payment gateway SDK is loading. Please refresh and try again.');
+      }
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'LevelUp Learning',
+        description: course.title,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            setPaymentProcessing(true);
+            const verifyRes = await fetch(`${API_BASE}/api/payments/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                course_id: id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) {
+              throw new Error(verifyData.error || 'Payment verification failed');
+            }
+
+            setAlreadyEnrolled(true);
+            setPaymentSuccessData({
+              courseTitle: course.title,
+              courseId: id,
+              amount: orderData.amount,
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+            });
+          } catch (verifyErr) {
+            console.error('Verification error:', verifyErr);
+            setEnrollError(verifyErr.message || 'Payment verification failed. Please contact support.');
+          } finally {
+            setPaymentProcessing(false);
+          }
+        },
+        prefill: {
+          name: user.name || '',
+          email: user.email || '',
+        },
+        theme: {
+          color: '#0f172a',
+        },
+        modal: {
+          ondismiss: function () {
+            setPaymentProcessing(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        console.error('Razorpay payment failed:', response.error);
+        setEnrollError(response.error.description || 'Payment was unsuccessful. Please try again.');
+        setPaymentProcessing(false);
+      });
+      rzp.open();
+    } catch (err) {
+      console.error('Checkout error:', err);
+      setEnrollError(err.message || 'Unable to start checkout. Please try again.');
+      setPaymentProcessing(false);
+    }
   }
 
   function handleReviewSubmit(e) {
@@ -1580,16 +1689,24 @@ export default function CourseDetail() {
                         navigate(target);
                         return;
                       }
-                      handleEnroll();
+                      if (parseFloat(course?.price) > 0) {
+                        handlePaymentCheckout();
+                      } else {
+                        handleEnroll();
+                      }
                     }}
-                    disabled={enrolling}
+                    disabled={enrolling || paymentProcessing}
                   >
                     {alreadyEnrolled ? (
                       enrolledProgressPercent >= 100
                         ? 'Review in Classroom →'
                         : 'Continue Learning in Classroom →'
+                    ) : paymentProcessing ? (
+                      'Processing Checkout...'
                     ) : enrolling ? (
                       'Enrolling...'
+                    ) : parseFloat(course?.price) > 0 ? (
+                      `Proceed to Pay ₹${Number(course.price).toLocaleString('en-IN')}`
                     ) : (
                       'Enroll Now'
                     )}
@@ -1637,6 +1754,16 @@ export default function CourseDetail() {
       </main>
 
       <Footer />
+
+      <PaymentSuccessModal
+        isOpen={Boolean(paymentSuccessData)}
+        onClose={() => setPaymentSuccessData(null)}
+        courseTitle={paymentSuccessData?.courseTitle}
+        courseId={paymentSuccessData?.courseId}
+        amount={paymentSuccessData?.amount}
+        paymentId={paymentSuccessData?.paymentId}
+        orderId={paymentSuccessData?.orderId}
+      />
     </div>
   );
 }

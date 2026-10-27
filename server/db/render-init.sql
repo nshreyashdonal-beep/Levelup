@@ -135,6 +135,25 @@ CREATE TABLE IF NOT EXISTS lecture_progress (
 );
 CREATE INDEX IF NOT EXISTS idx_lecture_progress_student ON lecture_progress(student_id);
 
+-- payments table (Branch 14 / PaymentGateway)
+CREATE TABLE IF NOT EXISTS payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  razorpay_order_id VARCHAR(100) NOT NULL UNIQUE,
+  razorpay_payment_id VARCHAR(100),
+  razorpay_signature TEXT,
+  amount INTEGER NOT NULL,
+  currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+  status VARCHAR(20) NOT NULL DEFAULT 'created' CHECK (status IN ('created', 'paid', 'failed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  verified_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_payments_student ON payments(student_id);
+CREATE INDEX IF NOT EXISTS idx_payments_course ON payments(course_id);
+CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(razorpay_order_id);
+
+
 -- ============================================================
 -- 2. SEED CATEGORIES TREE
 -- ============================================================

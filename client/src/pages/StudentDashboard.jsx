@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import StudentNav from '../components/StudentNav';
 import Footer from '../components/Footer';
+import PaymentReceiptModal from '../components/PaymentReceiptModal';
 import { API_BASE } from '../api';
 import './StudentDashboard.css';
 
@@ -56,6 +57,9 @@ export default function StudentDashboard() {
   const [user, setUser] = useState(null);
   const [enrolledSessions, setEnrolledSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -72,6 +76,7 @@ export default function StudentDashboard() {
     if (!user) return;
     const token = localStorage.getItem('token');
     setSessionsLoading(true);
+    setPaymentsLoading(true);
 
     fetch(`${API_BASE}/api/sessions/enrolled`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -84,6 +89,19 @@ export default function StudentDashboard() {
         console.error('Failed to load enrolled sessions:', err);
       })
       .finally(() => setSessionsLoading(false));
+
+    fetch(`${API_BASE}/api/payments/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setPayments(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error('Failed to load payment history:', err);
+      })
+      .finally(() => setPaymentsLoading(false));
+
   }, [user]);
 
   if (!user) return null;
@@ -229,6 +247,93 @@ export default function StudentDashboard() {
                   </article>
                 );
               })}
+            </div>
+          )}
+        </section>
+
+
+        {/* Billing & Payment History */}
+        <section className="student-dash-billing-section">
+          <div className="student-dash-section-header">
+            <div>
+              <span className="dash-section-eyebrow">TRANSACTION LEDGER</span>
+              <h2 className="student-dash-section-title text-left">
+                Billing & Payment History
+              </h2>
+            </div>
+            {payments.length > 0 && (
+              <span className="student-dash-sessions-count">
+                {payments.length} Transaction{payments.length === 1 ? '' : 's'}
+              </span>
+            )}
+          </div>
+
+          {paymentsLoading ? (
+            <div className="student-dash-sessions-empty">
+              <p>Loading payment history...</p>
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="student-dash-sessions-empty">
+              <p className="sessions-empty-text">No payment records found.</p>
+              <span className="sessions-empty-sub">
+                When you purchase paid courses, your Razorpay receipts and transaction invoices will be listed here.
+              </span>
+            </div>
+          ) : (
+            <div className="student-dash-table-wrap">
+              <table className="student-dash-billing-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Course</th>
+                    <th>Amount</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                    <th className="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((p) => {
+                    const formattedDate = new Date(p.verified_at || p.created_at).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    });
+                    const formattedAmount = (Number(p.amount) / 100).toLocaleString('en-IN', {
+                      style: 'currency',
+                      currency: 'INR',
+                    });
+
+                    return (
+                      <tr key={p.id}>
+                        <td className="billing-td-date">{formattedDate}</td>
+                        <td className="billing-td-course">
+                          <strong className="billing-course-title">{p.course_title}</strong>
+                          <span className="billing-instructor-name">Instructor: {p.instructor_name}</span>
+                        </td>
+                        <td className="billing-td-amount">{formattedAmount}</td>
+                        <td className="billing-td-code">
+                          <code>{p.razorpay_payment_id || p.razorpay_order_id}</code>
+                        </td>
+                        <td>
+                          <span className={`billing-status-pill is-${p.status}`}>
+                            {p.status === 'paid' ? 'Paid' : p.status}
+                          </span>
+                        </td>
+                        <td className="text-right">
+                          <button
+                            type="button"
+                            className="billing-view-receipt-btn"
+                            onClick={() => setSelectedReceipt(p)}
+                          >
+                            View Receipt
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>

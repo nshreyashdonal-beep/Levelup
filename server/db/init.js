@@ -54,6 +54,7 @@ async function initializeDatabase() {
       'course_lectures',
       'sessions',
       'reviews',
+      'payments',
     ];
 
     for (const table of tables) {

@@ -946,26 +946,26 @@ works, same rule PROGRESS.md uses.
 **Feature Goal:** Integrate a secure, production-grade checkout and payment gateway workflow (Razorpay / Stripe / Mock Gateway) allowing students to purchase paid courses, generate payment orders, verify signatures, issue payment receipts, and automatically create enrollments upon successful payment.
 
 #### Phase 1 - Payment Gateway Backend Integration & Database Schema
-- [ ] Create `orders` / `payments` table in database schema (order_id, payment_id, student_id, course_id, amount, currency, status, signature, created_at)
-- [ ] Add backend payment order creation endpoint `POST /api/payments/create-order`
-- [ ] Add backend payment verification endpoint `POST /api/payments/verify` with signature validation
-- [ ] Automatically create student enrollment upon verified payment confirmation
-- [ ] Automated API testing for order generation and payment verification
+- [x] Create `orders` / `payments` table in database schema (order_id, payment_id, student_id, course_id, amount, currency, status, signature, created_at)
+- [x] Add backend payment order creation endpoint `POST /api/payments/create-order`
+- [x] Add backend payment verification endpoint `POST /api/payments/verify` with signature validation
+- [x] Automatically create student enrollment upon verified payment confirmation
+- [x] Automated API testing for order generation and payment verification
 
 #### Phase 2 - Student Checkout & Payment UI Flow
-- [ ] Update `CourseDetail.jsx` enrollment card: for paid courses, replace direct enrollment with `Proceed to Pay` checkout trigger
-- [ ] Build clean checkout modal supporting card, UPI, and netbanking test modes (zero cartoon emojis)
-- [ ] Implement live processing states: Loading, Payment Success modal with Transaction ID, and Failure retry handling
-- [ ] Instant classroom access redirect upon successful payment confirmation
+- [x] Update `CourseDetail.jsx` enrollment card: for paid courses, replace direct enrollment with `Proceed to Pay` checkout trigger
+- [x] Build clean checkout modal supporting card, UPI, and netbanking test modes (zero cartoon emojis)
+- [x] Implement live processing states: Loading, Payment Success modal with Transaction ID, and Failure retry handling
+- [x] Instant classroom access redirect upon successful payment confirmation
 
 #### Phase 3 - Transaction History & Student Invoices
-- [ ] Add "Billing & Payment History" section in `StudentDashboard.jsx` or `EditProfile.jsx`
-- [ ] Display transaction ID, date, course purchased, amount paid, and invoice receipt view
-- [ ] Allow students to view and print clean payment confirmation slips
+- [x] Add "Billing & Payment History" section in `StudentDashboard.jsx` or `EditProfile.jsx`
+- [x] Display transaction ID, date, course purchased, amount paid, and invoice receipt view
+- [x] Allow students to view and print clean payment confirmation slips
 
 #### Phase 4 - Production Build Verification & Testing
-- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
-- [ ] End-to-end testing: Student selects paid course -> Orders generated -> Completes checkout -> Instant enrollment created -> Appears in My Courses & Dashboard
+- [x] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [x] End-to-end testing: Student selects paid course -> Orders generated -> Completes checkout -> Instant enrollment created -> Appears in My Courses & Dashboard
 
 
 ### Branch 15 (Pagination)
