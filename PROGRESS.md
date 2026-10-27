@@ -2843,6 +2843,9 @@ Rules for this session:
    step 0b). One piece at a time.
 3. ALWAYS ask before coding: Propose what you plan to do for the task and wait for my explicit
    confirmation BEFORE implementing or writing any code.
+   - STRICT GIT PUSH RULE: NEVER run `git push` without asking for my explicit confirmation first.
+     You may stage and commit locally when appropriate, but ALWAYS ask me and get my approval before
+     pushing any commit to remote GitHub.
 4. Handling Extra Tasks: If I ask to work on an ad-hoc or unlisted task, propose the plan, ask
    before coding, implement it, and by default add it under '#### Extra / Ad-Hoc Completed Tasks'
    marked [x] <task> [Session N], then resume the scheduled roadmap.
