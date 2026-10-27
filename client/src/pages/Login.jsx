@@ -10,7 +10,7 @@
 // keep a control that does nothing.
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { API_BASE } from '../api.js';
@@ -18,6 +18,8 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnUrl = location.state?.from;
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -72,7 +74,7 @@ export default function Login() {
       // browse page. Instructors land on a welcome page (journey recap)
       // with a link through to the real stats dashboard.
       if (data.user.role === 'student') {
-        navigate('/student-dashboard');
+        navigate(returnUrl || '/student-dashboard');
       } else if (data.user.role === 'instructor') {
         navigate('/instructor-welcome');
       } else {

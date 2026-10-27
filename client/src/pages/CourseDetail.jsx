@@ -290,7 +290,7 @@ export default function CourseDetail() {
     const token = localStorage.getItem('token');
 
     if (!token || !user) {
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname + location.search } });
       return;
     }
 
@@ -326,7 +326,7 @@ export default function CourseDetail() {
   async function handlePaymentCheckout() {
     const token = localStorage.getItem('token');
     if (!token || !user) {
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname + location.search } });
       return;
     }
     if (user.role !== 'student') {
@@ -1015,7 +1015,7 @@ export default function CourseDetail() {
                         <button
                           type="button"
                           className="course-detail-review-login-btn"
-                          onClick={() => navigate('/login')}
+                          onClick={() => navigate('/login', { state: { from: location.pathname + location.search } })}
                         >
                           Log in
                         </button>{' '}

@@ -998,6 +998,11 @@ works, same rule PROGRESS.md uses.
 
 ### Branch 16 (Level up FINAL iMPROVEMENT)
 
+#### Phase 1 - Seamless Auth Redirects & Post-Login Return Flow
+- [x] Pass originating course URL (`state: { from: location.pathname + location.search }`) to `/login` when unauthenticated users trigger enrollment, payment checkout, or review submission
+- [x] Integrate `useLocation` in `Login.jsx` to redirect authenticated students directly back to their target course page instead of default dashboard
+- [x] Verify seamless post-login return flow for both free and paid courses
+
 
 
 ---
