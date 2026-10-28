@@ -11,6 +11,7 @@ import 'leaflet/dist/leaflet.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import CourseCard from '../components/CourseCard'
+import Pagination from '../components/Pagination'
 import { API_BASE } from '../api'
 import { getSavedVisitorLocation, saveVisitorLocation, clearSavedVisitorLocation } from '../utils/locationStorage'
 import './Home.css'
@@ -135,6 +136,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('student')
   const [courses, setCourses] = useState([])
   const [coursesLoading, setCoursesLoading] = useState(true)
+  const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return Math.max(1, parseInt(params.get('page'), 10) || 1)
+  })
+  const [limit] = useState(20)
+  const [pagination, setPagination] = useState(null)
+  const isFilterMount = useRef(true)
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedCategoryName, setSelectedCategoryName] = useState('')
   // searchInput updates immediately as the visitor types
@@ -191,6 +199,33 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+
+  // Reset pagination to page 1 whenever category or search filter changes
+  useEffect(() => {
+    if (isFilterMount.current) {
+      isFilterMount.current = false
+      return
+    }
+    setPage(1)
+  }, [selectedCategoryId, debouncedQuery])
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    const params = new URLSearchParams(window.location.search)
+    if (newPage > 1) {
+      params.set('page', newPage)
+    } else {
+      params.delete('page')
+    }
+    const newSearch = params.toString() ? `?${params.toString()}` : ''
+    window.history.pushState(null, '', `${window.location.pathname}${newSearch}#explore-courses`)
+
+    const el = document.getElementById('explore-courses')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   // Fetch courses whenever selected category or debounced search query changes
   useEffect(() => {
     setCoursesLoading(true)
@@ -213,7 +248,7 @@ export default function Home() {
         console.error('Failed to fetch public courses:', error)
         setCoursesLoading(false)
       })
-  }, [selectedCategoryId, debouncedQuery, visitorLocation])
+  }, [selectedCategoryId, debouncedQuery, visitorLocation, page, limit])
 
   useEffect(() => {
     if (location.hash !== '#explore-courses') return
@@ -870,21 +905,31 @@ export default function Home() {
               )}
             </div>
           ) : (
-            <div className="home-course-grid">
-              {courses.map(course => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  userLocation={visitorLocation}
-                  distanceKm={
-                    nearbyCourseDistances.get(course.id) ??
-                    nearbyInstructors.find(
-                      (instructor) => instructor.instructor_id === course.instructor_id
-                    )?.distance_km
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <div className="home-course-grid">
+                {courses.map(course => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    userLocation={visitorLocation}
+                    distanceKm={
+                      nearbyCourseDistances.get(course.id) ??
+                      nearbyInstructors.find(
+                        (instructor) => instructor.instructor_id === course.instructor_id
+                      )?.distance_km
+                    }
+                  />
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={page}
+                totalPages={pagination?.totalPages || 1}
+                totalItems={pagination?.totalItems}
+                limit={limit}
+                onPageChange={handlePageChange}
+              />
+            </>
           )}
         </section>
 

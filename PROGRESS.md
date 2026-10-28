@@ -974,27 +974,27 @@ works, same rule PROGRESS.md uses.
 
 #### Phase 1 - Backend API Pagination & Metadata
 - [ ] Add `page` (default 1) and `limit` (default 20, max 50) query parameters with SQL `LIMIT` and `OFFSET` to `GET /api/courses`
-- [ ] Execute parallel count query to return structured pagination metadata: `{ data: [...], pagination: { totalItems, totalPages, currentPage, limit, hasNextPage, hasPrevPage } }`
-- [ ] Ensure backward compatibility with defensive unpacking for unpaginated API consumers
-- [ ] Automated API testing for limit, offset, and out-of-bounds page handling using `api-testing` skill
+- [x] Execute parallel count query to return structured pagination metadata: `{ data: [...], pagination: { totalItems, totalPages, currentPage, limit, hasNextPage, hasPrevPage } }`
+- [x] Ensure backward compatibility with defensive unpacking for unpaginated API consumers
+- [x] Automated API testing for limit, offset, and out-of-bounds page handling using `api-testing` skill
 
 #### Phase 2 - Reusable Typographic Pagination Component
 - [ ] Create `client/src/components/Pagination.jsx` and `client/src/components/Pagination.css`
-- [ ] Clean typographic controls: Previous, Next, active page states, and dynamic ellipsis windowing (zero cartoon emojis)
-- [ ] Gracefully auto-hide component when `totalPages <= 1` (zero layout shift)
-- [ ] Accessible ARIA attributes and keyboard navigation support
+- [x] Clean typographic controls: Previous, Next, active page states, and dynamic ellipsis windowing (zero cartoon emojis)
+- [x] Gracefully auto-hide component when `totalPages <= 1` (zero layout shift)
+- [x] Accessible ARIA attributes and keyboard navigation support
 
 #### Phase 3 - Frontend Integration Across Explore Views
-- [ ] Integrate pagination into `StudentLanding.jsx` (Student Explore catalog with default limit 20)
-- [ ] Integrate pagination into `Home.jsx` (`#explore-courses` Guest Explore catalog with default limit 20)
-- [ ] Synchronize pagination state with browser URL search parameters (`?page=1`) for bookmarkable and shareable pages
-- [ ] Automatically reset pagination to page 1 whenever category filter or search input changes
-- [ ] Implement smooth scroll-to-top on page change to the top of the course catalog grid
+- [x] Integrate pagination into `StudentLanding.jsx` (Student Explore catalog with default limit 20)
+- [x] Integrate pagination into `Home.jsx` (`#explore-courses` Guest Explore catalog with default limit 20)
+- [x] Synchronize pagination state with browser URL search parameters (`?page=1`) for bookmarkable and shareable pages
+- [x] Automatically reset pagination to page 1 whenever category filter or search input changes
+- [x] Implement smooth scroll-to-top on page change to the top of the course catalog grid
 
 #### Phase 4 - Production Build Verification & Testing
-- [ ] Verify production client build (`npm --prefix client run build`) with 0 errors
-- [ ] Test edge cases: out-of-bounds page numbers, category change reset, and browser forward/back navigation
-- [ ] Verify seamless operation with current 14 courses and readiness for upcoming 24-course seeding
+- [x] Verify production client build (`npm --prefix client run build`) with 0 errors
+- [x] Test edge cases: out-of-bounds page numbers, category change reset, and browser forward/back navigation
+- [x] Verify seamless operation with current 14 courses and readiness for upcoming 24-course seeding
 
 
 ### Branch 16 (Level up FINAL iMPROVEMENT)

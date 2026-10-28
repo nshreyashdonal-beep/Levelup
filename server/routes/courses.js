@@ -172,7 +172,7 @@ router.post('/:id/modules', requireAuth, requireRole('instructor'), async (req, 
 // Supports ?q=<keyword> for case-insensitive keyword search on title and description.
 // Only published courses are returned unless specifically filtering by instructor.
 router.get('/', async (req, res) => {
-  const { instructor_id, category_id, q, lat, lng, status } = req.query;
+  const { instructor_id, category_id, q, lat, lng, status, page, limit, paginate } = req.query;
 
   try {
     const params = [];
@@ -300,6 +300,54 @@ router.get('/', async (req, res) => {
       ${whereClause}
       ORDER BY courses.created_at DESC
     `;
+
+    const isPaginated = page !== undefined || limit !== undefined || paginate === 'true';
+
+    if (isPaginated) {
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
+      const offsetNum = (pageNum - 1) * limitNum;
+
+      // Count total matching courses
+      const countQuery = `
+        ${cte}
+        SELECT COUNT(*)::int AS total
+        FROM courses
+        JOIN users ON users.id = courses.instructor_id
+        LEFT JOIN instructor_profiles ON instructor_profiles.user_id = courses.instructor_id
+        ${whereClause}
+      `;
+      const countParams = hasCoordinates ? params.slice(0, -2) : params;
+      const countRes = await db.query(countQuery, countParams);
+      const totalItems = countRes.rows[0]?.total || 0;
+      const totalPages = Math.ceil(totalItems / limitNum) || 1;
+
+      // Query paginated slice
+      const queryParams = [...params];
+      queryParams.push(limitNum);
+      const limitIndex = queryParams.length;
+      queryParams.push(offsetNum);
+      const offsetIndex = queryParams.length;
+
+      const paginatedQuery = `
+        ${query}
+        LIMIT $${limitIndex} OFFSET $${offsetIndex}
+      `;
+
+      const result = await db.query(paginatedQuery, queryParams);
+
+      return res.json({
+        data: result.rows,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: pageNum,
+          limit: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1,
+        },
+      });
+    }
 
     const result = await db.query(query, params);
     res.json(result.rows);
