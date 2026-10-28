@@ -36,6 +36,8 @@ CREATE TABLE categories (
 
 -- Speeds up finding the direct children of a category
 CREATE INDEX idx_categories_parent ON categories(parent_id);
+CREATE UNIQUE INDEX idx_categories_unique_root ON categories (name) WHERE parent_id IS NULL;
+CREATE UNIQUE INDEX idx_categories_unique_child ON categories (name, parent_id) WHERE parent_id IS NOT NULL;
 
 -- Seed the initial 3-level Technology category tree.
 INSERT INTO categories (name)

@@ -161,7 +161,9 @@ FROM (
 JOIN users ON users.email = demo.email
 JOIN categories cat ON cat.name = demo.topic_name
 JOIN categories subcat ON cat.parent_id = subcat.id AND subcat.name = demo.subcat_name
-ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM courses c WHERE c.title = demo.title
+);
 
 -- ============================================================
 -- 2. Insert Course Modules

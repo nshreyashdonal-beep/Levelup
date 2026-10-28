@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS categories (
   parent_id UUID REFERENCES categories(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_unique_root ON categories (name) WHERE parent_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_unique_child ON categories (name, parent_id) WHERE parent_id IS NOT NULL;
 
 -- courses table
 CREATE TABLE IF NOT EXISTS courses (
@@ -159,8 +161,10 @@ CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(razorpay_order_id);
 -- ============================================================
 
 INSERT INTO categories (name)
-VALUES ('Technology')
-ON CONFLICT DO NOTHING;
+SELECT 'Technology'
+WHERE NOT EXISTS (
+  SELECT 1 FROM categories WHERE name = 'Technology' AND parent_id IS NULL
+);
 
 INSERT INTO categories (name, parent_id)
 SELECT subcategory.name, technology.id
