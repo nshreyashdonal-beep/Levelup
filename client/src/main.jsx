@@ -7,13 +7,17 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* BrowserRouter wraps the whole app so any page/component inside
-        can use routing features (links, navigation, current page info). */}
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    {/* ErrorBoundary prevents any unhandled component crash from showing a blank white screen */}
+    <ErrorBoundary>
+      {/* BrowserRouter wraps the whole app so any page/component inside
+          can use routing features (links, navigation, current page info). */}
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -32,7 +32,6 @@ export default function NavbarSearchFilter({
 
   const isControlledCategory = controlledCategoryId !== undefined;
   const currentCategoryId = isControlledCategory ? controlledCategoryId : internalCatId;
-  const currentCategoryName = selectedCategoryName || internalCatName;
 
   // Category data fetched from backend
   const [categoriesTree, setCategoriesTree] = useState([]);
@@ -42,6 +41,27 @@ export default function NavbarSearchFilter({
 
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // Derived subcategories & topics
+  const rootCategory = categoriesTree[0];
+  const subcategories = rootCategory?.children || [];
+  const activeSubId = hoveredSubId || (subcategories[0]?.id || '');
+  const activeSub = subcategories.find((s) => s.id === activeSubId) || subcategories[0];
+  const topics = activeSub?.children || [];
+
+  // Helper to resolve category name from ID if not provided as prop
+  const currentCategoryName = (() => {
+    if (selectedCategoryName) return selectedCategoryName;
+    if (internalCatName) return internalCatName;
+    if (!currentCategoryId) return '';
+    for (const sub of subcategories) {
+      if (sub.id === currentCategoryId) return sub.name;
+      for (const t of sub.children || []) {
+        if (t.id === currentCategoryId) return `${sub.name} > ${t.name}`;
+      }
+    }
+    return '';
+  })();
 
   // 1. Fetch categories on mount
   useEffect(() => {
@@ -81,12 +101,13 @@ export default function NavbarSearchFilter({
     };
   }, [dropdownOpen]);
 
-  // Derived subcategories & topics
-  const rootCategory = categoriesTree[0];
-  const subcategories = rootCategory?.children || [];
-  const activeSubId = hoveredSubId || (subcategories[0]?.id || '');
-  const activeSub = subcategories.find((s) => s.id === activeSubId) || subcategories[0];
-  const topics = activeSub?.children || [];
+  // Smooth scroll to explore courses or map helper
+  function scrollToExploreSection() {
+    const exploreSection = document.getElementById('explore-courses') || document.getElementById('nearby-map-section');
+    if (exploreSection) {
+      exploreSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   // Smooth scroll to map helper
   function scrollToMapSection() {
@@ -133,12 +154,16 @@ export default function NavbarSearchFilter({
       onSearchSubmit(currentSearch);
       scrollToMapSection();
     } else {
-      // If on another page, navigate to student landing with search query
+      let storedUser = null;
+      try {
+        storedUser = localStorage.getItem('user');
+      } catch {}
+      const basePath = storedUser ? '/student-landing' : '/';
       const params = new URLSearchParams();
       if (currentSearch.trim()) params.append('q', currentSearch.trim());
       if (currentCategoryId) params.append('category_id', currentCategoryId);
       const queryStr = params.toString() ? `?${params.toString()}` : '';
-      navigate(`/student-landing${queryStr}#nearby-map-section`);
+      navigate(`${basePath}${queryStr}#nearby-map-section`);
     }
   }
 
@@ -152,14 +177,19 @@ export default function NavbarSearchFilter({
       setInternalCatName(catName);
     }
 
-    if (onSearchSubmit) {
-      scrollToMapSection();
+    if (onCategoryChange) {
+      scrollToExploreSection();
     } else {
+      let storedUser = null;
+      try {
+        storedUser = localStorage.getItem('user');
+      } catch {}
+      const basePath = storedUser ? '/student-landing' : '/';
       const params = new URLSearchParams();
       if (currentSearch.trim()) params.append('q', currentSearch.trim());
       if (catId) params.append('category_id', catId);
       const queryStr = params.toString() ? `?${params.toString()}` : '';
-      navigate(`/student-landing${queryStr}#nearby-map-section`);
+      navigate(`${basePath}${queryStr}#explore-courses`);
     }
   }
 
@@ -242,7 +272,11 @@ export default function NavbarSearchFilter({
                         type="button"
                         className={`nav-cat-item ${isHovered ? 'nav-cat-item--hovered' : ''} ${isSelected ? 'nav-cat-item--active' : ''}`}
                         onMouseEnter={() => setHoveredSubId(sub.id)}
-                        onClick={() => setHoveredSubId(sub.id)}
+                        onClick={() => {
+                          setHoveredSubId(sub.id);
+                          handleSelectCategory(sub.id, sub.name);
+                        }}
+                        title={`Filter by all ${sub.name} courses`}
                       >
                         <span className="nav-cat-item-text">{sub.name}</span>
                         <span className="nav-cat-item-arrow" aria-hidden="true">›</span>
@@ -300,7 +334,12 @@ export default function NavbarSearchFilter({
 
       {/* ── Search Input Box ─────────────────────────────────────── */}
       <div className="nav-search-box">
-        <span className="nav-search-icon" aria-hidden="true">🔍</span>
+        <span className="nav-search-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
         <input
           ref={searchInputRef}
           type="text"

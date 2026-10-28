@@ -1,0 +1,94 @@
+/* client/src/components/ErrorBoundary.css */
+
+.levelup-error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background-color: #0b0f19;
+  color: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.levelup-error-card {
+  max-width: 32rem;
+  width: 100%;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.levelup-error-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 1.25rem;
+}
+
+.levelup-error-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f9fafb;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.3;
+}
+
+.levelup-error-subtitle {
+  font-size: 0.95rem;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+}
+
+.levelup-error-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.levelup-error-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+}
+
+.levelup-error-btn--primary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.levelup-error-btn--primary:hover {
+  background-color: #1d4ed8;
+}
+
+.levelup-error-btn--secondary {
+  background-color: #1f2937;
+  color: #d1d5db;
+  border: 1px solid #374151;
+}
+
+.levelup-error-btn--secondary:hover {
+  background-color: #374151;
+  color: #ffffff;
+}

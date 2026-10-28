@@ -34,7 +34,8 @@ function getInstructorInitials(name) {
 }
 
 function buildInstructorPopup(instructor, hasActiveFilter) {
-  const courses = [...(instructor.courses || [])]
+  const allCourses = [...(instructor.courses || [])]
+  const courses = allCourses
     .sort((a, b) => {
       if (hasActiveFilter) return 0
       return (
@@ -42,7 +43,7 @@ function buildInstructorPopup(instructor, hasActiveFilter) {
         Number(b.review_count || 0) - Number(a.review_count || 0)
       )
     })
-    .slice(0, hasActiveFilter ? courses.length : 3)
+    .slice(0, hasActiveFilter ? allCourses.length : 3)
 
   const avatar = instructor.avatar_url
     ? `<img class="levelup-map-popup-avatar-image" src="${escapeHtml(instructor.avatar_url)}" alt="" />`
@@ -165,6 +166,36 @@ export default function StudentLanding() {
     }
     setPage(1)
   }, [selectedCategoryId, debouncedQuery])
+
+  // Synchronize category name from tree if ID was loaded from URL or external state
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setSelectedCategoryName('')
+      return
+    }
+    if (selectedCategoryName) return
+
+    fetch(`${API_BASE}/api/categories`)
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data.categories)) return
+        for (const root of data.categories) {
+          for (const sub of root.children || []) {
+            if (sub.id === selectedCategoryId) {
+              setSelectedCategoryName(sub.name)
+              return
+            }
+            for (const t of sub.children || []) {
+              if (t.id === selectedCategoryId) {
+                setSelectedCategoryName(`${sub.name} > ${t.name}`)
+                return
+              }
+            }
+          }
+        }
+      })
+      .catch(() => {})
+  }, [selectedCategoryId, selectedCategoryName])
 
   const handlePageChange = (newPage) => {
     setPage(newPage)
@@ -371,9 +402,17 @@ export default function StudentLanding() {
       .bindPopup('<strong>You are here</strong>')
       .addTo(mapMarkersRef.current)
 
-    nearbyInstructors.forEach(instructor => {
+    const validInstructors = nearbyInstructors.filter(instructor => {
+      const lat = parseFloat(instructor.latitude)
+      const lng = parseFloat(instructor.longitude)
+      return Number.isFinite(lat) && Number.isFinite(lng)
+    })
+
+    validInstructors.forEach(instructor => {
+      const lat = parseFloat(instructor.latitude)
+      const lng = parseFloat(instructor.longitude)
       const marker = L.marker(
-        [instructor.latitude, instructor.longitude],
+        [lat, lng],
         { icon: instructorIcon }
       )
         .bindPopup(buildInstructorPopup(instructor, Boolean(selectedCategoryId || debouncedQuery)), {
@@ -385,17 +424,23 @@ export default function StudentLanding() {
       instructorMarkersRef.current.set(instructor.instructor_id, marker)
     })
 
-    if (nearbyInstructors.length > 0) {
-      const bounds = L.latLngBounds([
-        [visitorLocation.latitude, visitorLocation.longitude],
-        ...nearbyInstructors.map(instructor => [instructor.latitude, instructor.longitude]),
-      ])
-      mapInstanceRef.current.fitBounds(bounds, { padding: [28, 28] })
-    } else {
-      mapInstanceRef.current.setView(
-        [visitorLocation.latitude, visitorLocation.longitude],
-        12
-      )
+    const visitorLat = parseFloat(visitorLocation.latitude)
+    const visitorLng = parseFloat(visitorLocation.longitude)
+
+    if (validInstructors.length > 0 && Number.isFinite(visitorLat) && Number.isFinite(visitorLng)) {
+      try {
+        const bounds = L.latLngBounds([
+          [visitorLat, visitorLng],
+          ...validInstructors.map(i => [parseFloat(i.latitude), parseFloat(i.longitude)]),
+        ])
+        if (bounds.isValid() && mapInstanceRef.current) {
+          mapInstanceRef.current.fitBounds(bounds, { padding: [28, 28] })
+        }
+      } catch (err) {
+        console.warn('Could not fit map bounds:', err)
+      }
+    } else if (Number.isFinite(visitorLat) && Number.isFinite(visitorLng) && mapInstanceRef.current) {
+      mapInstanceRef.current.setView([visitorLat, visitorLng], 12)
     }
   }, [nearbyInstructors, visitorLocation, selectedCategoryId, debouncedQuery])
 
@@ -716,7 +761,12 @@ export default function StudentLanding() {
                   className={`home-list-toggle-btn${listPanelVisible ? ' home-list-toggle-btn--active' : ''}`}
                   onClick={() => setListPanelOpen(prev => !prev)}
                 >
-                  <span aria-hidden="true">📋</span>
+                  <span className="home-list-toggle-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    </svg>
+                  </span>
                   <span>{listPanelVisible ? 'Hide instructor list' : 'See all instructors'}</span>
                   {!nearbyLoading && !nearbyError && (
                     <span className="home-list-count-badge">{nearbyInstructors.length}</span>
@@ -797,7 +847,10 @@ export default function StudentLanding() {
           ) : courses.length === 0 ? (
             <div className="student-landing-status-card">
               <div className="student-landing-status-icon" aria-hidden="true">
-                {hasActiveFilters ? '🔍' : '📚'}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
               </div>
               <p className="student-landing-empty">
                 {debouncedQuery
