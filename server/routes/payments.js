@@ -132,7 +132,22 @@ router.post('/create-order', requireAuth, requireRole('student'), async (req, re
   } catch (err) {
     console.error('Failed to create payment order:', err);
     const detail = err?.error?.description || err?.message || 'Failed to initiate payment order';
-    res.status(500).json({ error: detail });
+    const keys = getCleanRazorpayKeys();
+    res.status(500).json({
+      error: detail,
+      key_id_info: {
+        length: keys.key_id.length,
+        prefix: keys.key_id.slice(0, 10),
+        suffix: keys.key_id.slice(-4),
+      },
+      key_secret_info: {
+        length: keys.key_secret.length,
+        prefix: keys.key_secret.slice(0, 6),
+        suffix: keys.key_secret.slice(-4),
+        has_letter_O: keys.key_secret.includes('O'),
+        has_digit_0: keys.key_secret.includes('0'),
+      }
+    });
   }
 });
 
