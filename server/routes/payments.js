@@ -12,13 +12,18 @@ const router = express.Router();
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Initialize Razorpay client with credentials from .env
-let razorpayInstance = null;
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-  razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
+// Clean and sanitize Razorpay keys (strip any trailing/leading whitespace or newlines from Render dashboard)
+const getCleanRazorpayKeys = () => ({
+  key_id: (process.env.RAZORPAY_KEY_ID || '').trim().replace(/[\r\n\s]+/g, ''),
+  key_secret: (process.env.RAZORPAY_KEY_SECRET || '').trim().replace(/[\r\n\s]+/g, ''),
+});
+
+function getRazorpayInstance() {
+  const { key_id, key_secret } = getCleanRazorpayKeys();
+  if (key_id && key_secret) {
+    return new Razorpay({ key_id, key_secret });
+  }
+  return null;
 }
 
 // ============================================================
@@ -82,7 +87,8 @@ router.post('/create-order', requireAuth, requireRole('student'), async (req, re
     let orderAmount = amountInPaise;
     let orderCurrency = 'INR';
 
-    if (razorpayInstance) {
+    const rzp = getRazorpayInstance();
+    if (rzp) {
       // 5. Create order with Razorpay Sandbox API
       const options = {
         amount: amountInPaise,
@@ -95,7 +101,7 @@ router.post('/create-order', requireAuth, requireRole('student'), async (req, re
         },
       };
 
-      const rzpOrder = await razorpayInstance.orders.create(options);
+      const rzpOrder = await rzp.orders.create(options);
       orderId = rzpOrder.id;
       orderAmount = rzpOrder.amount;
       orderCurrency = rzpOrder.currency;
@@ -115,7 +121,7 @@ router.post('/create-order', requireAuth, requireRole('student'), async (req, re
       orderId,
       amount: orderAmount,
       currency: orderCurrency,
-      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+      keyId: getCleanRazorpayKeys().key_id || 'rzp_test_placeholder',
       course: {
         id: course.id,
         title: course.title,
@@ -125,7 +131,8 @@ router.post('/create-order', requireAuth, requireRole('student'), async (req, re
     });
   } catch (err) {
     console.error('Failed to create payment order:', err);
-    res.status(500).json({ error: 'Failed to initiate payment order' });
+    const detail = err?.error?.description || err?.message || 'Failed to initiate payment order';
+    res.status(500).json({ error: detail });
   }
 });
 
@@ -180,8 +187,7 @@ router.post('/verify', requireAuth, requireRole('student'), async (req, res) => 
     let isAuthentic = false;
 
     if (process.env.RAZORPAY_KEY_SECRET && razorpay_signature) {
-      const generatedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      const generatedSignature = crypto.createHmac('sha256', getCleanRazorpayKeys().key_secret)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest('hex');
 
